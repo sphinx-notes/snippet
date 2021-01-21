@@ -1,0 +1,7 @@
+langdetect
+jieba
+python-pinyin
+pyxdg
+tabulate[widechars]
+summa
+stopwordsiso
