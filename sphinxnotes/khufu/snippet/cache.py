@@ -11,18 +11,20 @@ from os import path
 from typing import List, Tuple, Dict
 from dataclasses import dataclass
 import pickle
-import uuid
+from hashlib import sha1
 
 from tabulate import tabulate
 # from rst2ansi import rst2ansi
 
 from ..utils.snippet import Snippet, Notes
+from ..utils.titlepath_extra import join
+
 
 @dataclass(frozen=True)
 class Item(object):
     """ Item of snippet cache. """
     # Name of sphinx project
-    projname:str # TODO
+    project:str # TODO
     # Name of documentation
     docname:str
     titlepath:List[str]
@@ -30,70 +32,144 @@ class Item(object):
     # (Keywords, Rank)
     keywords:List[Tuple[str,float]]
 
+    def hexdigest(self) -> str:
+        hasher = sha1()
+        # TODO: none for now
+        if self.project:
+            hasher.update(self.project.encode())
+        hasher.update(self.docname.encode())
+        [hasher.update(title.encode()) for title in self.titlepath]
+        [hasher.update(line.encode()) for line in self.snippet.rst()]
+        [hasher.update(keyword.encode()) for keyword, _ in self.keywords]
+        return hasher.hexdigest()
 
 class Cache(object):
     """Cache of snippet."""
-    # UID -> Item
-    _items: Dict[str,Item]
+    # Path to directory for saving cache
+    dirname:str
+    # Items that need write back to disk
+    _dirty_items:Dict[str,Item]
+    # Persistent items that loads from disk (hexdigest -> Item)
+    _persistent_items:Dict[str,Item]
 
-    def __init__(self) -> None:
-        self._items = {}
+    def __init__(self, dirname:str) -> None:
+        self.dirname = dirname
+        self._dirty_items = {}
+        self._persistent_items = {}
 
 
-    def add(self, item:Item) -> None:
-        """Add item to cache."""
-        uid = str(uuid.uuid4())[:8]
-        self._items[uid] = item
+    def cachefile(self) -> str:
+        return path.join(self.dirname, 'cache.pickle')
+
+
+    def indexfile(self) -> str:
+        return path.join(self.dirname, 'index.txt')
+
+
+    def snippetfile(self, uid:str) -> str:
+        return path.join(self.dirname, uid + '.rst')
+
+
+    def add(self, item:Item) -> str:
+        """Add item to cache, return ID of item"""
+        hasher = sha1()
+        for line in item.snippet.rst():
+            hasher.update(line.encode())
+        digest = hasher.hexdigest()
+        self._dirty_items[digest] = item
+        return digest
 
 
     def get(self, uid:str) -> Item:
-        return self._items.get(uid)
+        return self._persistent_items.get(uid)
 
 
     def items(self) -> List[Tuple[str,Item]]:
-        return self._items.items()
+        return self._persistent_items.items()
 
 
-    def purge(self, docname:str) -> None:
-        """Pure all items in given docname. """
-        items = [(uid, item) for uid, item in self._items if item.docname == docname]
-        for uid, item in items:
-            del self._items[uid]
-            # TODO: Del uid
+    def purge(self, project, docname:str) -> int:
+        """Pure persistent items that belongs to given docname. """
+        uids = []
+        for uid, item in self._persistent_items:
+            if item.project == project and item.docname == docname:
+                uids.append(uid)
+        for uid in uids:
+            self._del_item(uid)
+        return len(uids)
 
 
-    def dump(self, dirname:str) -> None:
+    def load(self) -> None:
+        with open(self.cachefile(), 'rb') as f:
+            obj = pickle.load(f)
+            self.__dict__.update(obj.__dict__)
+
+
+    def dump(self) -> None:
         """Save cache to directory."""
-        if not path.exists(dirname):
-            os.mkdir(dirname)
-        with open(path.join(dirname, 'cache.p'), 'wb') as f:
-            pickle.dump(self, f)
-        with open(path.join(dirname, 'index.txt'), 'w') as f:
+        # Makesure dir exists
+        if not path.exists(self.dirname):
+            os.mkdir(self.dirname)
+
+        # Merge items
+        self._merge_items()
+
+        # Dump indexes
+        with open(self.indexfile(), 'w') as f:
             f.write(self._dump_indexes())
-        # Dump snippet
-        for uid, item in self.items():
-            self._dump_item(dirname, uid, item)
+
+        # Dump self
+        with open(self.cachefile(), 'wb') as f:
+            pickle.dump(self, f)
 
 
     def _dump_indexes(self) -> str:
         ELLIPSIS = '…'
         lines = []
-        for uid, item in self.items():
-            titlepath = item.titlepath
-            if len(titlepath) > 3:
-                titlepath = [ELLIPSIS] + titlepath[-3:]
+        for uid, item in self._persistent_items.items():
+            titlepath = join(item.titlepath, 30, 15, placeholder=ELLIPSIS)
             if isinstance(item.snippet, Notes):
                 excerpt = item.snippet.excerpt()
             else:
                 excerpt = '<no excerpt available>'
             keywords = [keyword for keyword, rank in item.keywords]
-            lines.append([uid, '/'.join(titlepath), excerpt, ','.join(keywords)])
+            lines.append([uid, titlepath, excerpt, ','.join(keywords)])
         return tabulate(lines, headers=['ID', 'Path', 'Excerpt', 'Keywords'], tablefmt='plain')
 
 
-    def _dump_item(self, dirname:str, uid:str, item:Item) -> None:
-        with open(path.join(dirname, uid+ '.rst'), 'w') as f:
-            f.write('\n'.join(item.snippet.rst()))
+    def _del_item(self, uid:str) -> int:
+        del self._persistent_items[uid]
+        os.remove(self.snippetfile(uid))
+
+
+    def _dump_item(self, uid:str, item:Item) -> None:
         # TODO: fix rst2ansi
         # with open(path.join(dirname, uid+ '.ansi'), 'w') as f:
         #   f.write('\n'.join(rst2ansi(item.snippet.rst())))
+        with open(self.snippetfile(uid), 'w') as f:
+            f.write('\n'.join(item.snippet.rst()))
+
+
+    def _merge_items(self) -> None:
+        # Detect deletetd snippets in persistent items
+        #
+        # "Deleted" means: Documentation changed but the previous snippet is
+        # not ``add`` again.
+        ndel = 0
+        docnames = set([(item.project, item.docname) for _, item in self._dirty_items.items()])
+        for uid, item in self._persistent_items:
+            if not (item.project, item.docname) in docnames:
+                self._del_item(uid)
+                ndel +=1
+
+        nadd = 0
+        # Merge dirty items
+        for uid, item in self._dirty_items.items():
+            if uid not in self._persistent_items:
+                # Dirty items is new item
+                self._persistent_items[uid] = item
+                self._dump_item(uid, item)
+                nadd +=1
+
+        print('%d documentation(s) changed, %d snippet(s) deleted and %d snippet(s) added' % (len(docnames), ndel, nadd))
+

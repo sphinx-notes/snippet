@@ -9,19 +9,16 @@
 """
 
 import argparse
-from os import path
 
 from .filter import Filter, FzfFilter
 from .cache import Cache
 from .. import config
 
 
-cachedir = config.load()['khufu']['cachedir']
-
 
 def _load_cache() -> Cache:
-    cache = Cache()
-    cache.load(cachedir)
+    cache = Cache(config.load()['khufu']['cachedir'])
+    cache.load()
     return cache
 
 
@@ -35,14 +32,16 @@ def _on_command_show(args:argparse.Namespace):
         # TODO
         pass
     else:
-        print('Snippet cache loaded from %s' % cachedir)
-        print('I have %d targets' % len(cache.items()))
+        print('Snippet cache loaded from %s' % cache.dirname)
+        print('I have %d snippet(s)' % len(cache.items()))
 
 
 def _on_command_view(args:argparse.Namespace):
-    """Entrypoint of snippet subcommand"""
-    filter:Filter = FzfFilter()
-    filter.filter(path.join(cachedir, 'index.txt'), keywords=args.keywords)
+    cache = _load_cache()
+    filter:Filter = FzfFilter(cache)
+    uid = filter.filter(keywords=args.keywords)
+    if uid:
+        filter.view(uid)
 
 
 def init(subparsers:argparse.ArgumentParser) -> None:
@@ -59,7 +58,7 @@ def init(subparsers:argparse.ArgumentParser) -> None:
     showparser.add_argument('--list-target', '-t', action='store_true',
                             help='List all target IDs')
     showparser.set_defaults(func=_on_command_show)
-    
+
     viewparser = subsubparsers.add_parser('search', aliases=['s', 'se'],
         description='Search and view snippets.')
     viewparser.add_argument('keywords', nargs='*', default=[])

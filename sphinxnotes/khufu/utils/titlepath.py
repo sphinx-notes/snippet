@@ -13,7 +13,6 @@ from docutils import nodes
 from sphinx.builders import Builder
 from sphinx.util.docutils import SphinxTranslator
 
-
 UNTITLED = 'Untitled'
 SEP = '/'
 
@@ -119,3 +118,4 @@ class Resolver(SphinxTranslator):
             loc.append(self._resolve_document_title(docname) or UNTITLED)
 
         return loc
+

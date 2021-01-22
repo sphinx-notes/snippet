@@ -24,7 +24,8 @@ from ..utils import titlepath
 
 
 def setup(app:Sphinx):
-    cache = Cache()
+    cache = Cache(config.load()['khufu']['cachedir'])
+
     from .keyword import FrequencyExtractor
     extractor:Extractor = FrequencyExtractor()
     # from .keyword import TextRankExtractor
@@ -54,7 +55,7 @@ def setup(app:Sphinx):
         doctree.walkabout(resolver)
 
         for code in code_picker.snippets:
-            cache.add(Item(projname='',
+            cache.add(Item(project=app.config.project,
                         docname=docname,
                         titlepath=resolver.resolve(code.scopes()[0][0]),
                         snippet=code,
@@ -63,7 +64,7 @@ def setup(app:Sphinx):
 
     def on_build_finished(app:Sphinx, execption) -> None:
         """ Write literati cache """
-        cache.dump(path.join(config.load()['khufu']['cachedir']))
+        cache.dump()
 
 
     app.connect('env-get-outdated', on_env_get_outdated)

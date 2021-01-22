@@ -5,3 +5,4 @@ pyxdg
 tabulate[widechars]
 summa
 stopwordsiso
+wcwidth

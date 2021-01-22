@@ -81,7 +81,7 @@ class Snippet(ABC):
         scopes = []
         for node in self.nodes():
             after_node = next_nonchild_node(node)
-            if after_node:
+            if after_node and after_node.line:
                 # TODO: document why node.line - 1
                 # after_node.line - 1 for right open
                 scopes.append((node.line - 1, after_node.line - 1))
@@ -126,6 +126,9 @@ class Notes(Snippet):
 
     def excerpt(self) -> str:
         """Return excerpt of snippet (for preview)."""
+        if not self.content:
+            # FIXME: 
+            return '<no content>'
         excerpt = self.content[0].astext().replace('\n', '')
         return excerpt[:30] # TODO: Magic number for now
 
