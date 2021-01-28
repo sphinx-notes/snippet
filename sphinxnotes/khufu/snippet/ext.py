@@ -47,6 +47,10 @@ def setup(app:Sphinx):
 
 
     def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
+        # FIXME:
+        if not isinstance(doctree, nodes.document):
+            return
+
         # Pick code snippet from doctree
         code_picker = snippet.CodePicker(doctree, app.builder)
         doctree.walkabout(code_picker)
