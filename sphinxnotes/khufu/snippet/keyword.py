@@ -71,28 +71,27 @@ class FrequencyExtractor(Extractor):
 
     @staticmethod
     def tokenize(text:str) -> List[str]:
-        def _tokenize(tokens:List[str]) -> List[str]:
-            # Recursive tokenize to deal with multiple language text
+        tokens = [text]
+        new_tokens = []
+        fin = False
+        while not fin:
             new_tokens = []
             for token in tokens:
                 try:
                     lang = langdetect.detect(token)
                 except Exception:
-                    pass
+                    new_tokens += token.split(' ')
                 else:
                     if lang == 'zh-cn':
                         new_tokens += jieba.cut_for_search(token)
                     else:
                         new_tokens += token.split(' ')
-            return new_tokens
-        tokens = [text]
-        while True:
-            new_tokens = _tokenize(tokens)
-            if len(new_tokens) == len(tokens):
-                break
-            tokens = new_tokens
+                if len(new_tokens) == len(tokens):
+                    fin = True
+                    break
+                tokens = new_tokens
+                new_tokens = []
         return new_tokens
-
 
     @staticmethod
     def trans_to_pinyin(word:str) -> Optional[str]:
