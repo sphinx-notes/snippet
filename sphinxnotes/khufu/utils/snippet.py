@@ -80,6 +80,9 @@ class Snippet(ABC):
         """
         scopes = []
         for node in self.nodes():
+            if not node.line:
+                # Skip node that doesn't have line number, such as block_quote
+                continue
             after_node = next_nonchild_node(node)
             if after_node and after_node.line:
                 # TODO: document why node.line - 1

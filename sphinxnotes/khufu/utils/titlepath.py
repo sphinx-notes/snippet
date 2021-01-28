@@ -42,8 +42,9 @@ class Resolver(SphinxTranslator):
 
 
     def visit_Structural(self, node:nodes.Structural) -> None:
-        self._sections.append((node.line, node))
-        self._sections.sort(key=lambda tup: tup[0])
+        if node.line:
+            self._sections.append((node.line, node))
+            self._sections.sort(key=lambda tup: tup[0])
 
 
     def visit_title(self, node:nodes.title) -> None:
@@ -96,7 +97,8 @@ class Resolver(SphinxTranslator):
         if not self.builder.env:
             return None
         if not docname in self.builder.env.found_docs:
-            raise KeyError('Document %s not found in build environment' % docname)
+            # raise KeyError('Document %s not found in build environment' % docname)
+            None
         elif not docname in self.builder.env.titles:
             return None
         else:
