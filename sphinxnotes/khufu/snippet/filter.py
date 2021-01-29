@@ -10,6 +10,7 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List
 import subprocess

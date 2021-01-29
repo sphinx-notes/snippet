@@ -6,17 +6,16 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import annotations
 import os
 from os import path
 from typing import List, Tuple, Dict
 from dataclasses import dataclass
 import pickle
-from hashlib import sha1
 
 # from rst2ansi import rst2ansi
 
 from .import Snippet, Notes
-from ..utils.titlepath_extra import join
 
 
 @dataclass(frozen=True)
@@ -32,6 +31,7 @@ class Item(object):
     keywords:List[Tuple[str,float]]
 
     def hexdigest(self) -> str:
+        from hashlib import sha1
         hasher = sha1()
         # TODO: none for now
         if self.project:
@@ -123,6 +123,7 @@ class Cache(object):
 
 
     def _dump_indexes(self) -> str:
+        from ..utils.titlepath_extra import join
         ELLIPSIS = '…'
         lines = []
         for uid, item in self._persistent_items.items():

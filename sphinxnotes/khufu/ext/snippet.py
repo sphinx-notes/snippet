@@ -8,12 +8,15 @@
     :license: BSD, see LICENSE for details.
 """
 
-from typing import List, Set, Tuple
+from __future__ import annotations
+from typing import List, Set, Tuple, TYPE_CHECKING
 
-from docutils import nodes
+if TYPE_CHECKING:
+    from docutils import nodes
 
-from sphinx.application import Sphinx
-from sphinx.environment import BuildEnvironment
+if TYPE_CHECKING:
+    from sphinx.application import Sphinx
+    from sphinx.environment import BuildEnvironment
 
 from ..snippet import Code, CodePicker
 from ..snippet.cache import Cache, Item

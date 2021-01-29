@@ -8,6 +8,7 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import annotations
 import sys
 import argparse
 from typing import List

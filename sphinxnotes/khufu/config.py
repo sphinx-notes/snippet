@@ -6,6 +6,7 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import annotations
 import os
 from os import path
 import configparser

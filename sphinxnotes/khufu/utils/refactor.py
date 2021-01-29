@@ -6,6 +6,8 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import annotations
+
 from typing import Set
 from enum import Enum, auto
 

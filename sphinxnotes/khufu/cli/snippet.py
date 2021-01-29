@@ -8,7 +8,10 @@
     :license: BSD, see LICENSE for details.
 """
 
-import argparse
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import argparse
 
 from .. import config
 from ..snippet.filter import Filter, FzfFilter
