@@ -11,8 +11,7 @@
 from __future__ import annotations
 from typing import List, Set, Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from docutils import nodes
+from docutils import nodes
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx

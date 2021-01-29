@@ -1,5 +1,4 @@
-"""
-    sphinxnotes.khufu.snippet.cache
+""" sphinxnotes.khufu.snippet.cache
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: Copyright 2021 Shengyu Zhang
@@ -71,10 +70,7 @@ class Cache(object):
 
     def add(self, item:Item) -> str:
         """Add item to cache, return ID of item"""
-        hasher = sha1()
-        for line in item.snippet.rst():
-            hasher.update(line.encode())
-        digest = hasher.hexdigest()
+        digest = item.hexdigest()
         self._dirty_items[digest] = item
         return digest
 
