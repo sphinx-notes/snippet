@@ -13,7 +13,6 @@ from dataclasses import dataclass
 import pickle
 from hashlib import sha1
 
-from tabulate import tabulate
 # from rst2ansi import rst2ansi
 
 from ..utils.snippet import Snippet, Notes
@@ -134,6 +133,7 @@ class Cache(object):
                 excerpt = '<no excerpt available>'
             keywords = [keyword for keyword, rank in item.keywords]
             lines.append([uid, titlepath, excerpt, ','.join(keywords)])
+        from tabulate import tabulate
         return tabulate(lines, headers=['ID', 'Path', 'Excerpt', 'Keywords'], tablefmt='plain')
 
 

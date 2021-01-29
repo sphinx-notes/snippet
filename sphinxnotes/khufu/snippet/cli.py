@@ -15,7 +15,6 @@ from .cache import Cache
 from .. import config
 
 
-
 def _load_cache() -> Cache:
     cache = Cache(config.load()['khufu']['cachedir'])
     cache.load()

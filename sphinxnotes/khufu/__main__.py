@@ -11,8 +11,7 @@
 import sys
 import argparse
 
-from .snippet import init as snippet_init
-
+from .snippet.cli import init as snippet_init
 
 def main():
     parser = argparse.ArgumentParser(prog='khufu',
