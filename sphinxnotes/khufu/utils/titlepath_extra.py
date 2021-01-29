@@ -8,8 +8,7 @@
     :license: BSD, see LICENSE for details.
 """
 
-from typing import List
-
+from typing import List 
 from wcwidth import wcswidth
 
 def shorten(text:str, width:int, placeholder:str):

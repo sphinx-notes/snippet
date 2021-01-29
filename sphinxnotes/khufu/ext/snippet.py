@@ -1,8 +1,8 @@
 """
-    sphinxnotes.khufu.snippet.ext
+    sphinxnotes.khufu.ext.snippet
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Sphinx extension implementation for sphinxnotes.khufu.snippet.
+    Sphinx extension for sphinxnotes.khufu.snippet.
 
     :copyright: Copyright 2021 Shengyu Zhang
     :license: BSD, see LICENSE for details.
@@ -15,23 +15,23 @@ from docutils import nodes
 from sphinx.application import Sphinx
 from sphinx.environment import BuildEnvironment
 
-from .cache import Cache, Item
-from .keyword import Extractor
+from ..snippet import Code, CodePicker
+from ..snippet.cache import Cache, Item
+from ..snippet.keyword import Extractor
 from .. import config
-from ..utils import snippet
 from ..utils import titlepath
 
 
 def setup(app:Sphinx):
     cache = Cache(config.load()['khufu']['cachedir'])
 
-    from .keyword import FrequencyExtractor
+    from ..snippet.keyword import FrequencyExtractor
     extractor:Extractor = FrequencyExtractor()
-    # from .keyword import TextRankExtractor
+    # from ..snippet.keyword import TextRankExtractor
     # extractor:Extractor = TextRankExtractor()
 
 
-    def extract_keywords(s:snippet.Code) -> List[Tuple[str,float]]:
+    def extract_keywords(s:Code) -> List[Tuple[str,float]]:
         # TODO: Deal with more snippet
         text = '\n'.join([s.title.astext()] + [x.astext() for x in s.content])
         return extractor.extract(text)
@@ -51,7 +51,7 @@ def setup(app:Sphinx):
             return
 
         # Pick code snippet from doctree
-        code_picker = snippet.CodePicker(doctree, app.builder)
+        code_picker = CodePicker(doctree, app.builder)
         doctree.walkabout(code_picker)
         # Resolve title from doctree
         resolver = titlepath.Resolver(doctree, app.builder, docname)

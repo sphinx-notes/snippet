@@ -15,7 +15,7 @@ from hashlib import sha1
 
 # from rst2ansi import rst2ansi
 
-from ..utils.snippet import Snippet, Notes
+from .import Snippet, Notes
 from ..utils.titlepath_extra import join
 
 

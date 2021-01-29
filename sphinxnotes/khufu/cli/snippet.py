@@ -1,5 +1,5 @@
 """
-    sphinxnotes.khufu.snippet.cli
+    sphinxnotes.khufu.cli.snippet
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Command line interface for sphinxnotes.khufu.snippet
@@ -10,9 +10,9 @@
 
 import argparse
 
-from .filter import Filter, FzfFilter
-from .cache import Cache
 from .. import config
+from ..snippet.filter import Filter, FzfFilter
+from ..snippet.cache import Cache
 
 
 def _load_cache() -> Cache:

@@ -37,7 +37,7 @@ version = release = proj.version
 # ones.
 extensions = [
     'sphinx.ext.githubpages',
-    'sphinxnotes.khufu.snippet',
+    'sphinxnotes.khufu.ext.snippet',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
