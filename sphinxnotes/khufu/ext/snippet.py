@@ -18,7 +18,8 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment
 
-from ..snippet import Code, CodePicker
+from ..snippet import Code
+from ..snippet.picker import CodePicker
 from ..snippet.cache import Cache, Item
 from ..snippet.keyword import Extractor
 from .. import config

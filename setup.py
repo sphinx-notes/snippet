@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from doc import project
+
 
 with open('README.rst') as f:
     long_desc = f.read()
@@ -36,7 +37,8 @@ setup(
     keywords=project.keywords,
     platforms='any',
     python_requires='>=3',
-    packages=find_packages(exclude=['tests']),
+    packages=find_namespace_packages(include=['sphinxnotes.*'],
+                                     exclude=['sphinxnote.khufu.tests']),
     include_package_data=True,
     entry_points={
         'console_scripts': [
