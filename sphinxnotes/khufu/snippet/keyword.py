@@ -75,7 +75,7 @@ class FrequencyExtractor(Extractor):
         tokens = [text]
         new_tokens = []
         fin = False
-        while not fin:
+        while True:
             new_tokens = []
             for token in tokens:
                 try:
@@ -87,11 +87,15 @@ class FrequencyExtractor(Extractor):
                         new_tokens += jieba.cut_for_search(token)
                     else:
                         new_tokens += token.split(' ')
-                if len(new_tokens) == len(tokens):
+                new_tokens.sort()
+                if new_tokens == tokens:
+                    # Stop repeat tokenize when we tried our best
                     fin = True
                     break
-                tokens = new_tokens
-                new_tokens = []
+            if not fin:
+                break
+            tokens = new_tokens
+            new_tokens = []
         return new_tokens
 
     @staticmethod
