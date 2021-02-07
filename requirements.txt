@@ -1,4 +1,4 @@
-langdetect
+langid
 jieba
 python-pinyin
 pyxdg
@@ -6,3 +6,4 @@ tabulate[widechars]
 summa
 stopwordsiso
 wcwidth
+wordsegment

@@ -14,13 +14,6 @@ from abc import ABC, abstractclassmethod
 import string
 from collections import Counter
 
-import langdetect
-import jieba
-import jieba.analyse
-from pypinyin import lazy_pinyin
-import summa
-from stopwordsiso import stopwords
-
 class Extractor(ABC):
     """Keyword extractor abstract class."""
 
@@ -31,7 +24,28 @@ class Extractor(ABC):
 
 
 class FrequencyExtractor(Extractor):
-    """Keyword extractor based on frequency statistic."""
+    """
+    Keyword extractor based on frequency statistic.
+
+    TODO: extract date, time
+    """
+
+    def __init__(self):
+        # Import NLP libs here to prevent import overhead
+        from langid import rank
+        from jieba import cut_for_search
+        from pypinyin import lazy_pinyin
+        from stopwordsiso import stopwords
+        from wordsegment import load, segment
+
+        load()
+        self._detect_langs = rank
+        self._tokenize_zh_cn = cut_for_search
+        self._tokenize_en = segment
+        self._pinyin = lazy_pinyin
+        self._stopwords = stopwords
+
+        self._punctuation = string.punctuation + "！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
 
     def extract(self, text:str, top_n:int=10) -> List[Tuple[str,float]]:
         # TODO: zh -> en
@@ -39,6 +53,8 @@ class FrequencyExtractor(Extractor):
         text = self.normalize(text)
         # Tokenize
         words = self.tokenize(text)
+        # Invalid token removal
+        words = self.strip_invalid_token(words)
         # Stopwords removal
         words = self.strip_stopwords(words)
         # Get top 5 words as keyword
@@ -56,13 +72,11 @@ class FrequencyExtractor(Extractor):
         return keywords + keywords_pinyin
 
 
-    @staticmethod
-    def normalize(text:str) -> str:
-        punctuation =  string.punctuation + "！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
+    def normalize(self, text:str) -> str:
         # Convert text to lowercase
         text = text.lower()
         # Remove punctuation (both english and chinese)
-        text = text.translate(text.maketrans('', '', punctuation))
+        text = text.translate(text.maketrans('', '', self._punctuation))
         # White spaces removals
         text = text.strip()
         # Replace newline to whitespace
@@ -70,42 +84,30 @@ class FrequencyExtractor(Extractor):
         return text
 
 
-    @staticmethod
-    def tokenize(text:str) -> List[str]:
+    def tokenize(self, text:str) -> List[str]:
+        # Get top most 5 langs
+        langs = self._detect_langs(text)[:5]
         tokens = [text]
         new_tokens = []
-        fin = False
-        while True:
-            new_tokens = []
+        for lang in langs:
             for token in tokens:
-                try:
-                    lang = langdetect.detect(token)
-                except Exception:
-                    new_tokens += token.split(' ')
+                if lang[0] == 'zh':
+                    new_tokens += self._tokenize_zh_cn(token)
+                elif lang[0] == 'en':
+                    new_tokens += self._tokenize_en(token)
                 else:
-                    if lang == 'zh-cn':
-                        new_tokens += jieba.cut_for_search(token)
-                    else:
-                        new_tokens += token.split(' ')
-                new_tokens.sort()
-                if new_tokens == tokens:
-                    # Stop repeat tokenize when we tried our best
-                    fin = True
-                    break
-            if not fin:
-                break
+                    new_tokens += token.split(' ')
             tokens = new_tokens
             new_tokens = []
-        return new_tokens
-
-    @staticmethod
-    def trans_to_pinyin(word:str) -> Optional[str]:
-        return ' '.join(lazy_pinyin(word, errors='ignore'))
+        return tokens
 
 
-    @staticmethod
-    def strip_stopwords(words:List[str]) -> List[str]:
-        stw = stopwords(['en', 'zh'])
+    def trans_to_pinyin(self, word:str) -> Optional[str]:
+        return ' '.join(self._pinyin(word, errors='ignore'))
+
+
+    def strip_stopwords(self, words:List[str]) -> List[str]:
+        stw = self._stopwords(['en', 'zh'])
         new_words = []
         for word in words:
             if not word in stw:
@@ -113,12 +115,27 @@ class FrequencyExtractor(Extractor):
         return new_words
 
 
+    def strip_invalid_token(self, tokens:List[str]) -> List[str]:
+        return [token for token in tokens if token  != '']
+
+
 class TextRankExtractor(Extractor):
     """Keyword extractor based on text rank algorithm."""
 
+    def __init__(self):
+        # Import NLP libs here to prevent import overhead
+        from langid import classify
+        from jieba.analyse import textrank
+        from summa.keywords import keywords
+
+        self._detect_lang = classify
+        self._textrank_zh_cn = textrank
+        self._textrank_en = keywords
+
+
     def extract(self, text:str, top_n:int=10) -> List[Tuple[str,float]]:
-        lang = langdetect.detect(text)
-        if lang == 'zh-cn':
-            return jieba.analyse.textrank(text, topK=top_n, withWeight=True)
+        lang = self._detect_lang(text)
+        if lang[0] == 'zh':
+            return self._textrank_zh_cn(text, topK=top_n, withWeight=True)
         else:
-            return summa.keywords.keywords(text, scores=True)[:top_n]
+            return self._textrank_en(text, scores=True)[:top_n]
