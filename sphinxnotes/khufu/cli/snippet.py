@@ -27,15 +27,25 @@ def _load_cache() -> Cache:
 def _on_command_show(args:argparse.Namespace):
     cache = _load_cache()
 
-    if args.target:
-        for uid in args.target:
+    if args.snippet_ids:
+        for uid in args.snippet_ids:
             print(cache.get(uid))
-    elif args.list_target:
-        # TODO
-        pass
+    elif args.all:
+        for uid in cache.keys():
+            print(uid)
     else:
-        print('Snippet cache loaded from %s' % cache.dirname)
-        print('I have %d snippet(s)' % len(cache.items()))
+        projects = []
+        num_snippets = []
+        num_docs = []
+        for project in cache.tree:
+            projects.append(project)
+            num_docs.append(len(cache.tree[project]))
+            num_snippets.append(sum([len(x) for x in cache.tree[project]]))
+        print('Snippets are loaded from %s' % cache.dirname)
+        print(f'I have {len(projects)} project(s), {sum(num_docs)} documentation(s) and {sum(num_snippets)} snippet(s)')
+        for i, _ in enumerate(projects):
+            print(f'Project {projects[i]}:')
+            print(f"\t {num_docs[i]} documentation(s), {num_snippets[i]} snippets(s)")
 
 
 def _on_command_view(args:argparse.Namespace):
@@ -49,19 +59,27 @@ def _on_command_view(args:argparse.Namespace):
 def init(subparsers:argparse.ArgumentParser) -> None:
     # Init snippet subcommand argument parser
     parser = subparsers.add_parser('snippet', aliases=['s', 'sni'],
-        description='Tool for taking advantage of snippet in documentations.')
+        description='View and use snippets in sphinx documentations.')
     subsubparsers = parser.add_subparsers()
 
-    showparser = subsubparsers.add_parser('show', aliases=['sh'],
+    showparser = subsubparsers.add_parser('show', aliases=['s'],
         description='Show infomation about snippets.')
-    showparser.add_argument('target', nargs='*', help='Target ID to be shown')
-    showparser.add_argument('--list-index', '-i', action='store_true',
-                            help='List all indexes and the ID they points to')
-    showparser.add_argument('--list-target', '-t', action='store_true',
-                            help='List all target IDs')
+    showparser.add_argument('snippet_ids', nargs='*', help='Snippet IDs to be shown')
+    showparser.add_argument('--all', '-i', action='store_true',
+                            help='List all snippets')
     showparser.set_defaults(func=_on_command_show)
 
-    viewparser = subsubparsers.add_parser('search', aliases=['s', 'se'],
-        description='Search and view snippets.')
+    viewparser = subsubparsers.add_parser('view', aliases=['v'],
+        description='View snippets from interactive filter.')
     viewparser.add_argument('keywords', nargs='*', default=[])
     viewparser.set_defaults(func=_on_command_view)
+
+    execparser = subsubparsers.add_parser('exec', aliases=['e'],
+        description='Execute code snippet from interactive filter.')
+    execparser.add_argument('keywords', nargs='*', default=[])
+    # execparser.set_defaults(func=_on_command_exec)
+
+    clipparser = subsubparsers.add_parser('clip', aliases=['c'],
+        description='Clip snippet from interactive filter.')
+    clipparser.add_argument('keywords', nargs='*', default=[])
+    # clipparser.set_defaults(func=_on_command_clip)

@@ -16,6 +16,7 @@ from docutils import nodes
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment
+from sphinx.util import logging
 
 from ..snippet import Code
 from ..snippet.picker import CodePicker
@@ -25,8 +26,15 @@ from .. import config
 from ..utils import titlepath
 
 
+logger = logging.getLogger(__name__)
+
+
 def setup(app:Sphinx):
     cache = Cache(config.load()['khufu']['cachedir'])
+    try:
+        cache.load()
+    except Exception as e:
+        logger.warning("failed to laod cache: %s" % e)
 
     from ..snippet.keyword import FrequencyExtractor
     extractor:Extractor = FrequencyExtractor()
@@ -44,7 +52,7 @@ def setup(app:Sphinx):
                              changed:Set[str], removed:Set[str]) -> List[str]:
         # Remove purged indexes and snippetes from db
         for docname in removed:
-            cache.purge(docname)
+            cache.purge_doc(docname)
         return []
 
 

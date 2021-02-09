@@ -33,11 +33,13 @@ class FzfFilter(Filter):
     # TODO: preview backend
     def filter(self, keywords:List[str]=[]) -> str:
         input_args = ['cat', self._cache.indexfile()]
+        preview_cmd = '"bat --style=plain --color=always %s"' %  self._cache.previewfile('{1}')
         fzf_args = ['fzf',
-                '--with-nth', '2..', # Hide first column (ID)
-                '--header-lines', '1', # Treat first line as header
-                '--preview', '"bat --style=plain --color=always %s"' % self._cache.snippetfile('{1}'),
-                '--preview-window', 'up',
+                    '--with-nth', '2..', # Hide first column (ID)
+                    '--header-lines', '1', # Treat first line as header
+                    '--preview', preview_cmd,
+                    '--preview-window', 'up',
+                    '--no-hscroll',
                     ]
         if keywords:
             fzf_args += ['--query', ' '.join(keywords)]
@@ -54,7 +56,7 @@ class FzfFilter(Filter):
 
     # TODO: preview backend
     def view(self, uid:str) -> None:
-        args = ['bat', self._cache.snippetfile(uid),
+        args = ['bat', self._cache.previewfile(uid),
                 '--color', 'always',
                 '--style', 'plain',
                 '--paging', 'always',
