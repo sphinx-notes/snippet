@@ -56,13 +56,13 @@ class Cache(Mapping):
         super().dump()
 
 
-    def post_dump(self, key:str,item:Item) -> None:
+    def post_dump_item(self, key:str,item:Item) -> None:
         """Overwrite Mapping.post_dump."""
         with open(self.previewfile(key), 'w') as f:
             f.write('\n'.join(item.snippet.rst()))
 
 
-    def post_purge(self, key:str, item:Item) -> None:
+    def post_purge_item(self, key:str, item:Item) -> None:
         """Overwrite Mapping.post_purge."""
         os.remove(self.previewfile(key))
 

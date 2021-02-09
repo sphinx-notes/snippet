@@ -75,7 +75,8 @@ class Mapping(MutableMapping):
 
 
     def __delitem__(self, key:str) -> None:
-        value = self._store.pop(key)
+        value = self.__getitem__(key)
+        del self._store[key]
         self._orphan_items[key] = value
         if key in self._dirty_items:
             del self._dirty_items[key]
@@ -103,12 +104,18 @@ class Mapping(MutableMapping):
 
     def by_project(self, project:str) -> Set[str]:
         res = set()
+        if not project in self.tree:
+            return res
         for _, keys in self.tree[project].items:
             res.update(keys)
         return res
 
 
     def by_docname(self, project:str, docname:str) -> Set[str]:
+        if not project in self.tree:
+            return set()
+        if not docname in self.tree[project]:
+            return set()
         return self.tree[project][docname].copy()
 
 
@@ -127,13 +134,13 @@ class Mapping(MutableMapping):
         # Purge orphan items
         for key, value in self._orphan_items.items():
             os.remove(self.itemfile(key))
-            self.post_purge(key, value)
+            self.post_purge_item(key, value)
 
         # Dump dirty items
         for key, value in self._dirty_items.items():
             with open(self.itemfile(key), 'wb') as f:
                 pickle.dump(value, f)
-            self.post_dump(key, value)
+            self.post_dump_item(key, value)
 
         # Clear all in-memory items
         self._orphan_items = {}
@@ -153,9 +160,9 @@ class Mapping(MutableMapping):
         return path.join(self.dirname, key + '.pickle')
 
 
-    def post_dump(self, key:str,value:T) -> None:
+    def post_dump_item(self, key:str,value:T) -> None:
         pass
 
 
-    def post_purge(self, key:str,value:T) -> None:
+    def post_purge_item(self, key:str,value:T) -> None:
         pass

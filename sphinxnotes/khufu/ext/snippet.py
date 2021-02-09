@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 from typing import List, Set, Tuple, TYPE_CHECKING
+import re
 
 from docutils import nodes
 
@@ -52,13 +53,23 @@ def setup(app:Sphinx):
                              changed:Set[str], removed:Set[str]) -> List[str]:
         # Remove purged indexes and snippetes from db
         for docname in removed:
-            cache.purge_doc(docname)
+            cache.purge_doc(app.config.project, docname)
         return []
 
 
     def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
         # FIXME:
         if not isinstance(doctree, nodes.document):
+            return
+
+        matched = len(app.config.khufu_snippet_patterns) == 0
+        for pat in app.config.khufu_snippet_patterns:
+            if re.match(pat, docname):
+                matched = True
+                break
+
+        if not matched:
+            cache.purge_doc(app.config.project, docname)
             return
 
         # Pick code snippet from doctree
@@ -80,6 +91,7 @@ def setup(app:Sphinx):
         """ Write literati cache """
         cache.dump()
 
+    app.add_config_value('khufu_snippet_patterns', [], '')
 
     app.connect('env-get-outdated', on_env_get_outdated)
     app.connect('doctree-resolved', on_doctree_resolved)
