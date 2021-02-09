@@ -16,7 +16,7 @@ from datetime import datetime
 import pickle
 from collections.abc import MutableMapping
 
-T = TypeVar('T') 
+T = TypeVar('T')
 
 class Mapping(MutableMapping):
     """A customized persistent KV store for Sphinx project."""
@@ -138,7 +138,7 @@ class Mapping(MutableMapping):
         # Clear all in-memory items
         self._orphan_items = {}
         self._dirty_items = {}
-        self._store = {key: None for key in self.store}
+        self._store = {key: None for key in self._store}
 
         # Dump store itself
         with open(self.cachefile(), 'wb') as f:
