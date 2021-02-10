@@ -70,12 +70,14 @@ class Cache(Mapping):
         """Overwrite Mapping.post_dump."""
 
         # Update item index
-        from ..utils.titlepath_extra import join
-        ELLIPSIS = '...'
-        titlepath = join(item.titlepath, 50, 30,
-                         placeholder=ELLIPSIS, reverse=True)
+        from ..utils import ellipsis
+        dotdotdot = '...'
+        # Reverse for showing inner title first
+        titlepath = ellipsis.join(item.titlepath[::-1], 60, 20,
+                                  placeholder=dotdotdot)
         if isinstance(item.snippet, Notes):
-            excerpt = item.snippet.excerpt()
+            excerpt = ellipsis.ellipsis(item.snippet.excerpt(), 80,
+                                        placeholder=dotdotdot)
         else:
             excerpt = '<no excerpt available>'
         keywords = [keyword for keyword, rank in item.keywords]

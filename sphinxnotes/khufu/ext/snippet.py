@@ -76,13 +76,12 @@ def setup(app:Sphinx):
         code_picker = CodePicker(doctree, app.builder)
         doctree.walkabout(code_picker)
         # Resolve title from doctree
-        resolver = titlepath.Resolver(doctree, app.builder, docname)
-        doctree.walkabout(resolver)
 
+        resolver = titlepath.Resolver(app.builder)
         for code in code_picker.snippets:
             cache.add(Item(project=app.config.project,
                         docname=docname,
-                        titlepath=resolver.resolve(code.scopes()[0][0]),
+                        titlepath=resolver.resolve(docname, code.nodes()[0]),
                         snippet=code,
                         keywords=extract_keywords(code)))
 

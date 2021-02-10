@@ -2,123 +2,91 @@
     sphinxnotes.utils.titlepath
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    Utils for ellipsis string.
+
     :copyright: Copyright 2020 Shengyu Zhang
     :license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
-from typing import List, Dict,Optional, Tuple
+from typing import List, Optional, TYPE_CHECKING
 
 from docutils import nodes
 
-from sphinx.builders import Builder
-from sphinx.util.docutils import SphinxTranslator
-
-UNTITLED = 'Untitled'
-SEP = '/'
-
-class Resolver(SphinxTranslator):
-
-    _docname:str
-    # Sorted list of (line number, structural node)
-    _sections:List[Tuple[int,nodes.Structural]]
-    # Title of structural nodes
-    _section_titles:Dict[nodes.Structural,str]
-    # Title path of document
-    _document_path:List[str]
+if TYPE_CHECKING:
+    from sphinx.builders import Builder
 
 
-    def __init__(self, document:nodes.document, builder: Builder, docname:str) -> None:
-        super().__init__(document, builder)
+class Resolver(object):
+    _builder:Builder
 
-        self._docname = docname
-        self._sections = []
-        self._section_titles = {}
-        # Document path is set at first resolve
-        self._document_path = None
+    def __init__(self, builder: Builder) -> None:
+        self._builder = builder
 
 
-    def visit_document(self, node:nodes.document) -> None:
-        self._sections.append((0, node))
-
-
-    def visit_Structural(self, node:nodes.Structural) -> None:
-        if node.line:
-            self._sections.append((node.line, node))
-            self._sections.sort(key=lambda tup: tup[0])
-
-
-    def visit_title(self, node:nodes.title) -> None:
-        self._section_titles[node.parent] = node.astext()
-
-
-    def unknown_visit(self, node:nodes.Node) -> None:
-        # Ignore any unknown node
-        pass
-
-
-    def unknown_departure(self, node:nodes.Node) -> None:
-        # Ignore any unknown node
-        pass
-
-
-    def resolve(self, lineno:int,
-                include_document_path:bool=True,
-                include_document_title:bool=True) -> List[str]:
-        if not self._document_path:
-            self._document_path = self._resolve_document_path(self._docname)
-
-        node = None
-        for i, tup in enumerate(self._sections):
-            if lineno < tup[0]:
-                if i > 1:
-                    # Get previous node if have
-                    node = self._sections[i-1][1]
-                else:
-                    # Else use root node
-                    node = self._sections[0][1]
-                break
-        if not node:
-            # Use last node if not node matched
-            node = self._sections[-1][1]
-
-        loc = self._document_path.copy()
-        while node:
-            title = self._section_titles.get(node)
-            if title:
-                loc = [title] + loc 
-            else:
-                loc = [UNTITLED] + loc 
+    def resolve(self, docname:str, node:nodes.Node,
+                include_docpath:bool=True) -> List[str]:
+        titles = []
+        while node.parent:
             node = node.parent
-
-        return loc
-
-
-    def _resolve_document_title(self, docname:str) -> Optional[str]:
-        if not self.builder.env:
-            return None
-        if not docname in self.builder.env.found_docs:
-            # raise KeyError('Document %s not found in build environment' % docname)
-            return None
-        elif not docname in self.builder.env.titles:
-            return None
-        else:
-            return self.builder.env.titles[docname].astext()
+            titlenode = node.next_node(condition=self._title_node_filter)
+            if not titlenode or titlenode.parent != node:
+                # No title node or title node is not direct child
+                continue
+            titles.append(titlenode.astext())
+        if include_docpath:
+            titles += self.resolve_docpath(docname)
+        return titles
 
 
-    def _resolve_document_path(self, docname:str) -> List[str]:
-        loc = []
+    def resolve_docpath(self, docname:str) -> List[str]:
+        titles = []
+        master_doc = self._builder.config.master_doc
+        v = docname.split('/')
+        if v.pop() == master_doc:
+            if v:
+                # If docname is "a/b/index", we need titles of "a"
+                v.pop()
+            else:
+                # docname is "index", no need to get docpath, it is root doc
+                return []
+        while v:
+            titles.append(self.resolve_doctitle('/'.join(v + [master_doc])) or \
+                          v[-1].title())
+            v.pop()
+        titles.reverse()
+        return titles
 
-        # Get titles of all master docs appear on the path of given docname
-        # TODO: any toctree
-        slices = docname.split(SEP)
-        master_doc = self.config.master_doc
-        for i, s in enumerate(slices):
-            master_docname = SEP.join(slices[0:i] + [master_doc])
-            loc.append(self._resolve_document_title(master_docname) or UNTITLED)
-        # Get title of given docname
-        if slices[-1] != master_doc:
-            loc.append(self._resolve_document_title(docname) or UNTITLED)
 
-        return loc
+    def resolve_doctitle(self, docname:str) -> Optional[str]:
+        if docname in self._builder.env.titles:
+            return self._builder.env.titles[docname].astext()
 
+
+    def _title_node_filter(self, node:nodes.Node) -> bool:
+        if not isinstance(node, nodes.title):
+            return False
+        # NOTE: ``isinstance(node, nodes.subtitle)`` does not make senses
+        # beacuse Sphinx doesn't support subtitle:
+        #
+        # > Sphinx does not support a "subtitle".
+        # > Sphinx recognizes it as a mere second level section
+        #
+        # ref:
+        # - https://github.com/sphinx-doc/sphinx/issues/3574#issuecomment-288722585
+        # - https://github.com/sphinx-doc/sphinx/issues/3567#issuecomment-288093991
+        if isinstance(node, nodes.subtitle):
+            return False
+        # HACK: For our convenience, we regard second level section title
+        # (under document) as subtitle
+        if not node.document:
+            # FIXME: I don't know why there is a None document, fix it
+            return True
+        toplevel_section = node.document.next_node(nodes.section)
+        if node.parent.parent == toplevel_section and len(toplevel_section) == 2:
+            # Second level secion under toplevel section
+            # AND
+            # Top level section and only 2 child: its title and second level section
+            # THEN we regard it as subtitle
+            return False
+        return True

@@ -130,8 +130,7 @@ class Notes(Snippet):
         if not self.content:
             # FIXME:
             return '<no content>'
-        excerpt = self.content[0].astext().replace('\n', '')
-        return excerpt[:60] # TODO: Magic number for now
+        return self.content[0].astext().replace('\n', '')
 
 
 @dataclass(frozen=True)
