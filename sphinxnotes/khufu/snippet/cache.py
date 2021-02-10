@@ -8,7 +8,7 @@
 from __future__ import annotations
 import os
 from os import path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from dataclasses import dataclass
 
 # from rst2ansi import rst2ansi
@@ -46,24 +46,50 @@ class Item(object):
 class Cache(Mapping):
     """Cache of snippet."""
     # Path to directory for saving cache
+    _indexes:Dict[str,List[str]]
+
     def __init__(self, dirname:str) -> None:
+        self._indexes = {}
         super().__init__(dirname)
 
 
     def dump(self):
         """Overwrite Mapping.dump."""
-        self._update_index()
+        # Update indexes
+        from tabulate import tabulate
+        table = tabulate(self._indexes.values(),
+                         headers=['ID', 'Excerpt' ,'Path',  'Keywords'],
+                         tablefmt='plain')
+        with open(self.indexfile(), 'w') as f:
+            f.write(table)
+
+        # Dump
         super().dump()
 
 
     def post_dump_item(self, key:str,item:Item) -> None:
         """Overwrite Mapping.post_dump."""
+
+        # Update item index
+        from ..utils.titlepath_extra import join
+        ELLIPSIS = '...'
+        titlepath = join(item.titlepath, 50, 30,
+                         placeholder=ELLIPSIS, reverse=True)
+        if isinstance(item.snippet, Notes):
+            excerpt = item.snippet.excerpt()
+        else:
+            excerpt = '<no excerpt available>'
+        keywords = [keyword for keyword, rank in item.keywords]
+        self._indexes[key] = [key, excerpt, titlepath,  ','.join(keywords)]
+
+        # Update item preview
         with open(self.previewfile(key), 'w') as f:
             f.write('\n'.join(item.snippet.rst()))
 
 
     def post_purge_item(self, key:str, item:Item) -> None:
         """Overwrite Mapping.post_purge."""
+        del self._indexes[str]
         os.remove(self.previewfile(key))
 
 
@@ -86,26 +112,3 @@ class Cache(Mapping):
         """Pure persistent items that belongs to given docname. """
         for k in self.by_docname(project, docname):
             del self[k]
-
-
-    def _update_index(self) -> str:
-        from ..utils.titlepath_extra import join
-        ELLIPSIS = '...'
-        lines = []
-        for key, item in self.items():
-            # TODO: responsive support?
-            titlepath = join(item.titlepath, 50, 30,
-                             placeholder=ELLIPSIS, reverse=True)
-            if isinstance(item.snippet, Notes):
-                excerpt = item.snippet.excerpt()
-            else:
-                excerpt = '<no excerpt available>'
-            keywords = [keyword for keyword, rank in item.keywords]
-            lines.append([key, excerpt, titlepath,  ','.join(keywords)])
-
-        from tabulate import tabulate
-        table = tabulate(lines,
-                         headers=['ID', 'Excerpt' ,'Path',  'Keywords'],
-                         tablefmt='plain')
-        with open(self.indexfile(), 'w') as f:
-            f.write(table)
