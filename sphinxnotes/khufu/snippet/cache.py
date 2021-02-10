@@ -72,9 +72,7 @@ class Cache(Mapping):
         # Update item index
         from ..utils import ellipsis
         dotdotdot = '...'
-        # Reverse for showing inner title first
-        titlepath = ellipsis.join(item.titlepath[::-1], 60, 20,
-                                  placeholder=dotdotdot)
+        titlepath = ellipsis.join(item.titlepath, 60, 20, placeholder=dotdotdot)
         if isinstance(item.snippet, Notes):
             excerpt = ellipsis.ellipsis(item.snippet.excerpt(), 80,
                                         placeholder=dotdotdot)
