@@ -27,7 +27,7 @@ def shorten(text:str, width:int, placeholder:str):
 
 
 def join(titlepath:List[str], total_width:int, title_width:int,
-                       separator:str='/', placeholder:str='...'):
+                       separator:str='/', placeholder:str='...', reverse=False):
     # TODO: position
     total_width -= wcswidth(placeholder)
     result = []
@@ -37,5 +37,6 @@ def join(titlepath:List[str], total_width:int, title_width:int,
         if wcswidth(separator.join(result)) > total_width:
             break
     result.append(placeholder)
-    result.reverse()
+    if not reverse:
+        result.reverse()
     return separator.join(result)

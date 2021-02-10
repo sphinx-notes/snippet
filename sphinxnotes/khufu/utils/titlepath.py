@@ -99,7 +99,7 @@ class Resolver(SphinxTranslator):
             return None
         if not docname in self.builder.env.found_docs:
             # raise KeyError('Document %s not found in build environment' % docname)
-            None
+            return None
         elif not docname in self.builder.env.titles:
             return None
         else:

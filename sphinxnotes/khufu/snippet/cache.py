@@ -94,17 +94,18 @@ class Cache(Mapping):
         lines = []
         for key, item in self.items():
             # TODO: responsive support?
-            titlepath = join(item.titlepath, 60, 40, placeholder=ELLIPSIS)
+            titlepath = join(item.titlepath, 50, 30,
+                             placeholder=ELLIPSIS, reverse=True)
             if isinstance(item.snippet, Notes):
                 excerpt = item.snippet.excerpt()
             else:
                 excerpt = '<no excerpt available>'
             keywords = [keyword for keyword, rank in item.keywords]
-            lines.append([key, titlepath, excerpt, ','.join(keywords)])
+            lines.append([key, excerpt, titlepath,  ','.join(keywords)])
 
         from tabulate import tabulate
         table = tabulate(lines,
-                         headers=['ID', 'Path', 'Excerpt', 'Keywords'],
+                         headers=['ID', 'Excerpt' ,'Path',  'Keywords'],
                          tablefmt='plain')
         with open(self.indexfile(), 'w') as f:
             f.write(table)

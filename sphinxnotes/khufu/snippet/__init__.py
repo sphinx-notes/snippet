@@ -128,10 +128,10 @@ class Notes(Snippet):
     def excerpt(self) -> str:
         """Return excerpt of snippet (for preview)."""
         if not self.content:
-            # FIXME: 
+            # FIXME:
             return '<no content>'
         excerpt = self.content[0].astext().replace('\n', '')
-        return excerpt[:30] # TODO: Magic number for now
+        return excerpt[:60] # TODO: Magic number for now
 
 
 @dataclass(frozen=True)
