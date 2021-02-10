@@ -5,7 +5,7 @@ Project Meta Information
 '''
 
 name = 'sphinxnotes-khufu'
-version = '1.0a0'
+version = '1.0a1'
 github_user = 'sphinx-notes'
 github_repo = 'khufu'
 url = 'https://github.com/' + github_user + '/' + github_repo
