@@ -55,6 +55,8 @@ class Cache(Mapping):
 
     def dump(self):
         """Overwrite Mapping.dump."""
+        super().dump()
+
         # Update indexes
         from tabulate import tabulate
         table = tabulate(self._indexes.values(),
@@ -62,9 +64,6 @@ class Cache(Mapping):
                          tablefmt='plain')
         with open(self.indexfile(), 'w') as f:
             f.write(table)
-
-        # Dump
-        super().dump()
 
 
     def post_dump_item(self, key:str,item:Item) -> None:
