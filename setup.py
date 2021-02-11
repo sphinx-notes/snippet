@@ -54,6 +54,7 @@ setup(
         'summa',
         'stopwordsiso',
         'wcwidth'
+        'wordsegment'
     ],
     namespace_packages=['sphinxnotes'],
 )
