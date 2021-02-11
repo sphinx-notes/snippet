@@ -47,14 +47,14 @@ setup(
     },
     install_requires= [
         'Sphinx',
-        'langdetect',
+        'langid',
         'jieba',
         'python-pinyin',
         'pyxdg',
-        'tabulate',
         'summa',
         'stopwordsiso',
-        'wcwidth'
+        'wcwidth',
+        'wordsegment',
     ],
     namespace_packages=['sphinxnotes'],
 )
