@@ -38,11 +38,11 @@ setup(
     platforms='any',
     python_requires='>=3',
     packages=find_namespace_packages(include=['sphinxnotes.*'],
-                                     exclude=['sphinxnote.khufu.tests']),
+                                     exclude=['sphinxnotes.khufu.tests']),
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'khufu= sphinxnotes.khufu:main',
+            'khufu=sphinxnotes.khufu:main',
         ],
     },
     install_requires= [
