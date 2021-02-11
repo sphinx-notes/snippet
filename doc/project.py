@@ -4,8 +4,13 @@ Project Meta Information
 ~~~~~~~~~~~~~~~~~~~~~~~~
 '''
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('..'))
+from sphinxnotes import khufu
+
 name = 'sphinxnotes-khufu'
-version = '1.0a1'
+version = khufu.__version__
 github_user = 'sphinx-notes'
 github_repo = 'khufu'
 url = 'https://github.com/' + github_user + '/' + github_repo

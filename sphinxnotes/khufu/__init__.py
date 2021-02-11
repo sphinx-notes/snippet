@@ -15,7 +15,7 @@ from typing import List
 
 from .cli import snippet
 
-__version__ = '1.0a0'
+__version__ = '1.0a3'
 
 def main(argv:List[str]=sys.argv[1:]) -> int:
     """Command line entrypoint."""
