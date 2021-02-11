@@ -45,41 +45,24 @@ class Item(object):
 
 class Cache(Mapping):
     """Cache of snippet."""
-    # Path to directory for saving cache
-    _indexes:Dict[str,List[str]]
+    # Table of index: ID, excerpt, titlepath, keywords
+    indexes:Tuple[str,str,List[str],List[str]]
 
     def __init__(self, dirname:str) -> None:
-        self._indexes = {}
+        self.indexes = {}
         super().__init__(dirname)
-
-
-    def dump(self):
-        """Overwrite Mapping.dump."""
-        super().dump()
-
-        # Update indexes
-        from tabulate import tabulate
-        table = tabulate(self._indexes.values(),
-                         headers=['ID', 'Excerpt' ,'Path',  'Keywords'],
-                         tablefmt='plain')
-        with open(self.indexfile(), 'w') as f:
-            f.write(table)
 
 
     def post_dump_item(self, key:str,item:Item) -> None:
         """Overwrite Mapping.post_dump."""
 
         # Update item index
-        from ..utils import ellipsis
-        dotdotdot = '...'
-        titlepath = ellipsis.join(item.titlepath, 60, 20, placeholder=dotdotdot)
         if isinstance(item.snippet, Notes):
-            excerpt = ellipsis.ellipsis(item.snippet.excerpt(), 80,
-                                        placeholder=dotdotdot)
+            excerpt = item.snippet.excerpt()
         else:
-            excerpt = '<no excerpt available>'
+            excerpt = None
         keywords = [keyword for keyword, rank in item.keywords]
-        self._indexes[key] = [key, excerpt, titlepath,  ','.join(keywords)]
+        self.indexes[key] = (key, excerpt, item.titlepath, keywords)
 
         # Update item preview
         with open(self.previewfile(key), 'w') as f:
@@ -88,12 +71,8 @@ class Cache(Mapping):
 
     def post_purge_item(self, key:str, item:Item) -> None:
         """Overwrite Mapping.post_purge."""
-        del self._indexes[str]
+        del self.indexes[str]
         os.remove(self.previewfile(key))
-
-
-    def indexfile(self) -> str:
-        return path.join(self.dirname, 'index.txt')
 
 
     def previewfile(self, key:str) -> str:

@@ -32,7 +32,6 @@ class FzfFilter(Filter):
 
     # TODO: preview backend
     def filter(self, keywords:List[str]=[]) -> str:
-        input_args = ['cat', self._cache.indexfile()]
         preview_cmd = '"bat --style=plain --color=always %s"' %  self._cache.previewfile('{1}')
         fzf_args = ['fzf',
                     '--with-nth', '2..', # Hide first column (ID)
@@ -44,14 +43,32 @@ class FzfFilter(Filter):
         if keywords:
             fzf_args += ['--query', ' '.join(keywords)]
         output_args = ['cut', '-d', '" "', '-f', '1']
-        args = input_args + ['|'] + fzf_args + ['|'] + output_args
+        args = fzf_args + ['|'] + output_args
         try:
-            p = subprocess.run(['sh', '-c', ' '.join(args)], stdout=subprocess.PIPE)
-        except OSError as e:
+            p = subprocess.Popen(['sh', '-c', ' '.join(args)],
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+
+            from ..utils import ellipsis
+            header = '%s  %s  %s  %s\n' % (
+                'ID',
+                ellipsis.ellipsis('Excerpt', 100, blank_sym=' '),
+                ellipsis.ellipsis('Path', 50, blank_sym=' ' ),
+                'Keywords')
+            p.stdin.write(header.encode('utf-8'))
+            for index in self._cache.indexes.values():
+                row = '%s  %s  %s  %s\n' % (
+                    index[0], # ID
+                    ellipsis.ellipsis(index[1], 100, blank_sym=' '), # Excerpt
+                    ellipsis.join(index[2], 50, 20, blank_sym=' ' ), # Titleppath
+                    ','.join(index[3])) # Keywords
+                p.stdin.write(row.encode('utf-8'))
+                p.stdin.flush()
+            p.stdin.close()
+        except Exception as e:
             raise e
-        if not p.stdout:
-            raise p.stderr
-        return p.stdout.decode('utf-8').strip().replace('\n', '')
+        p.wait()
+        return p.stdout.read().decode('utf-8').strip().replace('\n', '')
 
 
     # TODO: preview backend
