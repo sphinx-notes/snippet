@@ -12,22 +12,20 @@
 #
 import os
 import sys
+sys.path.insert(0, os.path.abspath('../sphinxnotes'))
 from datetime import datetime
 
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('..'))
-
 # Import proj's meta info
-import project as proj
+import khufu as proj
 
 # -- Project information -----------------------------------------------------
 
-project = proj.name
-copyright = '%s, %s' % (datetime.now().year, proj.author)
-author = proj.author
+project = proj.__title__
+author = proj.__author__
+copyright = '%s, %s' % (datetime.now().year, author)
 
 # The full version, including alpha/beta/rc tags
-version = release = proj.version
+version = release = proj.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -65,8 +63,8 @@ show_authors = True
 html_theme = 'alabaster'
 
 html_theme_options = {
-    'github_user': proj.github_user,
-    'github_repo': proj.github_repo,
+    'github_user': 'sphinxnotes',
+    'github_repo': 'khufu',
     'nosidebar': True,
 }
 

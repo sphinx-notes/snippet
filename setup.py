@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath('./sphinxnotes'))
 from setuptools import setup, find_namespace_packages
-from doc import project
 
+import khufu as proj
 
 with open('README.rst') as f:
     long_desc = f.read()
 
 setup(
-    name=project.name,
-    version=project.version,
-    url=project.url,
-    download_url=project.download_url,
-    project_urls=project.project_urls,
-    license=project.license,
-    author=project.author,
-    description=project.description,
+    name=proj.__title__,
+    version=proj.__version__,
+    url=proj.__url__,
+    license=proj.__license__,
+    author=proj.__author__,
+    description=proj.__description__,
     long_description=long_desc,
+    long_description_content_type = 'text/x-rst',
     zip_safe=False,
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -34,7 +36,7 @@ setup(
         'Topic :: Text Processing :: Markup :: reStructuredText',
         'Topic :: Utilities',
     ],
-    keywords=project.keywords,
+    keywords=proj.__keywords__,
     platforms='any',
     python_requires='>=3',
     packages=find_namespace_packages(include=['sphinxnotes.*'],
