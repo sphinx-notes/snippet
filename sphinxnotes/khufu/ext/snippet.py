@@ -29,69 +29,70 @@ from ..utils import titlepath
 
 logger = logging.getLogger(__name__)
 
+cache:Cache = None
+
+def extract_keywords(s:Code) -> List[Tuple[str,float]]:
+    from ..snippet.keyword import FrequencyExtractor
+    extractor:Extractor = FrequencyExtractor()
+    # from ..snippet.keyword import TextRankExtractor
+    # extractor:Extractor = TextRankExtractor()
+
+    # TODO: Deal with more snippet
+    text = '\n'.join([s.title.astext()] + [x.astext() for x in s.content])
+    return extractor.extract(text)
+
+
+def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
+                         changed:Set[str], removed:Set[str]) -> List[str]:
+    # Remove purged indexes and snippetes from db
+    for docname in removed:
+        cache.purge_doc(app.config.project, docname)
+    return []
+
+
+def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
+    # FIXME:
+    if not isinstance(doctree, nodes.document):
+        return
+
+    matched = len(app.config.khufu_snippet_patterns) == 0
+    for pat in app.config.khufu_snippet_patterns:
+        if re.match(pat, docname):
+            matched = True
+            break
+
+    if not matched:
+        cache.purge_doc(app.config.project, docname)
+        return
+
+    # Pick code snippet from doctree
+    code_picker = CodePicker(doctree, app.builder)
+    doctree.walkabout(code_picker)
+    # Resolve title from doctree
+
+    resolver = titlepath.Resolver(app.builder)
+    for code in code_picker.snippets:
+        cache.add(Item(project=app.config.project,
+                    docname=docname,
+                    titlepath=resolver.resolve(docname, code.nodes()[0]),
+                    snippet=code,
+                    keywords=extract_keywords(code)))
+
+
+def on_builder_finished(app:Sphinx, exception) -> None:
+    cache.dump()
+
 
 def setup(app:Sphinx):
+    global cache
     cache = Cache(config.load()['khufu']['cachedir'])
     try:
         cache.load()
     except Exception as e:
         logger.warning("failed to laod cache: %s" % e)
 
-    from ..snippet.keyword import FrequencyExtractor
-    extractor:Extractor = FrequencyExtractor()
-    # from ..snippet.keyword import TextRankExtractor
-    # extractor:Extractor = TextRankExtractor()
-
-
-    def extract_keywords(s:Code) -> List[Tuple[str,float]]:
-        # TODO: Deal with more snippet
-        text = '\n'.join([s.title.astext()] + [x.astext() for x in s.content])
-        return extractor.extract(text)
-
-
-    def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
-                             changed:Set[str], removed:Set[str]) -> List[str]:
-        # Remove purged indexes and snippetes from db
-        for docname in removed:
-            cache.purge_doc(app.config.project, docname)
-        return []
-
-
-    def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
-        # FIXME:
-        if not isinstance(doctree, nodes.document):
-            return
-
-        matched = len(app.config.khufu_snippet_patterns) == 0
-        for pat in app.config.khufu_snippet_patterns:
-            if re.match(pat, docname):
-                matched = True
-                break
-
-        if not matched:
-            cache.purge_doc(app.config.project, docname)
-            return
-
-        # Pick code snippet from doctree
-        code_picker = CodePicker(doctree, app.builder)
-        doctree.walkabout(code_picker)
-        # Resolve title from doctree
-
-        resolver = titlepath.Resolver(app.builder)
-        for code in code_picker.snippets:
-            cache.add(Item(project=app.config.project,
-                        docname=docname,
-                        titlepath=resolver.resolve(docname, code.nodes()[0]),
-                        snippet=code,
-                        keywords=extract_keywords(code)))
-
-
-    def on_build_finished(app:Sphinx, execption) -> None:
-        """ Write literati cache """
-        cache.dump()
-
     app.add_config_value('khufu_snippet_patterns', [], '')
 
     app.connect('env-get-outdated', on_env_get_outdated)
     app.connect('doctree-resolved', on_doctree_resolved)
-    app.connect('build-finished', on_build_finished)
+    app.connect('build-finished', on_builder_finished)

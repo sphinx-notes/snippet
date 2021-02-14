@@ -8,7 +8,7 @@
 from __future__ import annotations
 import os
 from os import path
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 from dataclasses import dataclass
 
 # from rst2ansi import rst2ansi

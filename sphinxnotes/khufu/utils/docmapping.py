@@ -28,6 +28,8 @@ class Mapping(MutableMapping):
             self.last_update = None
 
 
+    dirname:str
+    itemname:str
     # The real in memory store of values
     _store:Dict[str,T]
     # Tree structure of values
@@ -39,8 +41,9 @@ class Mapping(MutableMapping):
     _orphan_items:Dict[str,T]
 
 
-    def __init__(self, dirname:str) -> None:
+    def __init__(self, dirname:str, itemname:str='item') -> None:
         self.dirname = dirname
+        self.itemname = itemname
         self._store = {}
         self.tree = {}
         self._dirty_items = {}
@@ -127,17 +130,25 @@ class Mapping(MutableMapping):
 
     def dump(self):
         """Dump store to disk."""
+        from sphinx.util import status_iterator
+
         # Makesure dir exists
         if not path.exists(self.dirname):
             os.mkdir(self.dirname)
 
         # Purge orphan items
-        for key, value in self._orphan_items.items():
+        for key, value in status_iterator(self._orphan_items.items(),
+                                          f'purging orphan {self.itemname}(s)... ',
+                                          'brown', len(self._orphan_items), 0,
+                                          stringify_func=lambda i: self.stringify(i[0], i[1])):
             os.remove(self.itemfile(key))
             self.post_purge_item(key, value)
 
         # Dump dirty items
-        for key, value in self._dirty_items.items():
+        for key, value in status_iterator(self._dirty_items.items(),
+                                          f'dumping dirty {self.itemname}(s)... ',
+                                          'brown', len(self._dirty_items), 0,
+                                          stringify_func=lambda i: self.stringify(i[0], i[1])):
             with open(self.itemfile(key), 'wb') as f:
                 pickle.dump(value, f)
             self.post_dump_item(key, value)
@@ -166,3 +177,7 @@ class Mapping(MutableMapping):
 
     def post_purge_item(self, key:str,value:T) -> None:
         pass
+
+
+    def stringify(self, key:str,value:T) -> str:
+        return key
