@@ -1,6 +1,6 @@
 """
-    sphinxnotes.khufu.ext.snippet
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    sphinxnotes.ext.snippet
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     Sphinx extension for sphinxnotes.khufu.snippet.
 
@@ -19,12 +19,12 @@ if TYPE_CHECKING:
     from sphinx.environment import BuildEnvironment
 from sphinx.util import logging
 
-from .. import config
-from ..snippet import Snippet, Headline, Notes
-from ..snippet.picker import pick_doctitle, pick_codes
-from ..snippet.cache import Cache, Item
-from ..snippet.keyword import Extractor
-from ..utils.titlepath import resolve_fullpath, resolve_docpath
+from . import config
+from . import Snippet, Headline, Notes
+from .picker import pick_doctitle, pick_codes
+from .cache import Cache, Item
+from .keyword import Extractor
+from .utils.titlepath import resolve_fullpath, resolve_docpath
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 cache:Cache = None
 
 def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
-    from ..snippet.keyword import FrequencyExtractor
+    from .keyword import FrequencyExtractor
     extractor:Extractor = FrequencyExtractor()
     # from ..snippet.keyword import TextRankExtractor
     # extractor:Extractor = TextRankExtractor()

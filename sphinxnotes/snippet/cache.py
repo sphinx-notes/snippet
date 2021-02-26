@@ -1,5 +1,5 @@
-""" sphinxnotes.khufu.snippet.cache
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""" sphinxnotes.snippet.cache
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: Copyright 2021 Shengyu Zhang
     :license: BSD, see LICENSE for details.
@@ -11,8 +11,8 @@ from os import path
 from typing import List, Tuple
 from dataclasses import dataclass
 
-from .import Snippet
-from ..utils.docmapping import Mapping
+from . import Snippet
+from .utils.docmapping import Mapping
 
 
 @dataclass(frozen=True)

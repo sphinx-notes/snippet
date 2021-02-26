@@ -9,12 +9,12 @@
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Dict
 
 from docutils import nodes
 
 from . import Headline, Code, Procedure
-from ..utils.titlepath import resolve_doctitle
+from .utils.titlepath import resolve_doctitle
 
 
 def pick_doctitle(doctree:nodes.document) -> Optional[Headline]:
@@ -74,7 +74,6 @@ class CodePicker(nodes.SparseNodeVisitor):
         i += 1 # Skip last post_description
 
         self.offset[container] = i
-        print('desc', len(desc))
         self.codes.append(Code(description=desc,
                                block=node))
 

@@ -1,10 +1,10 @@
 """
-    sphinxnotes.khufu.snippet.filter
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    sphinxnotes.snippet.filter
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     TODO: interactive filtering / selector
 
-    Interactive filter for sphinxnotes.khufu.snippet.
+    Interactive filter for sphinxnotes.snippet.
 
     :copyright: Copyright 2021 Shengyu Zhang
     :license: BSD, see LICENSE for details.
@@ -56,7 +56,7 @@ class FzfFilter(Filter):
                                stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE)
 
-            from ..utils import ellipsis
+            from .utils import ellipsis
             header = '%s  %s  %s  %s\n' % (
                 'ID',
                 ellipsis.ellipsis('Excerpt', excerpt_width, blank_sym=' '),

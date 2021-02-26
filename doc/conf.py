@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('../sphinxnotes'))
 from datetime import datetime
 
 # Import proj's meta info
-import khufu as proj
+import snippet as proj
 
 # -- Project information -----------------------------------------------------
 
@@ -35,7 +35,7 @@ version = release = proj.__version__
 # ones.
 extensions = [
     'sphinx.ext.githubpages',
-    'khufu.ext.snippet',
+    'snippet.ext',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

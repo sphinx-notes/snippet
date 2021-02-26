@@ -14,89 +14,13 @@ import itertools
 
 from docutils import nodes
 
-def next_nonchild_node(node:nodes.Node) -> nodes.Node:
-    """Helper function for returing next sibling or ascend node."""
-    return node.next_node(descend=False, siblings=True, ascend=True)
-
-
-def next_sibling_node(node:nodes.Node) -> nodes.Node:
-    """Helper function for returing next sibling node."""
-    return node.next_node(descend=False, siblings=True, ascend=False)
-
-
-def next_child_node(node:nodes.Node) -> nodes.Node:
-    """Helper function for returing next child node."""
-    return node.next_node(descend=True, siblings=False, ascend=False)
-
-
-def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]:
-    lines = []
-    with open(filename, "r") as f:
-        start = scope[0] - 1
-        stop = scope[1] - 1 if scope[1] else None
-        for line in itertools.islice(f, start, stop):
-            lines.append(line.strip('\n'))
-    return lines
-
-
-def merge_scopes(scopes:List[Tuple[int,Optional[int]]]) -> List[Tuple[int,Optional[int]]]:
-    """"Merge the overlap scope, the pass-in scopes must be sorted."""
-    # TODO: simplify
-    merged = [scopes[0]]
-    for tup in scopes[:-1]:
-        if merged[-1][1] >= tup[0]:
-            if merged[-1][1] >= tup[1]:
-                # Completely overlap
-                continue
-            else:
-                # Partial overlap
-                merged[-1] = (merged[-1][0], tup[1])
-        else:
-            # No overlap
-            merged.append(tup)
-    # Spceial case for last scope
-    if merged[-1][1] >= scopes[-1][0]:
-        if scopes[-1][1] is None:
-            merged[-1] = (merged[-1][0], None)
-        elif merged[-1][1] >= scopes[-1][1]:
-            # Completely overlap
-            pass
-        else:
-            # Partial overlap
-            merged[-1] = (merged[-1][0], scopes[-1][1])
-    else:
-        # No overlap
-        merged.append(tup)
-
-    return merged
-
-
-def line_of_start(node:nodes.Node) -> int:
-    assert node.line
-    if isinstance(node, nodes.title):
-        if isinstance(node.parent.parent, nodes.document):
-            # Spceial case for Document Title / Subtitle
-            return 1
-        else:
-            # Spceial case for section title
-            return node.line - 1
-    elif isinstance(node, nodes.section):
-        if isinstance(node.parent, nodes.document):
-            # Spceial case for top level section
-            return 1
-        else:
-            # Spceial case for section
-            return node.line - 1
-    return node.line
-
-
-def line_of_end(node:nodes.Node) -> Optional[int]:
-    while node:
-        next_node = node.next_node(descend=False, siblings=True, ascend=True)
-        if next_node and next_node.line:
-            return line_of_start(next_node)
-        node = next_node
-    return None
+__title__= 'sphinxnotes-snippet'
+__license__ = 'BSD',
+__version__ = '1.0b0'
+__author__ = 'Shengyu Zhang'
+__url__ = 'https://sphinx-notes.github.io/snippet'
+__description__ = 'Non-intrusive literate programming tools for Sphinx documentation'
+__keywords__ = 'documentation, sphinx, extension, utility'
 
 
 class Snippet(ABC):
@@ -144,9 +68,7 @@ class Snippet(ABC):
                 # Skip node that doesn't have line number, such as block_quote
                 continue
             scopes.append((line_of_start(node), line_of_end(node)))
-            print(type(node),(line_of_start(node), line_of_end(node)))
         scopes = merge_scopes(scopes)
-        print('fin', scopes)
         return scopes
 
 
@@ -244,3 +166,73 @@ class Procedure(Notes):
     def languages(self) -> Set[str]:
         """Return the (programing) language(s) that appear in procedure."""
         return set(c.block['language'] for c in self.steps)
+
+
+def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]:
+    lines = []
+    with open(filename, "r") as f:
+        start = scope[0] - 1
+        stop = scope[1] - 1 if scope[1] else None
+        for line in itertools.islice(f, start, stop):
+            lines.append(line.strip('\n'))
+    return lines
+
+
+def merge_scopes(scopes:List[Tuple[int,Optional[int]]]) -> List[Tuple[int,Optional[int]]]:
+    """"Merge the overlap scope, the pass-in scopes must be sorted."""
+    # TODO: simplify
+    merged = [scopes[0]]
+    for tup in scopes[:-1]:
+        if merged[-1][1] >= tup[0]:
+            if merged[-1][1] >= tup[1]:
+                # Completely overlap
+                continue
+            else:
+                # Partial overlap
+                merged[-1] = (merged[-1][0], tup[1])
+        else:
+            # No overlap
+            merged.append(tup)
+    # Spceial case for last scope
+    if merged[-1][1] >= scopes[-1][0]:
+        if scopes[-1][1] is None:
+            merged[-1] = (merged[-1][0], None)
+        elif merged[-1][1] >= scopes[-1][1]:
+            # Completely overlap
+            pass
+        else:
+            # Partial overlap
+            merged[-1] = (merged[-1][0], scopes[-1][1])
+    else:
+        # No overlap
+        merged.append(tup)
+
+    return merged
+
+
+def line_of_start(node:nodes.Node) -> int:
+    assert node.line
+    if isinstance(node, nodes.title):
+        if isinstance(node.parent.parent, nodes.document):
+            # Spceial case for Document Title / Subtitle
+            return 1
+        else:
+            # Spceial case for section title
+            return node.line - 1
+    elif isinstance(node, nodes.section):
+        if isinstance(node.parent, nodes.document):
+            # Spceial case for top level section
+            return 1
+        else:
+            # Spceial case for section
+            return node.line - 1
+    return node.line
+
+
+def line_of_end(node:nodes.Node) -> Optional[int]:
+    while node:
+        next_node = node.next_node(descend=False, siblings=True, ascend=True)
+        if next_node and next_node.line:
+            return line_of_start(next_node)
+        node = next_node
+    return None

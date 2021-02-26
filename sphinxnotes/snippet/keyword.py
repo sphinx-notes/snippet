@@ -1,6 +1,6 @@
 """
-    sphinxnotes.khufu.snippet.keyword
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    sphinxnotes.snippet.keyword
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Helper functions for keywords extraction.
 

@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.abspath('./sphinxnotes'))
 from setuptools import setup, find_namespace_packages
 
-import khufu as proj
+import snippet as proj
 
 with open('README.rst') as f:
     long_desc = f.read()
@@ -21,7 +21,7 @@ setup(
     long_description_content_type = 'text/x-rst',
     zip_safe=False,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Environment :: Plugins',
         'Framework :: Sphinx',
@@ -40,11 +40,11 @@ setup(
     platforms='any',
     python_requires='>=3',
     packages=find_namespace_packages(include=['sphinxnotes.*'],
-                                     exclude=['sphinxnotes.khufu.tests']),
+                                     exclude=['sphinxnotes.snippet.tests']),
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'khufu=sphinxnotes.khufu:main',
+            'snippet=sphinxnotes.snippet:main',
         ],
     },
     install_requires= [
