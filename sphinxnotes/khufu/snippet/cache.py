@@ -11,10 +11,7 @@ from os import path
 from typing import List, Tuple
 from dataclasses import dataclass
 
-# from rst2ansi import rst2ansi
-# TODO: fix rst2ansi
-
-from .import Snippet, Notes
+from .import Snippet
 from ..utils.docmapping import Mapping
 
 
@@ -38,7 +35,7 @@ class Item(object):
             hasher.update(self.project.encode())
         hasher.update(self.docname.encode())
         [hasher.update(title.encode()) for title in self.titlepath]
-        [hasher.update(line.encode()) for line in self.snippet.rst()]
+        [hasher.update(line.encode()) for line in self.snippet.original()]
         [hasher.update(keyword.encode()) for keyword, _ in self.keywords]
         return hasher.hexdigest()
 
@@ -57,16 +54,13 @@ class Cache(Mapping):
         """Overwrite Mapping.post_dump."""
 
         # Update item index
-        if isinstance(item.snippet, Notes):
-            excerpt = item.snippet.excerpt()
-        else:
-            excerpt = None
+        excerpt = item.snippet.excerpt()
         keywords = [keyword for keyword, rank in item.keywords]
         self.indexes[key] = (key, excerpt, item.titlepath, keywords)
 
         # Update item preview
         with open(self.previewfile(key), 'w') as f:
-            f.write('\n'.join(item.snippet.rst()))
+            f.write('\n'.join(item.snippet.original()))
 
 
     def post_purge_item(self, key:str, item:Item) -> None:

@@ -2,81 +2,104 @@
     sphinxnotes.snippet.picker
     ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Snippet picker(node visitor) implementations.
+    Snippet picker implementations.
 
     :copyright: Copyright 2020 Shengyu Zhang
     :license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import List, Optional, Tuple, Dict
 
-if TYPE_CHECKING:
-    from docutils import nodes
+from docutils import nodes
 
-if TYPE_CHECKING:
-    from sphinx.builders import Builder
-from sphinx.util.docutils import SphinxTranslator
+from . import Headline, Code, Procedure
+from ..utils.titlepath import resolve_doctitle
 
-from . import Code, next_sibling_node
 
-class CodePicker(SphinxTranslator):
+def pick_doctitle(doctree:nodes.document) -> Optional[Headline]:
+    """Pick document title and subtitle (if have) from document."""
+    title, subtitle = resolve_doctitle(doctree)
+    return Headline(title=title, subtitle=subtitle)
+
+
+def pick_codes(doctree:nodes.document) -> List[Code]:
+    """Pick code snippet from document."""
+    picker = CodePicker(doctree)
+    doctree.walkabout(picker)
+    return picker.codes
+
+
+class CodePicker(nodes.SparseNodeVisitor):
     """Node visitor for picking code snippet from document."""
-    # TODO: term support
-
-    # Code snippets picked from document
-    snippets:List[Code]
-
-    # Stack of Structural node
-    _stack:List[nodes.Structural]
-    _cur_title:nodes.title
-    _cur_ptr:nodes.Node
-
-
-    def __init__(self, document:nodes.document, builder:Builder) -> None:
-        super().__init__(document, builder)
-
-        self._stack = []
-        self._cur_title = None
-        self._cur_ptr = None
-
-        self.snippets = []
+    # Code snippets that picked from document
+    codes:List[Code]
+    # Procedures that picked from document, TODO
+    procedures:List[Procedure]
+    # (container, pointer) that Recording the read pointer inside container
+    offset:Dict[nodes.Node,int]
+    # List of unsupported languages (:class:`pygments.lexers.Lexer`)
+    unsupported_languages:List[str] = ['default']
 
 
-    def visit_Structural(self, node:nodes.Structural) -> None:
-        self._stack.append(node)
-
-
-    def depart_Structural(self, node:nodes.Structural) -> None:
-        self._stack.pop()
-
-
-    def visit_title(self, node:nodes.title) -> None:
-        self._cur_title = node
-        self._cur_ptr = next_sibling_node(node)
+    def __init__(self, document:nodes.document) -> None:
+        super().__init__(document)
+        self.codes = []
+        self.procedures = []
+        self.offset = {}
 
 
     def visit_literal_block(self, node:nodes.literal_block) -> None:
-        # Find code container that has same level as self._cur_ptr
-        container = node
-        while container.parent not in [self._stack[-1], None]:
-            container = container.parent
+        if node['language'] in self.unsupported_languages:
+            raise nodes.SkipNode
 
         desc = []
-        if self._cur_ptr:
-            for n in self._cur_ptr.traverse(include_self=True, descend=False, siblings=True, ascend=False):
-                if n == container:
-                    break
-                desc.append(n)
-        self.snippets.append(Code(self._cur_title, desc, node))
-        self._cur_ptr = next_sibling_node(container)
+        container = node.parent
+        # Get current offset or use first child of container (must exists)
+        start = self.offset.get(container) or 0
+        # Stop iteration before current literal_block
+        end = container.index(node)
+        # Collect description
+        for i in range(start, end):
+            if self.is_description(container[i]):
+                desc.append(container[i])
+        i += 1 # Skip literal_block
+        # Collect continuously post_description
+        for i in range(i, len(container)):
+            if self.is_post_description(container[i]):
+                desc.append(container[i])
+            else:
+                i -= 1 # Currnet node is not post_description
+                break
+        i += 1 # Skip last post_description
+
+        self.offset[container] = i
+        print('desc', len(desc))
+        self.codes.append(Code(description=desc,
+                               block=node))
+
+
+    def visit_enumerated_list(self, node:nodes.enumerated_list) -> None:
+        pass
+
+    def depart_enumerated_list(self, node:nodes.enumerated_list) -> None:
+        pass
 
 
     def unknown_visit(self, node:nodes.Node) -> None:
-        # Ignore any unknown node
-        pass
-
+        pass # Ignore any unknown node
 
     def unknown_departure(self, node:nodes.Node) -> None:
-        # Ignore any unknown node
-        pass
+        pass # Ignore any unknown node
+
+
+    def is_description(self, node:nodes.Node) -> bool:
+        """Return whether given node can be description of code in :class:`Code` ."""
+        return isinstance(node, (nodes.Admonition, nodes.Sequential,
+                                 nodes.paragraph, nodes.field, nodes.option,
+                                 nodes.line_block))
+
+
+    def is_post_description(self, node:nodes.Node) -> bool:
+        """Return whether the given node can be post_description of code in :class:`Notes`."""
+        return isinstance(node, nodes.Admonition)

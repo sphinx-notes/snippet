@@ -19,27 +19,38 @@ if TYPE_CHECKING:
     from sphinx.environment import BuildEnvironment
 from sphinx.util import logging
 
-from ..snippet import Code
-from ..snippet.picker import CodePicker
+from .. import config
+from ..snippet import Snippet, Headline, Notes
+from ..snippet.picker import pick_doctitle, pick_codes
 from ..snippet.cache import Cache, Item
 from ..snippet.keyword import Extractor
-from .. import config
-from ..utils import titlepath
+from ..utils.titlepath import resolve_fullpath, resolve_docpath
 
 
 logger = logging.getLogger(__name__)
 
 cache:Cache = None
 
-def extract_keywords(s:Code) -> List[Tuple[str,float]]:
+def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
     from ..snippet.keyword import FrequencyExtractor
     extractor:Extractor = FrequencyExtractor()
     # from ..snippet.keyword import TextRankExtractor
     # extractor:Extractor = TextRankExtractor()
 
     # TODO: Deal with more snippet
-    text = '\n'.join([s.title.astext()] + [x.astext() for x in s.content])
-    return extractor.extract(text)
+    if isinstance(s, Notes):
+        ns = s.description
+        return extractor.extract('\n'.join(map(lambda x:x.astext(), ns)))
+    elif isinstance(s, Headline):
+        ns = []
+        if s.title:
+            ns.append(s.title)
+        if s.subtitle:
+            ns.append(s.subtitle)
+            # TODO: docname
+        return extractor.extract('\n'.join(map(lambda x:x.astext(), ns)))
+    else:
+        pass
 
 
 def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
@@ -65,18 +76,22 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         cache.purge_doc(app.config.project, docname)
         return
 
-    # Pick code snippet from doctree
-    code_picker = CodePicker(doctree, app.builder)
-    doctree.walkabout(code_picker)
-    # Resolve title from doctree
+    # Pick document title from doctree
+    doctitle = pick_doctitle(doctree)
+    cache.add(Item(project=app.config.project,
+                   docname=docname,
+                   titlepath=resolve_docpath(app.env, docname),
+                   snippet=doctitle,
+                   keywords=extract_keywords(doctitle)))
 
-    resolver = titlepath.Resolver(app.builder)
-    for code in code_picker.snippets:
+    # Pick code snippet from doctree
+    codes = pick_codes(doctree)
+    for code in codes:
         cache.add(Item(project=app.config.project,
-                    docname=docname,
-                    titlepath=resolver.resolve(docname, code.nodes()[0]),
-                    snippet=code,
-                    keywords=extract_keywords(code)))
+                       docname=docname,
+                       titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
+                       snippet=code,
+                       keywords=extract_keywords(code)))
 
 
 def on_builder_finished(app:Sphinx, exception) -> None:
