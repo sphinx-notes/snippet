@@ -17,10 +17,10 @@ from docutils import nodes
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment
-    from sphinx.config import Config
+    from sphinx.config import Config as SphinxConfig
 from sphinx.util import logging
 
-from . import config
+from .config import Config
 from . import Snippet, Headline, Notes
 from .picker import pick_doctitle, pick_codes
 from .cache import Cache, Item
@@ -48,11 +48,10 @@ def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
         pass
 
 
-def on_config_inited(app:Sphinx, cfg:Config) -> None:
+def on_config_inited(app:Sphinx, appcfg:SphinxConfig) -> None:
     global cache
-    if cfg.snippet_config:
-        config.update(cfg.snippet_config)
-    cache = Cache(config.cache_dir)
+    cfg = Config(appcfg.snippet_config)
+    cache = Cache(cfg.cache_dir)
 
     try:
         cache.load()
@@ -105,7 +104,7 @@ def on_builder_finished(app:Sphinx, exception) -> None:
 
 
 def setup(app:Sphinx):
-    app.add_config_value('snippet_config', None, '')
+    app.add_config_value('snippet_config', {}, '')
     app.add_config_value('snippet_patterns', [], '')
 
     app.connect('config-inited', on_config_inited)

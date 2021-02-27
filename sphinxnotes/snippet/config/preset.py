@@ -1,21 +1,27 @@
+"""
+    sphinxnotes.snippet.config.preset
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    :copyright: Copyright 2021 Shengyu Zhang
+    :license: BSD, see LICENSE for details.
+"""
+
 from __future__ import annotations
-from typing import Optional, List, Any
+from typing import Optional, List
 
 def fzf_filter(columns:List[str],
                header_line:Optional[int]=None,
-               keywords:List[str]=[],
-               previewfn:Any=None, # FIXME:
-               previewer:Any=None) -> List[str]:
+               keywords:List[str]=[]) -> List[str]:
     colid = columns.index('id') + 1
     args = ['fzf',
             '--with-nth', f'{colid+1}..', # Hide ID column FIXME
             '--no-hscroll',
             ]
-    if previewer:
-        args += ['--preview', previewer(previewfn(f'{{colid}}'))]
+    if False: # FIXME: impl preview
+        args += ['--preview', 'xxx']
         args += ['--preview-window', 'up']
     if header_line:
-        args += ['--header-lines', header_line]
+        args += ['--header-lines', str(header_line)]
     if keywords:
         args += ['--query', ' '.join(keywords)]
     return args

@@ -16,9 +16,11 @@ from textwrap import dedent
 from xdg.BaseDirectory import xdg_config_home
 
 from . import __title__, __version__, __description__
-from . import config
-from .filter import Filter, FzfFilter
+from .config import Config
+from .filter import Filter
 from .cache import Cache
+
+DEFAULT_CONFIG_FILE = path.join(xdg_config_home, __title__, 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                   argparse.RawDescriptionHelpFormatter):
@@ -34,8 +36,6 @@ def add_subcommand_common_arguments(parser:argparse.ArgumentParser) -> None:
 def main(argv:List[str]=sys.argv[1:]) -> int:
     """Command line entrypoint."""
 
-    default_cfgfn = path.join(xdg_config_home, __title__, 'conf.py')
-
     parser = argparse.ArgumentParser(prog=__name__, description=__description__,
                                      # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                      formatter_class=HelpFormatter,
@@ -46,7 +46,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                        procedure (p)         notes with a sequence of code for doing something (TODO)
                                        image (i)             notes with an image (TODO)"""))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
-    parser.add_argument('-c', '--config', default=default_cfgfn, help='path to configuration file')
+    parser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file')
 
     # Init subcommands
     subparsers = parser.add_subparsers()
@@ -74,25 +74,27 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Parse command line arguments
     args = parser.parse_args(argv)
-    # Read snippet config
-    if args.config == default_cfgfn and not path.isfile(default_cfgfn):
+
+    # Load config from file
+    if args.config == DEFAULT_CONFIG_FILE and not path.isfile(DEFAULT_CONFIG_FILE):
         print('the default configuration file does not exist, ignore it')
+        cfg = Config({})
     else:
-        config.update(args.config)
+        cfg = Config.load(args.config)
+    setattr(args, 'config', cfg)
+
+    # Load snippet cache
+    cache = Cache(cfg.cache_dir)
+    cache.load()
+    setattr(args, 'cache', cache)
+
     # Call subcommand
     if hasattr(args, 'func'):
         args.func(args)
 
 
-def _load_cache() -> Cache:
-    cache = Cache(config.cache_dir)
-    cache.load()
-    return cache
-
-
 def _on_command_show(args:argparse.Namespace):
-    cache = _load_cache()
-
+    cache = args.cache
     if args.ids:
         for uid in args.ids:
             print(cache.get(uid))
@@ -115,15 +117,17 @@ def _on_command_show(args:argparse.Namespace):
 
 
 def _on_command_view(args:argparse.Namespace):
-    cache = _load_cache()
-    filter:Filter = FzfFilter(cache)
+    filter = Filter(args.cache, args.config)
     uid = filter.filter(keywords=args.keywords)
     if uid:
         filter.view(uid)
 
 
 def _on_command_edit(args:argparse.Namespace):
-    pass
+    filter = Filter(args.cache, args.config)
+    uid = filter.filter(keywords=args.keywords)
+    if uid:
+        filter.edit(uid)
 
 
 def _on_command_invoke(args:argparse.Namespace):
