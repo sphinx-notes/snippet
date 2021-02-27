@@ -43,13 +43,7 @@ def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
         ns = s.description
         return extractor.extract('\n'.join(map(lambda x:x.astext(), ns)))
     elif isinstance(s, Headline):
-        ns = []
-        if s.title:
-            ns.append(s.title)
-        if s.subtitle:
-            ns.append(s.subtitle)
-            # TODO: docname
-        return extractor.extract('\n'.join(map(lambda x:x.astext(), ns)))
+        return extractor.extract('\n'.join(map(lambda x:x.astext(), s.nodes())))
     else:
         pass
 
@@ -105,7 +99,6 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
                        titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
                        snippet=code,
                        keywords=extract_keywords(code)))
-
 
 def on_builder_finished(app:Sphinx, exception) -> None:
     cache.dump()

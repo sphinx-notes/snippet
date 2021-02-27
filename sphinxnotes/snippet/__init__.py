@@ -34,9 +34,7 @@ class Snippet(ABC):
 
     @abstractclassmethod
     def nodes(self) -> List[nodes.Node]:
-        """
-        Return the doctree nodes that make up this snippet.
-        """
+        """Return the out of tree nodes that make up this snippet."""
         pass
 
 
@@ -61,12 +59,10 @@ class Snippet(ABC):
         ``[left, right)``. Snippet is not continuous in source file so we return
         a list of scope.
         """
-        # FIXME:
         scopes = []
         for node in self.nodes():
             if not node.line:
-                # Skip node that doesn't have line number, such as block_quote
-                continue
+                continue # Skip node that have None line, I dont know why :'(
             scopes.append((line_of_start(node), line_of_end(node)))
         scopes = merge_scopes(scopes)
         return scopes
@@ -88,7 +84,6 @@ class Headline(Snippet):
     title:nodes.title
     subtitle:Optional[nodes.title] = None
 
-
     def nodes(self) -> List[nodes.Node]:
         if not self.subtitle:
             return [self.title]
@@ -102,7 +97,7 @@ class Headline(Snippet):
 
 
     def kind(self) -> str:
-        return 'D'
+        return 'd'
 
 
 @dataclass(frozen=True)
@@ -132,7 +127,7 @@ class Code(Notes):
 
 
     def kind(self) -> str:
-        return 'C'
+        return 'c'
 
 
     def language(self) -> str:
@@ -160,7 +155,7 @@ class Procedure(Notes):
 
 
     def kind(self) -> str:
-        return 'P'
+        return 'p'
 
 
     def languages(self) -> Set[str]:
