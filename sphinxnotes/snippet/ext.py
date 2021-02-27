@@ -2,7 +2,7 @@
     sphinxnotes.ext.snippet
     ~~~~~~~~~~~~~~~~~~~~~~~
 
-    Sphinx extension for sphinxnotes.khufu.snippet.
+    Sphinx extension for sphinxnotes.snippet.
 
     :copyright: Copyright 2021 Shengyu Zhang
     :license: BSD, see LICENSE for details.
@@ -17,6 +17,7 @@ from docutils import nodes
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment
+    from sphinx.config import Config
 from sphinx.util import logging
 
 from . import config
@@ -53,6 +54,18 @@ def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
         pass
 
 
+def on_config_inited(app:Sphinx, cfg:Config) -> None:
+    global cache
+    if cfg.snippet_config:
+        config.update(cfg.snippet_config)
+    cache = Cache(config.cache_dir)
+
+    try:
+        cache.load()
+    except Exception as e:
+        logger.warning("failed to laod cache: %s" % e)
+
+
 def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
                          changed:Set[str], removed:Set[str]) -> List[str]:
     # Remove purged indexes and snippetes from db
@@ -66,8 +79,8 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
     if not isinstance(doctree, nodes.document):
         return
 
-    matched = len(app.config.khufu_snippet_patterns) == 0
-    for pat in app.config.khufu_snippet_patterns:
+    matched = len(app.config.snippet_patterns) == 0
+    for pat in app.config.snippet_patterns:
         if re.match(pat, docname):
             matched = True
             break
@@ -99,15 +112,10 @@ def on_builder_finished(app:Sphinx, exception) -> None:
 
 
 def setup(app:Sphinx):
-    global cache
-    cache = Cache(config.load()['khufu']['cachedir'])
-    try:
-        cache.load()
-    except Exception as e:
-        logger.warning("failed to laod cache: %s" % e)
+    app.add_config_value('snippet_config', None, '')
+    app.add_config_value('snippet_patterns', [], '')
 
-    app.add_config_value('khufu_snippet_patterns', [], '')
-
+    app.connect('config-inited', on_config_inited)
     app.connect('env-get-outdated', on_env_get_outdated)
     app.connect('doctree-resolved', on_doctree_resolved)
     app.connect('build-finished', on_builder_finished)
