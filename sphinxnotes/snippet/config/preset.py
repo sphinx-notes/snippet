@@ -42,6 +42,10 @@ def bat_viewer(filename:str, line:Optional[int]=None):
     return args
 
 
+def rst2ansi_viewer(filename:str, line:Optional[int]=None):
+    return ['rst2ansi', filename]
+
+
 def vim_editor(filename:str, line:Optional[int]=None) -> List[str]:
     args = ['vim']
     if line:

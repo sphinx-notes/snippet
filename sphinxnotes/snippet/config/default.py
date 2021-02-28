@@ -8,12 +8,11 @@
     :license: BSD, see LICENSE for details.
 """
 
-from __future__ import annotations
-from os import path
-
-from xdg.BaseDirectory import xdg_cache_home
-
-from . import preset
+# NOTE: All imported name should starts with ``__`` to distinguish from
+# configuration item
+from os import path as __path
+from xdg.BaseDirectory import xdg_cache_home as __xdg_cache_home
+from . import preset as __preset
 from .. import __title__
 
 
@@ -22,7 +21,7 @@ from .. import __title__
     (Default: ``"$XDG_CACHE_HOME/sphinxnotes-snippet"``)
     Path to snippet cache directory.
 """
-cache_dir = path.join(xdg_cache_home, __title__)
+cache_dir = __path.join(__xdg_cache_home, __title__)
 
 
 """
@@ -36,7 +35,7 @@ cache_dir = path.join(xdg_cache_home, __title__)
     If you want to write your own one, please refer to package
     `sphinxnotes.snippet.config.preset`
 """
-filter = preset.fzf_filter
+filter = __preset.fzf_filter
 
 
 """
@@ -49,7 +48,7 @@ filter = preset.fzf_filter
     If you want to write your own one, please refer to package
     `sphinxnotes.snippet.config.preset`
 """
-viewer = preset.cat_viewer
+viewer = __preset.cat_viewer
 
 
 """
@@ -62,4 +61,4 @@ viewer = preset.cat_viewer
     If you want to write your own one, please refer to package
     `sphinxnotes.snippet.config.preset`
 """
-editor = preset.vim_editor
+editor = __preset.vim_editor

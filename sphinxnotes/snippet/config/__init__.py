@@ -18,8 +18,12 @@ class Config(object):
         # Load default
         self.__dict__.update(default.__dict__)
         for name in config:
+            if name.startswith('__') and name != '__file__':
+                # Ignore unrelated name
+                continue
             if name in self.__dict__.keys():
                 self.__dict__[name] = config[name]
+
 
     @classmethod
     def load(cls, filename:str) -> "Config":

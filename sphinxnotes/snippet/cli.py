@@ -102,6 +102,7 @@ def _on_command_show(args:argparse.Namespace):
         for uid in cache.keys():
             print(uid)
     else:
+        # Cache
         projects = []
         num_snippets = []
         num_docs = []
@@ -114,6 +115,15 @@ def _on_command_show(args:argparse.Namespace):
         for i, _ in enumerate(projects):
             print(f'project {projects[i]}:')
             print(f"\t {num_docs[i]} documentation(s), {num_snippets[i]} snippets(s)")
+
+        print('')
+
+        # Configuration
+        print('configuration are loaded from %s' % args.config.__file__)
+        for k,v in args.config.__dict__.items():
+            if k.startswith('__'):
+                continue
+            print('%s:\t\t%s' % (k, v))
 
 
 def _on_command_view(args:argparse.Namespace):
