@@ -47,7 +47,7 @@ class FrequencyExtractor(Extractor):
 
         self._punctuation = string.punctuation + "！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
 
-    def extract(self, text:str, top_n:int=10) -> List[Tuple[str,float]]:
+    def extract(self, text:str, top_n:Optional[int]=None) -> List[Tuple[str,float]]:
         # TODO: zh -> en
         # Normalize
         text = self.normalize(text)
@@ -57,12 +57,16 @@ class FrequencyExtractor(Extractor):
         words = self.strip_invalid_token(words)
         # Stopwords removal
         words = self.strip_stopwords(words)
-        # Get top 5 words as keyword
-        keywords = Counter(words).most_common(top_n)
-        # Convert int rank to float
-        for i, tup in enumerate(keywords):
-            word, rank = tup
-            keywords[i] = (word, rank * 1.0)
+        if top_n:
+            # Get top n words as keyword
+            keywords = Counter(words).most_common(top_n)
+            # Convert int rank to float
+            for i, tup in enumerate(keywords):
+                word, rank = tup
+                keywords[i] = (word, rank * 1.0)
+        else:
+            # Keep all keywords
+            keywords = [(w, 1.0) for w in words]
         # Generate a pinyin version
         keywords_pinyin = []
         for word, rank in keywords:
@@ -133,7 +137,7 @@ class TextRankExtractor(Extractor):
         self._textrank_en = keywords
 
 
-    def extract(self, text:str, top_n:int=10) -> List[Tuple[str,float]]:
+    def extract(self, text:str, top_n:Optional[int]=None) -> List[Tuple[str,float]]:
         lang = self._detect_lang(text)
         if lang[0] == 'zh':
             return self._textrank_zh_cn(text, topK=top_n, withWeight=True)

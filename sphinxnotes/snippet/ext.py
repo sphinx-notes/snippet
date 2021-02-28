@@ -39,7 +39,8 @@ extractor:Extractor = FrequencyExtractor()
 def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
     # TODO: Deal with more snippet
     if isinstance(s, Notes):
-        return extractor.extract('\n'.join(map(lambda x:x.astext(), s.description)))
+        return extractor.extract('\n'.join(map(lambda x:x.astext(), s.description)),
+                                 top_n=10)
     elif isinstance(s, Headline):
         return extractor.extract('\n'.join(map(lambda x:x.astext(), s.nodes())))
     else:
