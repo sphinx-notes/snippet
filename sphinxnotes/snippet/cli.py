@@ -1,6 +1,6 @@
 """
-    sphinxnotes.snippet.__main__
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    sphinxnotes.snippet.cli
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     :copyright: Copyright 2020 Shengyu Zhang
     :license: BSD, see LICENSE for details.
