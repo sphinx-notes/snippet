@@ -99,8 +99,8 @@ class Headline(Snippet):
 
     def excerpt(self) -> str:
         if not self.subtitle:
-            return '<<%s>>' % self.title.astext()
-        return '<<%s ~%s~>>' % (self.title.astext(), self.subtitle.astext())
+            return '<%s>' % self.title.astext()
+        return '<%s ~%s~>' % (self.title.astext(), self.subtitle.astext())
 
 
     @classmethod
@@ -131,7 +131,7 @@ class Code(Notes):
 
 
     def excerpt(self) -> str:
-        return '/*%s*/ ' % self.language() + super().excerpt()
+        return '/%s/ ' % self.language() + super().excerpt()
 
 
     @classmethod
@@ -160,7 +160,7 @@ class Procedure(Notes):
 
 
     def excerpt(self) -> str:
-        return '/*%s*/ ' % ','.join(self.languages()) + super().excerpt()
+        return '/%s/ ' % ','.join(self.languages()) + super().excerpt()
 
 
     @classmethod

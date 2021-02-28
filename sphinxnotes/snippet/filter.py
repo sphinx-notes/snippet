@@ -12,14 +12,15 @@
 
 from __future__ import annotations
 from typing import List, Optional
-import sys
 import subprocess
 import shutil
 
 from .cache import Cache
 from .config import Config
 
-COLUMNS = ['id', 'excerpt', 'path', 'keywords']
+COLUMNS = ['id', 'kind', 'excerpt', 'path', 'keywords']
+VISIABLE_COLUMNS = COLUMNS[1:4]
+COLUMN_DELIMITER = '  '
 HEADER_LINE = 1
 
 class Filter(object):
@@ -42,14 +43,18 @@ class Filter(object):
         # Calcuate width
         term_width = shutil.get_terminal_size((120, 0)).columns
         term_width -= 2 # Filter border
-        excerpt_width = int(term_width * 3 / 4)
-        path_width = int(term_width * 1 / 4)
+        term_width -= len(VISIABLE_COLUMNS) * len(VISIABLE_COLUMNS) # Width of visiable columns
+        kind_width = len(VISIABLE_COLUMNS[0])
+        term_width -= kind_width
+        excerpt_width = max(int(term_width * 6/10), len(VISIABLE_COLUMNS[1]))
+        path_width = max(int(term_width * 4/10), len(VISIABLE_COLUMNS[2]))
         path_comp_width = path_width // 3
 
         # Write header
         from .utils import ellipsis
-        header = '%s  %s  %s  %s\n' % (
+        header = '%s  %s  %s  %s  %s\n' % (
             'ID',
+            ellipsis.ellipsis('Kind', kind_width, blank_sym=' '),
             ellipsis.ellipsis('Excerpt', excerpt_width, blank_sym=' '),
             ellipsis.ellipsis('Path', path_width, blank_sym=' ' ),
             'Keywords')
@@ -60,11 +65,12 @@ class Filter(object):
 
         # Write rows
         for index in self.cache.indexes.values():
-            row = '%s  %s  %s  %s\n' % (
+            row = '%s  %s  %s  %s  %s\n' % (
                 index[0], # ID
-                ellipsis.ellipsis(index[1], excerpt_width, blank_sym=' '), # Excerpt
-                ellipsis.join(index[2], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
-                ','.join(index[3])) # Keywords
+                ellipsis.ellipsis('[%s]' % index[1], kind_width, blank_sym=' '), # Kind
+                ellipsis.ellipsis(index[2], excerpt_width, blank_sym=' '), # Excerpt
+                ellipsis.join(index[3], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
+                ','.join(index[4])) # Keywords
             try:
                 p.stdin.write(row.encode('utf-8'))
                 p.stdin.flush()

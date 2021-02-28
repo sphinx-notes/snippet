@@ -43,7 +43,7 @@ class Item(object):
 class Cache(Mapping):
     """Cache of snippet."""
     # Table of index: ID, excerpt, titlepath, keywords
-    indexes:Tuple[str,str,List[str],List[str]]
+    indexes:Tuple[str,str,str,List[str],List[str]]
 
     def __init__(self, dirname:str) -> None:
         self.indexes = {}
@@ -56,7 +56,7 @@ class Cache(Mapping):
         # Update item index
         excerpt = item.snippet.excerpt()
         keywords = [keyword for keyword, rank in item.keywords]
-        self.indexes[key] = (key, excerpt, item.titlepath, keywords)
+        self.indexes[key] = (key, item.snippet.kind(), excerpt, item.titlepath, keywords)
 
         # Update item preview
         with open(self.previewfile(key), 'w') as f:
