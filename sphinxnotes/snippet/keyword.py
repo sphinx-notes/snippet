@@ -45,9 +45,11 @@ class FrequencyExtractor(Extractor):
         self._pinyin = lazy_pinyin
         self._stopwords = stopwords
 
-        self._punctuation = string.punctuation + "！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏."
+        self._punctuation = string.punctuation + "！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏.·"
 
-    def extract(self, text:str, top_n:Optional[int]=None) -> List[Tuple[str,float]]:
+    def extract(self, text:str,
+                top_n:Optional[int]=None,
+                strip_stopwords:bool=True) -> List[Tuple[str,float]]:
         # TODO: zh -> en
         # Normalize
         text = self.normalize(text)
@@ -56,7 +58,8 @@ class FrequencyExtractor(Extractor):
         # Invalid token removal
         words = self.strip_invalid_token(words)
         # Stopwords removal
-        words = self.strip_stopwords(words)
+        if strip_stopwords:
+            words = self.strip_stopwords(words)
         if top_n:
             # Get top n words as keyword
             keywords = Counter(words).most_common(top_n)
