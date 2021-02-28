@@ -88,7 +88,7 @@ class Filter(object):
 
 
     def view(self, uid:str) -> None:
-        args = self.config.viewer(self.cache.previewfile(uid),)
+        args = self.config.viewer(self.cache.previewfile(uid))
         try:
             subprocess.run(args)
         except KeyboardInterrupt:
@@ -96,7 +96,8 @@ class Filter(object):
 
 
     def edit(self, uid:str) -> None:
-        args = self.config.editor(self.cache.previewfile(uid))
+        snippet = self.cache[uid].snippet
+        args = self.config.editor(snippet.source(), line=snippet.scopes()[0][0])
         try:
             subprocess.run(args)
         except KeyboardInterrupt:

@@ -52,6 +52,12 @@ class Snippet(ABC):
         pass
 
 
+    def source(self) -> str:
+        """Return source file path of snippet"""
+        # All nodes should have same source file
+        return self.nodes()[0].source
+
+
     def scopes(self) -> List[Tuple[int,int]]:
         """
         Return the scopes of snippet, which corresponding to the line
@@ -72,8 +78,7 @@ class Snippet(ABC):
 
     def original(self) -> List[str]:
         """Return the original reStructuredText text of snippet."""
-        # All nodes should have same source file
-        srcfn = self.nodes()[0].source
+        srcfn = self.source()
         lines = []
         for scope in self.scopes():
             lines += read_partial_file(srcfn, scope)

@@ -149,15 +149,17 @@ def _on_command_mgmt(args:argparse.Namespace):
 def _on_command_view(args:argparse.Namespace):
     filter = Filter(args.cache, args.config)
     uid = filter.filter(keywords=args.keywords)
-    if uid:
-        filter.view(uid)
+    if not uid:
+        return
+    filter.view(uid)
 
 
 def _on_command_edit(args:argparse.Namespace):
     filter = Filter(args.cache, args.config)
     uid = filter.filter(keywords=args.keywords)
-    if uid:
-        filter.edit(uid)
+    if not uid:
+        return
+    filter.edit(uid)
 
 
 def _on_command_invoke(args:argparse.Namespace):
