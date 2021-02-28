@@ -98,7 +98,8 @@ class Headline(Snippet):
         return '<<%s ~%s~>>' % (self.title.astext(), self.subtitle.astext())
 
 
-    def kind(self) -> str:
+    @classmethod
+    def kind(cls) -> str:
         return 'd'
 
 
@@ -128,7 +129,8 @@ class Code(Notes):
         return '/*%s*/ ' % self.language() + super().excerpt()
 
 
-    def kind(self) -> str:
+    @classmethod
+    def kind(cls) -> str:
         return 'c'
 
 
@@ -156,7 +158,8 @@ class Procedure(Notes):
         return '/*%s*/ ' % ','.join(self.languages()) + super().excerpt()
 
 
-    def kind(self) -> str:
+    @classmethod
+    def kind(cls) -> str:
         return 'p'
 
 
