@@ -26,11 +26,11 @@ class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                   argparse.RawDescriptionHelpFormatter):
     pass
 
-def add_subcommand_common_arguments(parser:argparse.ArgumentParser) -> None:
+def add_subcommand_common_arguments(parser:argparse.ArgumentParser, kinds:str) -> None:
     """Add common arguments (partial) subcommands to subcommands' argument parser."""
     parser.add_argument('keywords', nargs='*', help='keywords for pre-filtering')
     parser.add_argument('--id', nargs=1, help='specify snippet by ID instead of filtering')
-    parser.add_argument('--kind', '-k', nargs=1, help='snippet kind for pre-filtering')
+    parser.add_argument('--kinds', '-k', nargs=1, default=kinds, help='snippet kinds for pre-filtering')
 
 
 def main(argv:List[str]=sys.argv[1:]) -> int:
@@ -44,7 +44,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                        d (headline)          documentation title and possible subtitle
                                        c (code)              notes with code block
                                        p (procedure)         notes with a sequence of code for doing something (TODO)
-                                       i (image)             notes with an image (TODO)"""))
+                                       i (image)             notes with an image (TODO)
+                                       * (any)               wildcard kind for any kind of snippet"""))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file')
 
@@ -79,9 +80,12 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                        help='filter and clip snippet to clipboard')
 
     clipparser.set_defaults(func=_on_command_clip)
+
     # Add common arguments
-    for p in [viewparser, editparser, invokeparser, clipparser]:
-        add_subcommand_common_arguments(p)
+    # TODO: to be document?
+    kinds = ['c', 'cd', 'c', 'c']
+    for i, p in enumerate([viewparser, editparser, invokeparser, clipparser]):
+        add_subcommand_common_arguments(p, kinds[i])
 
     # Parse command line arguments
     args = parser.parse_args(argv)
@@ -148,7 +152,7 @@ def _on_command_mgmt(args:argparse.Namespace):
 
 def _on_command_view(args:argparse.Namespace):
     filter = Filter(args.cache, args.config)
-    uid = filter.filter(keywords=args.keywords)
+    uid = filter.filter(keywords=args.keywords, kinds=args.kinds)
     if not uid:
         return
     filter.view(uid)
@@ -156,7 +160,7 @@ def _on_command_view(args:argparse.Namespace):
 
 def _on_command_edit(args:argparse.Namespace):
     filter = Filter(args.cache, args.config)
-    uid = filter.filter(keywords=args.keywords)
+    uid = filter.filter(keywords=args.keywords, kinds=args.kinds)
     if not uid:
         return
     filter.edit(uid)

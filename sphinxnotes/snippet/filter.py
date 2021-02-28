@@ -31,7 +31,7 @@ class Filter(object):
         self.cache = cache
         self.config = config
 
-    def filter(self, keywords:List[str]=[]) -> Optional[str]:
+    def filter(self, keywords:List[str]=[], kinds:str='*') -> Optional[str]:
         """Spwan a interactive filter and return selected ID"""
 
         # Spwan filter
@@ -65,6 +65,8 @@ class Filter(object):
 
         # Write rows
         for index in self.cache.indexes.values():
+            if index[1] not in kinds and '*' not in kinds:
+                continue
             row = '%s  %s  %s  %s  %s\n' % (
                 index[0], # ID
                 ellipsis.ellipsis('[%s]' % index[1], kind_width, blank_sym=' '), # Kind
