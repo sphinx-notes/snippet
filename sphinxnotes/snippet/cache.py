@@ -65,7 +65,7 @@ class Cache(Mapping):
 
     def post_purge_item(self, key:str, item:Item) -> None:
         """Overwrite Mapping.post_purge."""
-        del self.indexes[str]
+        del self.indexes[key]
         os.remove(self.previewfile(key))
 
 

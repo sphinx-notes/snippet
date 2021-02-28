@@ -41,33 +41,44 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                      formatter_class=HelpFormatter,
                                      epilog=dedent("""
                                      snippet kinds:
-                                       headline (d)          documentation title and possible subtitle
-                                       code (c)              notes with code block
-                                       procedure (p)         notes with a sequence of code for doing something (TODO)
-                                       image (i)             notes with an image (TODO)"""))
+                                       d (headline)          documentation title and possible subtitle
+                                       c (code)              notes with code block
+                                       p (procedure)         notes with a sequence of code for doing something (TODO)
+                                       i (image)             notes with an image (TODO)"""))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file')
 
     # Init subcommands
     subparsers = parser.add_subparsers()
-    showparser = subparsers.add_parser('show', aliases=['s'],
-        help='show snippets infomation')
-    showparser.add_argument('ids', nargs='*', help='show infomation of specify snippet')
-    showparser.add_argument('--list', '-l', action='store_true', help='list all snippets')
-    showparser.set_defaults(func=_on_command_show)
+    mgmtparser = subparsers.add_parser('mgmt', aliases=['m'], help='snippets management')
+    mgmtparser.add_argument('--stat', '-s', action='store_true', help='show snippets statistic')
+    mgmtparser.add_argument('--dump-config', '-d', action='store_true', help='dump current configuration')
+    mgmtparser.add_argument('--list', '-l', nargs='+', help='show specify snippet')
+    mgmtparser.add_argument('--list-all', action='store_true', help='list all snippets')
+    mgmtparser.add_argument('--purge', nargs='+', help='purge specify snippets')
+    mgmtparser.add_argument('--purge-all', action='store_true', help='purge all snippets')
+    mgmtparser.set_defaults(func=_on_command_mgmt)
 
-    viewparser = subparsers.add_parser('view', aliases=['v'], help='filter and view snippet')
+    viewparser = subparsers.add_parser('view', aliases=['v'],
+                                       help='filter and view snippet')
     viewparser.set_defaults(func=_on_command_view)
 
-    editparser = subparsers.add_parser('edit', aliases=['e'], help='filter and edit snippet')
+    editparser = subparsers.add_parser('edit', aliases=['e'],
+                                       help='filter snippet and edit the corresponding source file')
     editparser.set_defaults(func=_on_command_edit)
 
-    invokeparser = subparsers.add_parser('invoke', aliases=['i'], help='filter and invoke executable snippet')
+    invokeparser = subparsers.add_parser('invoke', aliases=['i'],
+                                         help='filter and invoke executable snippet')
     invokeparser.set_defaults(func=_on_command_invoke)
 
-    clipparser = subparsers.add_parser('clip', aliases=['c'], help='filter and clip snippet to clipboard')
+    clipparser = subparsers.add_parser('clip', aliases=['c'],
+                                       help='filter and clip snippet to clipboard')
     clipparser.set_defaults(func=_on_command_clip)
 
+    clipparser = subparsers.add_parser('purge', aliases=[''],
+                                       help='filter and clip snippet to clipboard')
+
+    clipparser.set_defaults(func=_on_command_clip)
     # Add common arguments
     for p in [viewparser, editparser, invokeparser, clipparser]:
         add_subcommand_common_arguments(p)
@@ -93,15 +104,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
         args.func(args)
 
 
-def _on_command_show(args:argparse.Namespace):
+def _on_command_mgmt(args:argparse.Namespace):
     cache = args.cache
-    if args.ids:
-        for uid in args.ids:
-            print(cache.get(uid))
-    elif args.list:
-        for uid in cache.keys():
-            print(uid)
-    else:
+
+    if args.stat:
         # Cache
         projects = []
         num_snippets = []
@@ -115,15 +121,29 @@ def _on_command_show(args:argparse.Namespace):
         for i, _ in enumerate(projects):
             print(f'project {projects[i]}:')
             print(f"\t {num_docs[i]} documentation(s), {num_snippets[i]} snippets(s)")
-
-        print('')
-
+    if args.dump_config:
         # Configuration
         print('configuration are loaded from %s' % args.config.__file__)
         for k,v in args.config.__dict__.items():
             if k.startswith('__'):
                 continue
             print('%s:\t\t%s' % (k, v))
+
+    # Snippet related
+    if args.list:
+        for id in args.list:
+            print(cache.get(id))
+    if args.list_all:
+        for id in cache.keys():
+            print(id)
+    if args.purge:
+        for id in args.purge:
+            del cache[id]
+        cache.dump()
+    if args.purge_all:
+        for id in list(cache.keys()):
+            del cache[id]
+        cache.dump()
 
 
 def _on_command_view(args:argparse.Namespace):
