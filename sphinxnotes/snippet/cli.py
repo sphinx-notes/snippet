@@ -54,6 +54,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     mgmtparser = subparsers.add_parser('mgmt', aliases=['m'], help='snippets management')
     mgmtparser.add_argument('--stat', '-s', action='store_true', help='show snippets statistic')
     mgmtparser.add_argument('--dump-config', '-d', action='store_true', help='dump current configuration')
+    mgmtparser.add_argument('--dump-index', '-i', action='store_true', help='dump snippet index')
     mgmtparser.add_argument('--list', '-l', nargs='+', help='show specify snippet')
     mgmtparser.add_argument('--list-all', action='store_true', help='list all snippets')
     mgmtparser.add_argument('--purge', nargs='+', help='purge specify snippets')
@@ -132,6 +133,10 @@ def _on_command_mgmt(args:argparse.Namespace):
             if k.startswith('__'):
                 continue
             print('%s:\t\t%s' % (k, v))
+    if args.dump_index:
+        print('snippet index are loaded from %s' % args.cache.cachefile())
+        for v in args.cache.indexes.values():
+            print(v)
 
     # Snippet related
     if args.list:

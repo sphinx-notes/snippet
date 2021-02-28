@@ -8,7 +8,7 @@
 from __future__ import annotations
 import os
 from os import path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from dataclasses import dataclass
 
 from . import Snippet
@@ -43,7 +43,7 @@ class Item(object):
 class Cache(Mapping):
     """Cache of snippet."""
     # Table of index: ID, excerpt, titlepath, keywords
-    indexes:Tuple[str,str,str,List[str],List[str]]
+    indexes:Dict[str,Tuple[str,str,str,List[str],List[str]]]
 
     def __init__(self, dirname:str) -> None:
         self.indexes = {}
