@@ -14,6 +14,7 @@ import itertools
 
 from docutils import nodes
 
+
 __title__= 'sphinxnotes-snippet'
 __license__ = 'BSD',
 __version__ = '1.0b0'
@@ -30,6 +31,7 @@ class Snippet(ABC):
 
     .. note:: Snippet constructor take doctree nodes as argument,
               please always pass the ``deepcopy()``\ ed nodes to constructor.
+              (FIXME)
     """
 
     @abstractclassmethod
@@ -50,7 +52,7 @@ class Snippet(ABC):
         pass
 
 
-    def scopes(self) -> List[Tuple[int,Optional[int]]]:
+    def scopes(self) -> List[Tuple[int,int]]:
         """
         Return the scopes of snippet, which corresponding to the line
         number in the source file.
@@ -173,11 +175,10 @@ def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]
     return lines
 
 
-def merge_scopes(scopes:List[Tuple[int,Optional[int]]]) -> List[Tuple[int,Optional[int]]]:
+def merge_scopes(scopes:List[Tuple[int,int]]) -> List[Tuple[int,int]]:
     """"Merge the overlap scope, the pass-in scopes must be sorted."""
-    # TODO: simplify
     merged = [scopes[0]]
-    for tup in scopes[:-1]:
+    for tup in scopes:
         if merged[-1][1] >= tup[0]:
             if merged[-1][1] >= tup[1]:
                 # Completely overlap
@@ -188,20 +189,6 @@ def merge_scopes(scopes:List[Tuple[int,Optional[int]]]) -> List[Tuple[int,Option
         else:
             # No overlap
             merged.append(tup)
-    # Spceial case for last scope
-    if merged[-1][1] >= scopes[-1][0]:
-        if scopes[-1][1] is None:
-            merged[-1] = (merged[-1][0], None)
-        elif merged[-1][1] >= scopes[-1][1]:
-            # Completely overlap
-            pass
-        else:
-            # Partial overlap
-            merged[-1] = (merged[-1][0], scopes[-1][1])
-    else:
-        # No overlap
-        merged.append(tup)
-
     return merged
 
 
@@ -225,9 +212,13 @@ def line_of_start(node:nodes.Node) -> int:
 
 
 def line_of_end(node:nodes.Node) -> Optional[int]:
-    while node:
+    while True:
         next_node = node.next_node(descend=False, siblings=True, ascend=True)
-        if next_node and next_node.line:
+        if not next_node:
+            break
+        if next_node.line:
             return line_of_start(next_node)
         node = next_node
-    return None
+    # No line found, return the max line of source file
+    with open(node.source) as f:
+        return sum(1 for line in f)
