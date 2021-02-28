@@ -44,7 +44,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'snippet=sphinxnotes.snippet:main',
+            'snippet=sphinxnotes.snippet.cli:main',
         ],
     },
     install_requires= [

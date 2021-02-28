@@ -22,3 +22,6 @@ upload: dist/
 .PHONY: test
 test:
 	$(PY) -m unittest -v
+
+cli:
+	./utils/cli.py --config utils/conf.py $(args)
