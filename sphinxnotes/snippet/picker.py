@@ -20,6 +20,8 @@ from .utils.titlepath import resolve_doctitle
 def pick_doctitle(doctree:nodes.document) -> Optional[Headline]:
     """Pick document title and subtitle (if have) from document."""
     title, subtitle = resolve_doctitle(doctree)
+    if not title:
+        return None
     return Headline(title=title, subtitle=subtitle)
 
 
