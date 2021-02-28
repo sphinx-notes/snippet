@@ -74,8 +74,10 @@ class CodePicker(nodes.SparseNodeVisitor):
         i += 1 # Skip last post_description
 
         self.offset[container] = i
-        self.codes.append(Code(description=desc,
-                               block=node))
+        if desc:
+            # Only add code with description
+            self.codes.append(Code(description=desc,
+                                   block=node))
 
 
     def visit_enumerated_list(self, node:nodes.enumerated_list) -> None:
