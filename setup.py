@@ -4,7 +4,6 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('./sphinxnotes'))
 from setuptools import setup, find_namespace_packages
-
 import snippet as proj
 
 with open('README.rst') as f:
