@@ -75,7 +75,7 @@ class Filter(object):
                  ellipsis.ellipsis(f'[{index[0]}]', kind_width, blank_sym=' '), # Kind
                  ellipsis.ellipsis(index[1], excerpt_width, blank_sym=' '), # Excerpt
                  ellipsis.join(index[2], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
-                 ','.join(index[3])]) # Keywords
+                 ','.join(index[3])]) + '\n' # Keywords
             row_id += 1
             item_ids.append(item_id)
             try:
