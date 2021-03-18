@@ -92,7 +92,7 @@ class Filter(object):
         if p.returncode == 130: # Terminated by Control-C
             return None
         elif p.returncode != 0:
-            raise('filter exited with code %s:%s' % (
+            raise ChildProcessError('filter exited with code %s:%s' % (
                 p.returncode, p.stderr.read().decode('utf-8')))
 
         # Normally exited pass

@@ -14,6 +14,7 @@ from os import path
 from typing import Dict, Optional, Iterable, TypeVar
 import pickle
 from collections.abc import MutableMapping
+from hashlib import sha1
 
 K = TypeVar('K')
 V = TypeVar('V')
@@ -125,7 +126,9 @@ class PDict(MutableMapping):
 
 
     def itemfile(self, key:K) -> str:
-        return path.join(self.dirname, pickle.dumps(key).hex() + '.pickle')
+        hasher = sha1()
+        hasher.update(pickle.dumps(key))
+        return path.join(self.dirname, hasher.hexdigest()[:7] + '.pickle')
 
 
     def post_dump(self, key:K, value:V) -> None:
