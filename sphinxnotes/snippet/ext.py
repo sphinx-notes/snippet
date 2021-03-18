@@ -76,7 +76,7 @@ def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
                          changed:Set[str], removed:Set[str]) -> List[str]:
     # Remove purged indexes and snippetes from db
     for docname in removed:
-        cache.purge_doc(app.config.project, docname)
+        del cache[(app.config.project, docname)]
     return []
 
 
@@ -90,30 +90,27 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
     pats = app.config.snippet_patterns
     matched = False
 
+    doc = cache.setdefault((app.config.project, docname), [])
     # Pick document title from doctree
     if is_matched(pats, Headline, docname):
         matched = True
         doctitle = pick_doctitle(doctree)
         if doctitle:
-            cache.add(Item(project=app.config.project,
-                           docname=docname,
-                           titlepath=resolve_docpath(app.env, docname),
-                           snippet=doctitle,
-                           keywords=extract_keywords(doctitle)))
+            doc.append(Item(titlepath=resolve_docpath(app.env, docname),
+                            snippet=doctitle,
+                            keywords=extract_keywords(doctitle)))
 
     # Pick code snippet from doctree
     if is_matched(pats, Code, docname):
         matched = True
         codes = pick_codes(doctree)
         for code in codes:
-            cache.add(Item(project=app.config.project,
-                           docname=docname,
-                           titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
-                           snippet=code,
-                           keywords=extract_keywords(code)))
+            doc.append(Item(titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
+                            snippet=code,
+                            keywords=extract_keywords(code)))
 
     if not matched:
-        cache.purge_doc(app.config.project, docname)
+        del cache[(app.config.project, docname)]
 
 
 def on_builder_finished(app:Sphinx, exception) -> None:

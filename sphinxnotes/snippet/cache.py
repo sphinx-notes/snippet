@@ -6,81 +6,50 @@
 """
 
 from __future__ import annotations
-import os
-from os import path
 from typing import List, Tuple, Dict
 from dataclasses import dataclass
 
 from . import Snippet
-from .utils.docmapping import Mapping
-
+from .utils.pdict import PDict
 
 @dataclass(frozen=True)
 class Item(object):
     """ Item of snippet cache. """
-    # Name of sphinx project
-    project:str # TODO
-    # Name of documentation
-    docname:str
-    titlepath:List[str]
     snippet:Snippet
-    # (Keywords, Rank)
-    keywords:List[Tuple[str,float]]
+    titlepath:List[str]
+    keywords:List[Tuple[str,float]] # (Keywords, Rank)
 
-    def hexdigest(self) -> str:
-        from hashlib import sha1
-        hasher = sha1()
-        # TODO: none for now
-        if self.project:
-            hasher.update(self.project.encode())
-        hasher.update(self.docname.encode())
-        [hasher.update(title.encode()) for title in self.titlepath]
-        [hasher.update(line.encode()) for line in self.snippet.original()]
-        [hasher.update(keyword.encode()) for keyword, _ in self.keywords]
-        return hasher.hexdigest()
+DocID = Tuple[str, str] # (project, docname)
+ItemList = List[Item]
+ItemID = Tuple[DocID,int]
+Index = Tuple[str,str,List[str],List[str]] # (kind, excerpt, titlepath, keywords)
 
-
-class Cache(Mapping):
-    """Cache of snippet."""
-    # Table of index: ID, excerpt, titlepath, keywords
-    indexes:Dict[str,Tuple[str,str,str,List[str],List[str]]]
+class Cache(PDict):
+    """A DocID -> ItemList Cache."""
+    indexes:Dict[ItemID,Index] # Table of index
 
     def __init__(self, dirname:str) -> None:
         self.indexes = {}
         super().__init__(dirname)
 
 
-    def post_dump_item(self, key:str,item:Item) -> None:
-        """Overwrite Mapping.post_dump."""
-
-        # Update item index
-        excerpt = item.snippet.excerpt()
-        keywords = [keyword for keyword, rank in item.keywords]
-        self.indexes[key] = (key, item.snippet.kind(), excerpt, item.titlepath, keywords)
-
-        # Update item preview
-        with open(self.previewfile(key), 'w') as f:
-            f.write('\n'.join(item.snippet.original()))
+    def post_dump(self, key:DocID, items:ItemList) -> None:
+        """Overwrite PDict.post_dump."""
+        # Update items index
+        for i, item in enumerate(items):
+            self.indexes[(key, i)] = (
+                item.snippet.kind(),
+                item.snippet.excerpt(),
+                item.titlepath,
+                [keyword for keyword, rank in item.keywords])
 
 
-    def post_purge_item(self, key:str, item:Item) -> None:
-        """Overwrite Mapping.post_purge."""
-        del self.indexes[key]
-        os.remove(self.previewfile(key))
+    def post_purge(self, key:DocID, items:ItemList) -> None:
+        """Overwrite PDict.post_purge."""
+        for i, _ in enumerate(items):
+            del self.indexes[(key, i)]
 
 
-    def previewfile(self, key:str) -> str:
-        return path.join(self.dirname, key + '.rst')
-
-
-    def add(self, item:Item) -> str:
-        """Add item to cache, return ID of item"""
-        digest = item.hexdigest()[:7]
-        self[digest] = item
-        return digest
-
-
-    def purge_doc(self, project:str, docname:str) -> None:
-        """Pure persistent items that belongs to given docname. """
-        for k in self.by_docname(project, docname):
-            del self[k]
+    def stringify(self, key:DocID, items:ItemList) -> str:
+        """Overwrite PDict.stringify."""
+        return key[1]

@@ -14,8 +14,9 @@ from __future__ import annotations
 from typing import List, Optional
 import subprocess
 import shutil
+import tempfile
 
-from .cache import Cache
+from .cache import Cache, Item, ItemID
 from .config import Config
 
 COLUMNS = ['id', 'kind', 'excerpt', 'path', 'keywords']
@@ -31,14 +32,14 @@ class Filter(object):
         self.cache = cache
         self.config = config
 
-    def filter(self, keywords:List[str]=[], kinds:str='*') -> Optional[str]:
+    def filter(self, keywords:List[str]=[], kinds:str='*') -> Optional[Item]:
         """Spwan a interactive filter and return selected ID"""
 
         # Spwan filter
         args = self.config.filter(COLUMNS, HEADER_LINE, keywords)
         p = subprocess.Popen(['sh', '-c', ' '.join(args)],
-                           stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE)
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE)
 
         # Calcuate width
         term_width = shutil.get_terminal_size((120, 0)).columns
@@ -52,27 +53,31 @@ class Filter(object):
 
         # Write header
         from .utils import ellipsis
-        header = '%s  %s  %s  %s  %s\n' % (
-            'ID',
-            ellipsis.ellipsis('Kind', kind_width, blank_sym=' '),
-            ellipsis.ellipsis('Excerpt', excerpt_width, blank_sym=' '),
-            ellipsis.ellipsis('Path', path_width, blank_sym=' ' ),
-            'Keywords')
+        header = COLUMN_DELIMITER.join(
+            [COLUMNS[0].upper(),
+             ellipsis.ellipsis(COLUMNS[1].upper(), kind_width, blank_sym=' '),
+             ellipsis.ellipsis(COLUMNS[2].upper(), excerpt_width, blank_sym=' '),
+             ellipsis.ellipsis(COLUMNS[3].upper(), path_width, blank_sym=' ' ),
+             COLUMNS[4].upper()]) + '\n'
         try:
             p.stdin.write(header.encode('utf-8'))
         except KeyboardInterrupt:
             return
 
         # Write rows
-        for index in self.cache.indexes.values():
-            if index[1] not in kinds and '*' not in kinds:
+        row_id = 0
+        item_ids = []
+        for item_id, index in self.cache.indexes.items():
+            if index[0] not in kinds and '*' not in kinds:
                 continue
-            row = '%s  %s  %s  %s  %s\n' % (
-                index[0], # ID
-                ellipsis.ellipsis('[%s]' % index[1], kind_width, blank_sym=' '), # Kind
-                ellipsis.ellipsis(index[2], excerpt_width, blank_sym=' '), # Excerpt
-                ellipsis.join(index[3], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
-                ','.join(index[4])) # Keywords
+            row = COLUMN_DELIMITER.join(
+                [str(row_id), # ID
+                 ellipsis.ellipsis(f'[{index[0]}]', kind_width, blank_sym=' '), # Kind
+                 ellipsis.ellipsis(index[1], excerpt_width, blank_sym=' '), # Excerpt
+                 ellipsis.join(index[2], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
+                 ','.join(index[3])]) # Keywords
+            row_id += 1
+            item_ids.append(item_id)
             try:
                 p.stdin.write(row.encode('utf-8'))
                 p.stdin.flush()
@@ -84,27 +89,37 @@ class Filter(object):
             p.wait()
         except KeyboardInterrupt:
             return
-
-        if p.returncode == 0: # Normally exited
-            stdout = p.stdout.read().decode('utf-8').strip().replace('\n', '')
-            return stdout.split(' ')[0] # Return snippet ID
-        elif p.returncode == 130: # Terminated by Control-C
+        if p.returncode == 130: # Terminated by Control-C
             return None
-        else:
+        elif p.returncode != 0:
             raise('filter exited with code %s:%s' % (
                 p.returncode, p.stderr.read().decode('utf-8')))
 
+        # Normally exited pass
+        stdout = p.stdout.read().decode('utf-8').strip().replace('\n', '')
+        row_id = int(stdout.split('  ')[0])
+        item_id = item_ids[row_id]
+        doc_id, item_offset = item_id
+        return self.cache[doc_id][item_offset]
 
-    def view(self, uid:str) -> None:
-        args = self.config.viewer(self.cache.previewfile(uid))
+
+    def view(self, id:ItemID) -> None:
+        doc_id, item_offset = id
+        snippet = self.cache[doc_id][item_offset].snippet
+        # FIXME
+        with tempfile.NamedTemporaryFile(mode='w') as f:
+            f.write(snippet.original())
+        args = self.config.viewer(snippet.original())
+        return
         try:
             subprocess.run(args)
         except KeyboardInterrupt:
             return
 
 
-    def edit(self, uid:str) -> None:
-        snippet = self.cache[uid].snippet
+    def edit(self, id:ItemID) -> None:
+        doc_id, item_offset = id
+        snippet = self.cache[doc_id][item_offset].snippet
         args = self.config.editor(snippet.source(), line=snippet.scopes()[0][0])
         try:
             subprocess.run(args)
