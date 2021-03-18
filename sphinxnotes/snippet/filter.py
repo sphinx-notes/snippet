@@ -101,27 +101,3 @@ class Filter(object):
         item_id = item_ids[row_id]
         doc_id, item_offset = item_id
         return self.cache[doc_id][item_offset]
-
-
-    def view(self, id:ItemID) -> None:
-        doc_id, item_offset = id
-        snippet = self.cache[doc_id][item_offset].snippet
-        # FIXME
-        with tempfile.NamedTemporaryFile(mode='w') as f:
-            f.write(snippet.original())
-        args = self.config.viewer(snippet.original())
-        return
-        try:
-            subprocess.run(args)
-        except KeyboardInterrupt:
-            return
-
-
-    def edit(self, id:ItemID) -> None:
-        doc_id, item_offset = id
-        snippet = self.cache[doc_id][item_offset].snippet
-        args = self.config.editor(snippet.source(), line=snippet.scopes()[0][0])
-        try:
-            subprocess.run(args)
-        except KeyboardInterrupt:
-            return

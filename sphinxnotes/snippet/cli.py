@@ -17,8 +17,10 @@ from xdg.BaseDirectory import xdg_config_home
 
 from . import __title__, __version__, __description__
 from .config import Config
-from .filter import Filter
 from .cache import Cache
+from .filter import Filter
+from .viewer import Viewer
+from .editor import Editor
 
 DEFAULT_CONFIG_FILE = path.join(xdg_config_home, __title__, 'conf.py')
 
@@ -144,7 +146,8 @@ def _on_command_view(args:argparse.Namespace):
     item = filter.filter(keywords=args.keywords, kinds=args.kinds)
     if not item:
         return
-    # filter.view(item_id)
+    viewer = Viewer(args.config)
+    viewer.view(item.snippet)
 
 
 def _on_command_edit(args:argparse.Namespace):
@@ -152,7 +155,8 @@ def _on_command_edit(args:argparse.Namespace):
     item = filter.filter(keywords=args.keywords, kinds=args.kinds)
     if not item:
         return
-    # filter.edit(item)
+    editor = Editor(args.config)
+    editor.edit(item.snippet)
 
 
 def _on_command_invoke(args:argparse.Namespace):
