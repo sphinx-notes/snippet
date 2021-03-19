@@ -34,7 +34,6 @@ logger = logging.getLogger(__name__)
 
 cache:Cache = None
 extractor:Extractor = FrequencyExtractor()
-# extractor:Extractor = TextRankExtractor()
 
 def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
     # TODO: Deal with more snippet

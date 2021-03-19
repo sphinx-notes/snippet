@@ -14,9 +14,8 @@ from __future__ import annotations
 from typing import List, Optional
 import subprocess
 import shutil
-import tempfile
 
-from .cache import Cache, Item, ItemID
+from .cache import Cache, Item
 from .config import Config
 
 COLUMNS = ['id', 'kind', 'excerpt', 'path', 'keywords']

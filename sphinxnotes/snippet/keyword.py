@@ -124,25 +124,3 @@ class FrequencyExtractor(Extractor):
 
     def strip_invalid_token(self, tokens:List[str]) -> List[str]:
         return [token for token in tokens if token  != '']
-
-
-class TextRankExtractor(Extractor):
-    """Keyword extractor based on text rank algorithm."""
-
-    def __init__(self):
-        # Import NLP libs here to prevent import overhead
-        from langid import classify
-        from jieba.analyse import textrank
-        from summa.keywords import keywords
-
-        self._detect_lang = classify
-        self._textrank_zh_cn = textrank
-        self._textrank_en = keywords
-
-
-    def extract(self, text:str, top_n:Optional[int]=None) -> List[Tuple[str,float]]:
-        lang = self._detect_lang(text)
-        if lang[0] == 'zh':
-            return self._textrank_zh_cn(text, topK=top_n, withWeight=True)
-        else:
-            return self._textrank_en(text, scores=True)[:top_n]
