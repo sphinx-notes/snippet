@@ -9,21 +9,12 @@
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional
-from abc import ABC, abstractclassmethod
+from typing import List, Optional
 import string
 from collections import Counter
 
-class Extractor(ABC):
-    """Keyword extractor abstract class."""
 
-    @abstractclassmethod
-    def extract(self, text:str, top_n:int=10) -> List[Tuple[str,float]]:
-        """Return keywords (and their rank) of given text."""
-        pass
-
-
-class FrequencyExtractor(Extractor):
+class Extractor(object):
     """
     Keyword extractor based on frequency statistic.
 
@@ -49,7 +40,8 @@ class FrequencyExtractor(Extractor):
 
     def extract(self, text:str,
                 top_n:Optional[int]=None,
-                strip_stopwords:bool=True) -> List[Tuple[str,float]]:
+                strip_stopwords:bool=True) -> List[str]:
+        """Return keywords of given text."""
         # TODO: zh -> en
         # Normalize
         text = self.normalize(text)
@@ -63,19 +55,17 @@ class FrequencyExtractor(Extractor):
         if top_n:
             # Get top n words as keyword
             keywords = Counter(words).most_common(top_n)
-            # Convert int rank to float
-            for i, tup in enumerate(keywords):
-                word, rank = tup
-                keywords[i] = (word, rank * 1.0)
+            # Remove rank
+            keywords = [word for word, _ in keywords]
         else:
             # Keep all keywords
-            keywords = [(w, 1.0) for w in words]
+            keywords = words
         # Generate a pinyin version
         keywords_pinyin = []
-        for word, rank in keywords:
+        for word in keywords:
             pinyin = self.trans_to_pinyin(word)
             if pinyin:
-                keywords_pinyin.append((pinyin, rank))
+                keywords_pinyin.append(pinyin)
         return keywords + keywords_pinyin
 
 

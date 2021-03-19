@@ -9,7 +9,7 @@
 """
 
 from __future__ import annotations
-from typing import List, Set, Tuple, TYPE_CHECKING, Type, Dict
+from typing import List, Set, TYPE_CHECKING, Type, Dict
 import re
 
 from docutils import nodes
@@ -26,16 +26,14 @@ from .picker import pick_doctitle, pick_codes
 from .cache import Cache, Item
 from .keyword import Extractor
 from .utils.titlepath import resolve_fullpath, resolve_docpath
-from .keyword import FrequencyExtractor
-# from .keyword import TextRankExtractor
 
 
 logger = logging.getLogger(__name__)
 
 cache:Cache = None
-extractor:Extractor = FrequencyExtractor()
+extractor:Extractor = Extractor()
 
-def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
+def extract_keywords(s:Snippet) -> List[str]:
     # TODO: Deal with more snippet
     if isinstance(s, Notes):
         return extractor.extract('\n'.join(map(lambda x:x.astext(), s.description)),

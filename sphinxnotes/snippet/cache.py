@@ -17,7 +17,7 @@ class Item(object):
     """ Item of snippet cache. """
     snippet:Snippet
     titlepath:List[str]
-    keywords:List[Tuple[str,float]] # (Keywords, Rank)
+    keywords:List[str]
 
 DocID = Tuple[str, str] # (project, docname)
 ItemList = List[Item]
@@ -41,7 +41,7 @@ class Cache(PDict):
                 item.snippet.kind(),
                 item.snippet.excerpt(),
                 item.titlepath,
-                [keyword for keyword, rank in item.keywords])
+                item.keywords)
 
 
     def post_purge(self, key:DocID, items:ItemList) -> None:
