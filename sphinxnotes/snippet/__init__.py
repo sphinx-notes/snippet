@@ -17,7 +17,7 @@ from docutils import nodes
 
 __title__= 'sphinxnotes-snippet'
 __license__ = 'BSD',
-__version__ = '1.0b2'
+__version__ = '1.0b3'
 __author__ = 'Shengyu Zhang'
 __url__ = 'https://sphinx-notes.github.io/snippet'
 __description__ = 'Non-intrusive snippet manager for Sphinx documentation'
@@ -52,7 +52,7 @@ class Snippet(ABC):
         pass
 
 
-    def source(self) -> str:
+    def file(self) -> str:
         """Return source file path of snippet"""
         # All nodes should have same source file
         return self.nodes()[0].source
@@ -76,9 +76,9 @@ class Snippet(ABC):
         return scopes
 
 
-    def original(self) -> List[str]:
+    def text(self) -> List[str]:
         """Return the original reStructuredText text of snippet."""
-        srcfn = self.source()
+        srcfn = self.file()
         lines = []
         for scope in self.scopes():
             lines += read_partial_file(srcfn, scope)

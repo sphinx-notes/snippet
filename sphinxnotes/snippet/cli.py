@@ -18,27 +18,18 @@ from xdg.BaseDirectory import xdg_config_home
 from . import __title__, __version__, __description__
 from .config import Config
 from .cache import Cache
-from .filter import Filter
-from .viewer import Viewer
-from .editor import Editor
+from .table import tablify, VISIABLE_COLUMNS
 
 DEFAULT_CONFIG_FILE = path.join(xdg_config_home, __title__, 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                     argparse.RawDescriptionHelpFormatter): pass
 
-def add_subcommand_common_arguments(parser:argparse.ArgumentParser, kinds:str) -> None:
-    """Add common arguments (partial) subcommands to subcommands' argument parser."""
-    parser.add_argument('keywords', nargs='*', help='keywords for pre-filtering')
-    parser.add_argument('--id', nargs=1, help='specify snippet item by ID instead of filtering')
-    parser.add_argument('--kinds', '-k', nargs=1, default=kinds, help='snippet kinds for pre-filtering')
-
 
 def main(argv:List[str]=sys.argv[1:]) -> int:
     """Command line entrypoint."""
 
     parser = argparse.ArgumentParser(prog=__name__, description=__description__,
-                                     # formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                      formatter_class=HelpFormatter,
                                      epilog=dedent("""
                                      snippet kinds:
@@ -52,36 +43,43 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Init subcommands
     subparsers = parser.add_subparsers()
-    mgmtparser = subparsers.add_parser('mgmt', aliases=['m'], help='snippets management')
-    mgmtparser.add_argument('--stat', '-s', action='store_true', help='show snippets statistic')
-    mgmtparser.add_argument('--dump-config', '-d', action='store_true', help='dump current configuration')
-    mgmtparser.add_argument('--dump-index', '-i', action='store_true', help='dump snippet indexes')
-    mgmtparser.add_argument('--list', action='store_true', help='list all snippets')
-    mgmtparser.add_argument('--purge', action='store_true', help='purge all snippets')
+    mgmtparser = subparsers.add_parser('stat',
+                                       aliases=['s'],
+                                       formatter_class=HelpFormatter,
+                                       help='snippets statistic')
     mgmtparser.set_defaults(func=_on_command_mgmt)
 
-    viewparser = subparsers.add_parser('view', aliases=['v'],
-                                       help='filter and view snippet')
-    viewparser.set_defaults(func=_on_command_view)
+    listparser = subparsers.add_parser('list',
+                                       aliases=['l'],
+                                       formatter_class=HelpFormatter,
+                                       help='list snippet indexes, columns of indexes: %s' %
+                                       VISIABLE_COLUMNS)
+    listparser.add_argument('--kinds', '-k',
+                            action='store_true',
+                            default='*',
+                            help='list specified kinds only')
+    listparser.add_argument('--width', '-w',
+                            action='store_true',
+                            default=120,
+                            help='width in characters of output')
+    listparser.set_defaults(func=_on_command_list)
 
-    editparser = subparsers.add_parser('edit', aliases=['e'],
-                                       help='filter snippet and edit the corresponding source file')
-    editparser.set_defaults(func=_on_command_edit)
-
-    invokeparser = subparsers.add_parser('invoke', aliases=['i'],
-                                         help='filter and invoke executable snippet')
-    invokeparser.set_defaults(func=_on_command_invoke)
-
-    clipparser = subparsers.add_parser('clip', aliases=['c'],
-                                       help='filter and clip snippet to clipboard')
-    clipparser.set_defaults(func=_on_command_clip)
-
-
-    # Add common arguments
-    # TODO: to be document?
-    kinds = ['c', 'cd', 'c', 'c']
-    for i, p in enumerate([viewparser, editparser, invokeparser, clipparser]):
-        add_subcommand_common_arguments(p, kinds[i])
+    getparser = subparsers.add_parser('get',
+                                      aliases=['g'],
+                                      formatter_class=HelpFormatter,
+                                      help='get information of snippet by index ID')
+    getparser.add_argument('--file', '-f',
+                           action='store_true',
+                           help='get source file path of snippet')
+    getparser.add_argument('--text', '-t',
+                           action='store_true',
+                           default=True,
+                           help='get source reStructuredText of snippet')
+    getparser.add_argument('index_id',
+                           type=str,
+                           nargs='+',
+                           help='index ID')
+    getparser.set_defaults(func=_on_command_get)
 
     # Parse command line arguments
     args = parser.parse_args(argv)
@@ -107,64 +105,32 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 def _on_command_mgmt(args:argparse.Namespace):
     cache = args.cache
 
-    if args.stat:
-        # Cache
-        num_snippets = {}
-        num_docs = {}
-        for project, docname in cache.keys():
-            num_docs[project] = num_docs.get(project, 0) + 1
-            num_snippets[project] = num_snippets.get(project, 0) + len(cache[(project, docname)]) # FIXME
-        print('snippets are loaded from %s' % cache.dirname)
-        print(f'I have {len(num_docs)} project(s), {sum(num_docs.values())} documentation(s) and {sum(num_snippets.values())} snippet(s)')
-        for i in num_docs:
-            print(f'project {i}:')
-            print(f"\t {num_docs[i]} documentation(s), {num_snippets[i]} snippets(s)")
-    if args.dump_config:
-        # Configuration
-        print('configuration are loaded from %s' % args.config.__file__)
-        for k,v in args.config.__dict__.items():
-            if k.startswith('__'):
-                continue
-            print('%s:\t\t%s' % (k, v))
-    if args.dump_index:
-        print('snippet index are loaded from %s' % args.cache.dictfile())
-        for k, v in args.cache.indexes.items():
-            print(k, v)
-
-    # Snippet related
-    if args.list:
-        for doc_id, item_list in cache.items():
-            for item_offset, item in enumerate(item_list):
-                print((doc_id, item_offset)) # TODO: list snippet content?
-    if args.purge:
-        cache.clear()
-        cache.dump()
+    num_projects = len(cache.num_snippets_by_project)
+    num_docs = len(cache.num_snippets_by_docid)
+    num_snippets = sum(cache.num_snippets_by_project.values())
+    print(f'snippets are loaded from {cache.dirname}')
+    print(f'I have {num_projects} project(s), {num_docs} documentation(s) and {num_snippets} snippet(s)')
+    for i, v in cache.num_snippets_by_project.items():
+        print(f'project {i}:')
+        print(f"\t {v} snippets(s)")
 
 
-def _on_command_view(args:argparse.Namespace):
-    filter = Filter(args.cache, args.config)
-    item = filter.filter(keywords=args.keywords, kinds=args.kinds)
-    if not item:
-        return
-    viewer = Viewer(args.config)
-    viewer.view(item.snippet)
+def _on_command_list(args:argparse.Namespace):
+    rows = tablify(args.cache.indexes, args.kinds, args.width)
+    for row in rows:
+        print(row)
 
 
-def _on_command_edit(args:argparse.Namespace):
-    filter = Filter(args.cache, args.config)
-    item = filter.filter(keywords=args.keywords, kinds=args.kinds)
-    if not item:
-        return
-    editor = Editor(args.config)
-    editor.edit(item.snippet)
-
-
-def _on_command_invoke(args:argparse.Namespace):
-    pass
-
-
-def _on_command_clip(args:argparse.Namespace):
-    pass
+def _on_command_get(args:argparse.Namespace):
+    for index_id in args.index_id:
+        item = args.cache.get_by_index_id(index_id)
+        if not item:
+            print('no such index ID', file=sys.stderr)
+            sys.exit(1)
+        if args.file:
+            print(item.snippet.file())
+        if args.text:
+            print('\n'.join(item.snippet.text()))
 
 
 if __name__ == '__main__':
