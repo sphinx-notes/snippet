@@ -9,7 +9,7 @@
 """
 
 from __future__ import annotations
-from typing import List, Set, Tuple, TYPE_CHECKING, Type, Dict
+from typing import List, Set, TYPE_CHECKING, Type, Dict
 import re
 
 from docutils import nodes
@@ -26,17 +26,14 @@ from .picker import pick_doctitle, pick_codes
 from .cache import Cache, Item
 from .keyword import Extractor
 from .utils.titlepath import resolve_fullpath, resolve_docpath
-from .keyword import FrequencyExtractor
-# from .keyword import TextRankExtractor
 
 
 logger = logging.getLogger(__name__)
 
 cache:Cache = None
-extractor:Extractor = FrequencyExtractor()
-# extractor:Extractor = TextRankExtractor()
+extractor:Extractor = Extractor()
 
-def extract_keywords(s:Snippet) -> List[Tuple[str,float]]:
+def extract_keywords(s:Snippet) -> List[str]:
     # TODO: Deal with more snippet
     if isinstance(s, Notes):
         return extractor.extract('\n'.join(map(lambda x:x.astext(), s.description)),
@@ -76,7 +73,7 @@ def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
                          changed:Set[str], removed:Set[str]) -> List[str]:
     # Remove purged indexes and snippetes from db
     for docname in removed:
-        cache.purge_doc(app.config.project, docname)
+        del cache[(app.config.project, docname)]
     return []
 
 
@@ -90,30 +87,27 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
     pats = app.config.snippet_patterns
     matched = False
 
+    doc = cache.setdefault((app.config.project, docname), [])
     # Pick document title from doctree
     if is_matched(pats, Headline, docname):
         matched = True
         doctitle = pick_doctitle(doctree)
         if doctitle:
-            cache.add(Item(project=app.config.project,
-                           docname=docname,
-                           titlepath=resolve_docpath(app.env, docname),
-                           snippet=doctitle,
-                           keywords=extract_keywords(doctitle)))
+            doc.append(Item(titlepath=resolve_docpath(app.env, docname),
+                            snippet=doctitle,
+                            keywords=extract_keywords(doctitle)))
 
     # Pick code snippet from doctree
     if is_matched(pats, Code, docname):
         matched = True
         codes = pick_codes(doctree)
         for code in codes:
-            cache.add(Item(project=app.config.project,
-                           docname=docname,
-                           titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
-                           snippet=code,
-                           keywords=extract_keywords(code)))
+            doc.append(Item(titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
+                            snippet=code,
+                            keywords=extract_keywords(code)))
 
     if not matched:
-        cache.purge_doc(app.config.project, docname)
+        del cache[(app.config.project, docname)]
 
 
 def on_builder_finished(app:Sphinx, exception) -> None:

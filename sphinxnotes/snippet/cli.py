@@ -17,19 +17,20 @@ from xdg.BaseDirectory import xdg_config_home
 
 from . import __title__, __version__, __description__
 from .config import Config
-from .filter import Filter
 from .cache import Cache
+from .filter import Filter
+from .viewer import Viewer
+from .editor import Editor
 
 DEFAULT_CONFIG_FILE = path.join(xdg_config_home, __title__, 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
-                  argparse.RawDescriptionHelpFormatter):
-    pass
+                    argparse.RawDescriptionHelpFormatter): pass
 
 def add_subcommand_common_arguments(parser:argparse.ArgumentParser, kinds:str) -> None:
     """Add common arguments (partial) subcommands to subcommands' argument parser."""
     parser.add_argument('keywords', nargs='*', help='keywords for pre-filtering')
-    parser.add_argument('--id', nargs=1, help='specify snippet by ID instead of filtering')
+    parser.add_argument('--id', nargs=1, help='specify snippet item by ID instead of filtering')
     parser.add_argument('--kinds', '-k', nargs=1, default=kinds, help='snippet kinds for pre-filtering')
 
 
@@ -54,11 +55,9 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     mgmtparser = subparsers.add_parser('mgmt', aliases=['m'], help='snippets management')
     mgmtparser.add_argument('--stat', '-s', action='store_true', help='show snippets statistic')
     mgmtparser.add_argument('--dump-config', '-d', action='store_true', help='dump current configuration')
-    mgmtparser.add_argument('--dump-index', '-i', action='store_true', help='dump snippet index')
-    mgmtparser.add_argument('--list', '-l', nargs='+', help='show specify snippet')
-    mgmtparser.add_argument('--list-all', action='store_true', help='list all snippets')
-    mgmtparser.add_argument('--purge', nargs='+', help='purge specify snippets')
-    mgmtparser.add_argument('--purge-all', action='store_true', help='purge all snippets')
+    mgmtparser.add_argument('--dump-index', '-i', action='store_true', help='dump snippet indexes')
+    mgmtparser.add_argument('--list', action='store_true', help='list all snippets')
+    mgmtparser.add_argument('--purge', action='store_true', help='purge all snippets')
     mgmtparser.set_defaults(func=_on_command_mgmt)
 
     viewparser = subparsers.add_parser('view', aliases=['v'],
@@ -77,10 +76,6 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                        help='filter and clip snippet to clipboard')
     clipparser.set_defaults(func=_on_command_clip)
 
-    clipparser = subparsers.add_parser('purge', aliases=[''],
-                                       help='filter and clip snippet to clipboard')
-
-    clipparser.set_defaults(func=_on_command_clip)
 
     # Add common arguments
     # TODO: to be document?
@@ -114,17 +109,15 @@ def _on_command_mgmt(args:argparse.Namespace):
 
     if args.stat:
         # Cache
-        projects = []
-        num_snippets = []
-        num_docs = []
-        for project in cache.tree:
-            projects.append(project)
-            num_docs.append(len(cache.tree[project]))
-            num_snippets.append(sum([len(x) for x in cache.tree[project]]))
+        num_snippets = {}
+        num_docs = {}
+        for project, docname in cache.keys():
+            num_docs[project] = num_docs.get(project, 0) + 1
+            num_snippets[project] = num_snippets.get(project, 0) + len(cache[(project, docname)]) # FIXME
         print('snippets are loaded from %s' % cache.dirname)
-        print(f'I have {len(projects)} project(s), {sum(num_docs)} documentation(s) and {sum(num_snippets)} snippet(s)')
-        for i, _ in enumerate(projects):
-            print(f'project {projects[i]}:')
+        print(f'I have {len(num_docs)} project(s), {sum(num_docs.values())} documentation(s) and {sum(num_snippets.values())} snippet(s)')
+        for i in num_docs:
+            print(f'project {i}:')
             print(f"\t {num_docs[i]} documentation(s), {num_snippets[i]} snippets(s)")
     if args.dump_config:
         # Configuration
@@ -134,41 +127,36 @@ def _on_command_mgmt(args:argparse.Namespace):
                 continue
             print('%s:\t\t%s' % (k, v))
     if args.dump_index:
-        print('snippet index are loaded from %s' % args.cache.cachefile())
-        for v in args.cache.indexes.values():
-            print(v)
+        print('snippet index are loaded from %s' % args.cache.dictfile())
+        for k, v in args.cache.indexes.items():
+            print(k, v)
 
     # Snippet related
     if args.list:
-        for id in args.list:
-            print(cache.get(id))
-    if args.list_all:
-        for id in cache.keys():
-            print(id)
+        for doc_id, item_list in cache.items():
+            for item_offset, item in enumerate(item_list):
+                print((doc_id, item_offset)) # TODO: list snippet content?
     if args.purge:
-        for id in args.purge:
-            del cache[id]
-        cache.dump()
-    if args.purge_all:
-        for id in list(cache.keys()):
-            del cache[id]
+        cache.clear()
         cache.dump()
 
 
 def _on_command_view(args:argparse.Namespace):
     filter = Filter(args.cache, args.config)
-    uid = filter.filter(keywords=args.keywords, kinds=args.kinds)
-    if not uid:
+    item = filter.filter(keywords=args.keywords, kinds=args.kinds)
+    if not item:
         return
-    filter.view(uid)
+    viewer = Viewer(args.config)
+    viewer.view(item.snippet)
 
 
 def _on_command_edit(args:argparse.Namespace):
     filter = Filter(args.cache, args.config)
-    uid = filter.filter(keywords=args.keywords, kinds=args.kinds)
-    if not uid:
+    item = filter.filter(keywords=args.keywords, kinds=args.kinds)
+    if not item:
         return
-    filter.edit(uid)
+    editor = Editor(args.config)
+    editor.edit(item.snippet)
 
 
 def _on_command_invoke(args:argparse.Namespace):
