@@ -73,7 +73,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     igparser = subparsers.add_parser('integration', aliases=['i'],
                                       formatter_class=HelpFormatter,
                                       help='integration related commands')
-    igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh plugin')
+    igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh integration script')
+    igparser.add_argument('--nvim', '-n', action='store_true', help='dump neovim integration script')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
 
 
@@ -136,6 +137,10 @@ def _on_command_integration(args:argparse.Namespace):
     # NOTE: files are included by MANIFEST.in
     if args.zsh:
         with open('integration/plugin.zsh', 'r') as f:
+            print(f.read())
+        return
+    if args.nvim:
+        with open('integration/plugin.nvim', 'r') as f:
             print(f.read())
         return
     args.parser.print_help()
