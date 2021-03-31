@@ -19,9 +19,13 @@ dist: setup.py
 upload: dist/
 	$(PY) -m twine upload --repository pypi $<*
 
+.PHONY: install
+install:
+	$(PY) -m pip install -U dist/*.whl
+
 .PHONY: test
 test:
 	$(PY) -m unittest -v
 
 cli:
-	./utils/cli.py --config utils/conf.py $(args)
+	$(PY) ./utils/cli.py --config utils/conf.py $(args)
