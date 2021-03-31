@@ -33,7 +33,7 @@ def tablify(indexes: Dict[IndexID,Index], kinds:str, width:int) -> Iterator[str]
          ellipsis.ellipsis(COLUMNS[1].upper(), kind_width, blank_sym=' '),
          ellipsis.ellipsis(COLUMNS[2].upper(), excerpt_width, blank_sym=' '),
          ellipsis.ellipsis(COLUMNS[3].upper(), path_width, blank_sym=' ' ),
-         COLUMNS[4].upper()]) + '\n'
+         COLUMNS[4].upper()])
     yield header
 
     # Write rows
@@ -46,5 +46,5 @@ def tablify(indexes: Dict[IndexID,Index], kinds:str, width:int) -> Iterator[str]
              ellipsis.ellipsis(f'[{index[0]}]', kind_width, blank_sym=' '), # Kind
              ellipsis.ellipsis(index[1], excerpt_width, blank_sym=' '), # Excerpt
              ellipsis.join(index[2], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
-             ','.join(index[3])]) + '\n' # Keywords
+             ','.join(index[3])]) # Keywords
         yield row
