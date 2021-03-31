@@ -2,3 +2,4 @@ include README.rst
 include LICENSE
 recursive-include doc *
 prune doc/_build
+include utils/plugin.zsh
