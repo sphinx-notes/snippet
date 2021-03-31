@@ -12,6 +12,7 @@ import argparse
 from typing import List
 from os import path
 from textwrap import dedent
+from shutil import get_terminal_size
 
 from xdg.BaseDirectory import xdg_config_home
 
@@ -43,43 +44,38 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Init subcommands
     subparsers = parser.add_subparsers()
-    mgmtparser = subparsers.add_parser('stat',
-                                       aliases=['s'],
+    mgmtparser = subparsers.add_parser('stat', aliases=['s'],
                                        formatter_class=HelpFormatter,
                                        help='snippets statistic')
     mgmtparser.set_defaults(func=_on_command_mgmt)
 
-    listparser = subparsers.add_parser('list',
-                                       aliases=['l'],
+    listparser = subparsers.add_parser('list', aliases=['l'],
                                        formatter_class=HelpFormatter,
                                        help='list snippet indexes, columns of indexes: %s' %
                                        VISIABLE_COLUMNS)
-    listparser.add_argument('--kinds', '-k',
-                            action='store_true',
-                            default='*',
+    listparser.add_argument('--kinds', '-k', type=str, nargs=1, default='*',
                             help='list specified kinds only')
-    listparser.add_argument('--width', '-w',
-                            action='store_true',
-                            default=120,
+    listparser.add_argument('--width', '-w', nargs=1, type=int,
+                            default=get_terminal_size((120, 0)).columns,
                             help='width in characters of output')
     listparser.set_defaults(func=_on_command_list)
 
-    getparser = subparsers.add_parser('get',
-                                      aliases=['g'],
+    getparser = subparsers.add_parser('get', aliases=['g'],
                                       formatter_class=HelpFormatter,
                                       help='get information of snippet by index ID')
-    getparser.add_argument('--file', '-f',
-                           action='store_true',
+    getparser.add_argument('--file', '-f', action='store_true',
                            help='get source file path of snippet')
-    getparser.add_argument('--text', '-t',
-                           action='store_true',
-                           default=True,
+    getparser.add_argument('--text', '-t', action='store_true', default=True,
                            help='get source reStructuredText of snippet')
-    getparser.add_argument('index_id',
-                           type=str,
-                           nargs='+',
-                           help='index ID')
+    getparser.add_argument('index_id', type=str, nargs='+', help='index ID')
     getparser.set_defaults(func=_on_command_get)
+
+    igparser = subparsers.add_parser('integration', aliases=['i'],
+                                      formatter_class=HelpFormatter,
+                                      help='integration related commands')
+    igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh plugin')
+    igparser.set_defaults(func=_on_command_integration, parser=igparser)
+
 
     # Parse command line arguments
     args = parser.parse_args(argv)
@@ -100,6 +96,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     # Call subcommand
     if hasattr(args, 'func'):
         args.func(args)
+    else:
+        parser.print_help()
 
 
 def _on_command_mgmt(args:argparse.Namespace):
@@ -131,6 +129,15 @@ def _on_command_get(args:argparse.Namespace):
             print(item.snippet.file())
         if args.text:
             print('\n'.join(item.snippet.text()))
+
+
+def _on_command_integration(args:argparse.Namespace):
+    # NOTE: files are included by MANIFEST.in
+    if args.zsh:
+        with open('integration/plugin.zsh', 'r') as f:
+            print(f.read())
+        return
+    args.parser.print_help()
 
 
 if __name__ == '__main__':
