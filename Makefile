@@ -21,7 +21,7 @@ upload: dist/
 
 .PHONY: install
 install:
-	$(PY) -m pip install -U dist/*.whl
+	$(PY) -m pip install --user --no-deps --force-reinstall dist/*.whl
 
 .PHONY: test
 test:
