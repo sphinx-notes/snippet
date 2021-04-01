@@ -41,6 +41,7 @@ setup(
     packages=find_namespace_packages(include=['sphinxnotes.*'],
                                      exclude=['sphinxnotes.snippet.tests']),
     include_package_data=True,
+    package_data={'sphinxnotes.snippet': ['integration/*']},
     entry_points={
         'console_scripts': [
             'snippet=sphinxnotes.snippet.cli:main',

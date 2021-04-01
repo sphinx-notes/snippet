@@ -20,8 +20,8 @@ upload: dist/
 	$(PY) -m twine upload --repository pypi $<*
 
 .PHONY: install
-install:
-	$(PY) -m pip install -U dist/*.whl
+install: dist
+	$(PY) -m pip install --user --no-deps --force-reinstall dist/*.whl
 
 .PHONY: test
 test:
