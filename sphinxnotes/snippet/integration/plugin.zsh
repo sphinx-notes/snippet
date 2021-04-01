@@ -4,6 +4,7 @@
 # :Author: Shengyu Zhang
 # :Date: 2021-03-20
 # :License: BSD
+# :Version: 20210401
 #
 # The recommanded key bindings are::
 #
@@ -24,7 +25,8 @@ function snippet_view() {
 }
 
 function snippet_edit() {
-  $EDITOR $($snippet get --file $(snippet_list dc))
+  BUFFER="$BUFFER $EDITOR $($snippet get --file $(snippet_list dc))"
+  zle accept-line
 }
 
 # Define a widget, mapped to our function above.
