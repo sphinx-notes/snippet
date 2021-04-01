@@ -4,6 +4,11 @@
 # :Author: Shengyu Zhang
 # :Date: 2021-03-20
 # :License: BSD
+#
+# The recommanded key bindings are::
+#
+#   bindkey ^kv snippet-view
+#   bindkey ^ke snippet-edit
 
 snippet="snippet"
 
@@ -19,16 +24,11 @@ function snippet_view() {
 }
 
 function snippet_edit() {
-  $EDITOR $($snippet get --file $(snippet_list c))
+  $EDITOR $($snippet get --file $(snippet_list dc))
 }
 
 # Define a widget, mapped to our function above.
-zle -N snippet_view
-zle -N snippet_edit
-
-# Bind it to ctrl-kv
-bindkey "^kv" snippet_view
-# Bind it to ctrl-ke
-bindkey "^ke" snippet_edit
+zle -N snippet-view snippet_view
+zle -N snippet-edit snippet_edit
 
 # vim: set shiftwidth=2:
