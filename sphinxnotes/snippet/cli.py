@@ -19,12 +19,22 @@ from xdg.BaseDirectory import xdg_config_home
 from . import __title__, __version__, __description__
 from .config import Config
 from .cache import Cache
-from .table import tablify, VISIABLE_COLUMNS
+from .table import tablify, COLUMNS
 
 DEFAULT_CONFIG_FILE = path.join(xdg_config_home, __title__, 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                     argparse.RawDescriptionHelpFormatter): pass
+
+
+def get_integration_file(fn:str) -> str:
+    """
+    Get file path of integration files.
+
+    .. note:: files are included by ``setup(package_data=xxx)``
+    """
+    prefix = path.abspath(path.dirname(__file__))
+    return path.join(prefix, 'integration', fn)
 
 
 def main(argv:List[str]=sys.argv[1:]) -> int:
@@ -51,8 +61,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     listparser = subparsers.add_parser('list', aliases=['l'],
                                        formatter_class=HelpFormatter,
-                                       help='list snippet indexes, columns of indexes: %s' %
-                                       VISIABLE_COLUMNS)
+                                       help='list snippet indexes, columns of indexes: %s' % COLUMNS)
     listparser.add_argument('--kinds', '-k', type=str, default='*',
                             help='list specified kinds only')
     listparser.add_argument('--width', '-w', type=int,
@@ -108,6 +117,8 @@ def _on_command_mgmt(args:argparse.Namespace):
     num_docs = len(cache.num_snippets_by_docid)
     num_snippets = sum(cache.num_snippets_by_project.values())
     print(f'snippets are loaded from {cache.dirname}')
+    print(f'integration files are located at {get_integration_file("")}')
+    print('')
     print(f'I have {num_projects} project(s), {num_docs} documentation(s) and {num_snippets} snippet(s)')
     for i, v in cache.num_snippets_by_project.items():
         print(f'project {i}:')
@@ -134,13 +145,12 @@ def _on_command_get(args:argparse.Namespace):
 
 
 def _on_command_integration(args:argparse.Namespace):
-    # NOTE: files are included by MANIFEST.in
     if args.zsh:
-        with open('integration/plugin.zsh', 'r') as f:
+        with open(get_integration_file('plugin.zsh'), 'r') as f:
             print(f.read())
         return
     if args.nvim:
-        with open('integration/plugin.nvim', 'r') as f:
+        with open(get_integration_file('plugin.nvim'), 'r') as f:
             print(f.read())
         return
     args.parser.print_help()
