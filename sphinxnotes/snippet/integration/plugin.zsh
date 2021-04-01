@@ -15,7 +15,7 @@ snippet="snippet"
 
 # $1: kinds
 function snippet_list() {
-  $snippet list --kinds $1 | \
+  $snippet list --kinds $1 --width $(($(tput cols) - 2))| \
     fzf --with-nth 2.. --no-hscroll --header-lines 1 | \
     cut -d ' ' -f1
 }
