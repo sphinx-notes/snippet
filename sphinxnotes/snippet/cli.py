@@ -53,9 +53,9 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                        formatter_class=HelpFormatter,
                                        help='list snippet indexes, columns of indexes: %s' %
                                        VISIABLE_COLUMNS)
-    listparser.add_argument('--kinds', '-k', type=str, nargs=1, default='*',
+    listparser.add_argument('--kinds', '-k', type=str, default='*',
                             help='list specified kinds only')
-    listparser.add_argument('--width', '-w', nargs=1, type=int,
+    listparser.add_argument('--width', '-w', type=int,
                             default=get_terminal_size((120, 0)).columns,
                             help='width in characters of output')
     listparser.set_defaults(func=_on_command_list)
