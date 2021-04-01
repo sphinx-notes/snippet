@@ -125,9 +125,10 @@ def _on_command_get(args:argparse.Namespace):
         if not item:
             print('no such index ID', file=sys.stderr)
             sys.exit(1)
+        # FIXME: get multi attrs at once
         if args.file:
             print(item.snippet.file())
-        if args.text:
+        elif args.text:
             print('\n'.join(item.snippet.text()))
 
 
