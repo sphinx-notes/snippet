@@ -78,10 +78,9 @@ def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
 
 
 def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
-    # FIXME:
     if not isinstance(doctree, nodes.document):
-        logger.warning('node %s is not nodes.document', type(doctree),
-                       location=doctree)
+        # XXX: It may caused by ablog
+        logger.debug('node %s is not nodes.document', type(doctree), location=doctree)
         return
 
     pats = app.config.snippet_patterns
