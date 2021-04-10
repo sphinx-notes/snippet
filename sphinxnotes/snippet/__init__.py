@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 from typing import List, Tuple, Optional, Set
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import ABC, abstractclassmethod
 import itertools
 
@@ -23,16 +23,42 @@ __url__ = 'https://sphinx-notes.github.io/snippet'
 __description__ = 'Non-intrusive snippet manager for Sphinx documentation'
 __keywords__ = 'documentation, sphinx, extension, utility'
 
+NODE_METADATA = 'node'
 
+@dataclass
 class Snippet(ABC):
     """
-    Snippet is fragment of reStructuredText documentation.
-    It is not always continuous fragment at text (rst) level.
-
-    .. note:: Snippet constructor take doctree nodes as argument,
-              please always pass the ``deepcopy()``\ ed nodes to constructor.
-              (FIXME)
+    Snippet is a {abstract,data}class represents a snippet of reStructuredText
+    documentation. Note that it is not always continuous fragment at text (rst)
+    level.
     """
+    _scopes:List[Tuple[int,int]] = field(init=False)
+
+    def __post_init__(self) -> None:
+        """Post-init processing routine of dataclass"""
+
+        # Store
+        scopes = []
+        for node in self.nodes():
+            if not node.line:
+                continue # Skip node that have None line, I dont know why :'(
+            scopes.append((line_of_start(node), line_of_end(node)))
+        self._scopes = merge_scopes(scopes)
+
+        # Separate all nodes from doctree
+        for f in self.__class__.__dataclass_fields__.values():
+            if not f.metadata.get(NODE_METADATA, False):
+                continue
+            v = getattr(self, f.name)
+            if v is None:
+                continue
+            elif isinstance(v, nodes.Node):
+                setattr(self, f.name, v.deepcopy())
+            elif isinstance(v, list):
+                setattr(self, f.name, [n.deepcopy() for n in v])
+            else:
+                raise NotImplementedError(type(v))
+
 
     @abstractclassmethod
     def nodes(self) -> List[nodes.Node]:
@@ -67,13 +93,7 @@ class Snippet(ABC):
         ``[left, right)``. Snippet is not continuous in source file so we return
         a list of scope.
         """
-        scopes = []
-        for node in self.nodes():
-            if not node.line:
-                continue # Skip node that have None line, I dont know why :'(
-            scopes.append((line_of_start(node), line_of_end(node)))
-        scopes = merge_scopes(scopes)
-        return scopes
+        return self._scopes
 
 
     def text(self) -> List[str]:
@@ -85,11 +105,11 @@ class Snippet(ABC):
         return lines
 
 
-@dataclass(frozen=True)
+@dataclass
 class Headline(Snippet):
     """Documentation title and possible subtitle."""
-    title:nodes.title
-    subtitle:Optional[nodes.title] = None
+    title:nodes.title = field(metadata={NODE_METADATA:True})
+    subtitle:Optional[nodes.title] = field(metadata={NODE_METADATA:True})
 
     def nodes(self) -> List[nodes.Node]:
         if not self.subtitle:
@@ -108,10 +128,10 @@ class Headline(Snippet):
         return 'd'
 
 
-@dataclass(frozen=True)
+@dataclass
 class Notes(Snippet):
     """An abstract :class:`Snippet` subclass."""
-    description:List[nodes.Body]
+    description:List[nodes.Body] = field(metadata={NODE_METADATA:True})
 
     def nodes(self) -> List[nodes.Node]:
         return self.description.copy()
@@ -121,10 +141,10 @@ class Notes(Snippet):
         return self.description[0].astext().replace('\n', '')
 
 
-@dataclass(frozen=True)
+@dataclass
 class Code(Notes):
     """A piece of :class:`Notes` with code block."""
-    block:nodes.literal_block
+    block:nodes.literal_block = field(metadata={NODE_METADATA:True})
 
     def nodes(self) -> List[nodes.Node]:
         return super().nodes() + [self.block]
@@ -144,11 +164,13 @@ class Code(Notes):
         return self.block['language']
 
 
-@dataclass(frozen=True)
+@dataclass
 class Procedure(Notes):
     """
     A piece of :class:`Notes` that describes a sequence of :class:`Code`
     to do something.
+
+    FIXME: how to use NODE_METADATA
     """
     steps:List[Code]
 
@@ -220,13 +242,19 @@ def line_of_start(node:nodes.Node) -> int:
 
 
 def line_of_end(node:nodes.Node) -> Optional[int]:
-    while True:
-        next_node = node.next_node(descend=False, siblings=True, ascend=True)
-        if not next_node:
-            break
+    next_node = node.next_node(descend=False, siblings=True, ascend=True)
+    while next_node:
         if next_node.line:
             return line_of_start(next_node)
-        node = next_node
+        next_node = next_node.next_node(
+            # Some nodes' line attr is always None, but their children has
+            # valid line attr
+            descend=True,
+            # If node and its children have not valid line attr, try use line
+            # of next node
+            ascend=True, siblings=True)
     # No line found, return the max line of source file
-    with open(node.source) as f:
-        return sum(1 for line in f)
+    if node.source:
+        with open(node.source) as f:
+            return sum(1 for line in f)
+    raise AttributeError('None source attr of node %s' % node)
