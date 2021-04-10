@@ -242,13 +242,19 @@ def line_of_start(node:nodes.Node) -> int:
 
 
 def line_of_end(node:nodes.Node) -> Optional[int]:
-    while True:
-        next_node = node.next_node(descend=False, siblings=True, ascend=True)
-        if not next_node:
-            break
+    next_node = node.next_node(descend=False, siblings=True, ascend=True)
+    while next_node:
         if next_node.line:
             return line_of_start(next_node)
-        node = next_node
+        next_node = next_node.next_node(
+            # Some nodes' line attr is always None, but their children has
+            # valid line attr
+            descend=True,
+            # If node and its children have not valid line attr, try use line
+            # of next node
+            ascend=True, siblings=True)
     # No line found, return the max line of source file
-    with open(node.source) as f:
-        return sum(1 for line in f)
+    if node.source:
+        with open(node.source) as f:
+            return sum(1 for line in f)
+    raise AttributeError('None source attr of node %s' % node)
