@@ -6,7 +6,7 @@
     :license: BSD, see LICENSE for details.
 """
 
-# Don't import __future__.annotations here, it effects dataclasses.Field.type
+from __future__ import annotations
 from typing import List, Tuple, Optional, Set
 from dataclasses import dataclass, field
 from abc import ABC, abstractclassmethod
