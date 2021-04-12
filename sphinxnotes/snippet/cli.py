@@ -86,7 +86,9 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                       formatter_class=HelpFormatter,
                                       help='integration related commands')
     igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh integration script')
-    igparser.add_argument('--nvim', '-n', action='store_true', help='dump neovim integration script')
+    igparser.add_argument('--zsh-binding', action='store_true', help='dump recommended zsh key binding')
+    igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script (NOTE: for now, only neovim is supported)')
+    igparser.add_argument('--vim-binding', action='store_true', help='dump recommended (neo)vim key binding')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
 
 
@@ -163,8 +165,16 @@ def _on_command_integration(args:argparse.Namespace):
         with open(get_integration_file('plugin.zsh'), 'r') as f:
             print(f.read())
         return
-    if args.nvim:
-        with open(get_integration_file('plugin.nvim'), 'r') as f:
+    if args.zsh_binding:
+        with open(get_integration_file('binding.zsh'), 'r') as f:
+            print(f.read())
+        return
+    if args.vim:
+        with open(get_integration_file('plugin.vim'), 'r') as f:
+            print(f.read())
+        return
+    if args.vim_binding:
+        with open(get_integration_file('binding.vim'), 'r') as f:
             print(f.read())
         return
     args.parser.print_help()

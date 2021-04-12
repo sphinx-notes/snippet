@@ -92,4 +92,3 @@ function! g:SphinxNotesSnippetListAndUrl()
 endfunction
 
 " vim: set shiftwidth=2:
-" vim: set filetype=vim:
