@@ -101,4 +101,4 @@ class Cache(PDict):
 
     def stringify(self, key:DocID, items:List[Item]) -> str:
         """Overwrite PDict.stringify."""
-        return key[0]
+        return key[1]
