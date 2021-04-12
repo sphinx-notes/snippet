@@ -13,6 +13,7 @@ from typing import List
 from os import path
 from textwrap import dedent
 from shutil import get_terminal_size
+import posixpath
 
 from xdg.BaseDirectory import xdg_config_home
 
@@ -76,6 +77,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                            help='get source file path of snippet')
     getparser.add_argument('--text', '-t', action='store_true', default=True,
                            help='get source reStructuredText of snippet')
+    getparser.add_argument('--url', '-u', action='store_true',
+                           help='get URL of HTML documentation of snippet')
     getparser.add_argument('index_id', type=str, nargs='+', help='index ID')
     getparser.set_defaults(func=_on_command_get)
 
@@ -140,6 +143,17 @@ def _on_command_get(args:argparse.Namespace):
         # FIXME: get multi attrs at once
         if args.file:
             print(item.snippet.file())
+        elif args.url:
+            # HACK: get doc id in better way
+            doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
+            base_url = args.config.base_urls.get(doc_id[0])
+            if not base_url:
+                print(f'base URL for project {doc_id[0]} not configurated', file=sys.stderr)
+                sys.exit(1)
+            url = posixpath.join(base_url, doc_id[1] + '.html')
+            if item.snippet.refid():
+                url +=  '#' + item.snippet.refid()
+            print(url)
         elif args.text:
             print('\n'.join(item.snippet.text()))
 
