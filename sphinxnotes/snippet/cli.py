@@ -55,10 +55,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Init subcommands
     subparsers = parser.add_subparsers()
-    mgmtparser = subparsers.add_parser('stat', aliases=['s'],
+    statparser = subparsers.add_parser('stat', aliases=['s'],
                                        formatter_class=HelpFormatter,
-                                       help='snippets statistic')
-    mgmtparser.set_defaults(func=_on_command_mgmt)
+                                       help='show snippets statistic information')
+    statparser.set_defaults(func=_on_command_stat)
 
     listparser = subparsers.add_parser('list', aliases=['l'],
                                        formatter_class=HelpFormatter,
@@ -101,7 +101,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
         cfg = Config({})
     else:
         cfg = Config.load(args.config)
-    setattr(args, 'config', cfg)
+    setattr(args, 'cfg', cfg)
 
     # Load snippet cache
     cache = Cache(cfg.cache_dir)
@@ -115,13 +115,14 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
         parser.print_help()
 
 
-def _on_command_mgmt(args:argparse.Namespace):
+def _on_command_stat(args:argparse.Namespace):
     cache = args.cache
 
     num_projects = len(cache.num_snippets_by_project)
     num_docs = len(cache.num_snippets_by_docid)
     num_snippets = sum(cache.num_snippets_by_project.values())
     print(f'snippets are loaded from {cache.dirname}')
+    print(f'configuration are loaded from {args.config}')
     print(f'integration files are located at {get_integration_file("")}')
     print('')
     print(f'I have {num_projects} project(s), {num_docs} documentation(s) and {num_snippets} snippet(s)')
@@ -149,7 +150,7 @@ def _on_command_get(args:argparse.Namespace):
         if args.url:
             # HACK: get doc id in better way
             doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
-            base_url = args.config.base_urls.get(doc_id[0])
+            base_url = args.cfg.base_urls.get(doc_id[0])
             if not base_url:
                 print(f'base URL for project {doc_id[0]} not configurated', file=sys.stderr)
                 sys.exit(1)
