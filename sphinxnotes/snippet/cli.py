@@ -163,20 +163,15 @@ def _on_command_integration(args:argparse.Namespace):
     if args.zsh:
         with open(get_integration_file('plugin.zsh'), 'r') as f:
             print(f.read())
-        return
     if args.zsh_binding:
         with open(get_integration_file('binding.zsh'), 'r') as f:
             print(f.read())
-        return
     if args.vim:
         with open(get_integration_file('plugin.vim'), 'r') as f:
             print(f.read())
-        return
     if args.vim_binding:
         with open(get_integration_file('binding.vim'), 'r') as f:
             print(f.read())
-        return
-    args.parser.print_help()
 
 
 if __name__ == '__main__':
