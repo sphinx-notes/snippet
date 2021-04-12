@@ -75,7 +75,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                       help='get information of snippet by index ID')
     getparser.add_argument('--file', '-f', action='store_true',
                            help='get source file path of snippet')
-    getparser.add_argument('--text', '-t', action='store_true', default=True,
+    getparser.add_argument('--text', '-t', action='store_true',
                            help='get source reStructuredText of snippet')
     getparser.add_argument('--url', '-u', action='store_true',
                            help='get URL of HTML documentation of snippet')
@@ -142,10 +142,11 @@ def _on_command_get(args:argparse.Namespace):
         if not item:
             print('no such index ID', file=sys.stderr)
             sys.exit(1)
-        # FIXME: get multi attrs at once
+        if args.text:
+            print('\n'.join(item.snippet.text()))
         if args.file:
             print(item.snippet.file())
-        elif args.url:
+        if args.url:
             # HACK: get doc id in better way
             doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
             base_url = args.config.base_urls.get(doc_id[0])
@@ -156,8 +157,6 @@ def _on_command_get(args:argparse.Namespace):
             if item.snippet.refid():
                 url +=  '#' + item.snippet.refid()
             print(url)
-        elif args.text:
-            print('\n'.join(item.snippet.text()))
 
 
 def _on_command_integration(args:argparse.Namespace):
