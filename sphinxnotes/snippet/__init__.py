@@ -17,7 +17,7 @@ from docutils import nodes
 
 __title__= 'sphinxnotes-snippet'
 __license__ = 'BSD',
-__version__ = '1.0b3'
+__version__ = '1.0b4'
 __author__ = 'Shengyu Zhang'
 __url__ = 'https://sphinx-notes.github.io/snippet'
 __description__ = 'Non-intrusive snippet manager for Sphinx documentation'
@@ -33,17 +33,31 @@ class Snippet(ABC):
     level.
     """
     _scopes:List[Tuple[int,int]] = field(init=False)
+    _refid:Optional[str] = field(init=False)
 
     def __post_init__(self) -> None:
         """Post-init processing routine of dataclass"""
 
-        # Store
+        # Calcuate scope before deepcopy
         scopes = []
         for node in self.nodes():
             if not node.line:
                 continue # Skip node that have None line, I dont know why :'(
             scopes.append((line_of_start(node), line_of_end(node)))
         self._scopes = merge_scopes(scopes)
+
+        # Find exactly one id attr in nodes
+        self._refid = None
+        for node in self.nodes():
+            if node['ids']:
+                self._refid = node['ids'][0]
+                break
+        # If no node has id, use parent's
+        if not self._refid:
+            for node in self.nodes():
+                if node.parent['ids']:
+                    self._refid = node.parent['ids'][0]
+                    break
 
         # Separate all nodes from doctree
         for f in self.__class__.__dataclass_fields__.values():
@@ -103,6 +117,16 @@ class Snippet(ABC):
         for scope in self.scopes():
             lines += read_partial_file(srcfn, scope)
         return lines
+
+
+    def refid(self) -> Optional[str]:
+        """
+        Return the possible identifier key of snippet.
+        It is picked from nodes' (or nodes' parent's) `ids attr`_.
+
+        .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
+        """
+        return self._refid
 
 
 @dataclass

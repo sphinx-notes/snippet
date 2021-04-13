@@ -3,13 +3,7 @@
 #
 # :Author: Shengyu Zhang
 # :Date: 2021-03-20
-# :License: BSD
-# :Version: 20210401
-#
-# The recommanded key bindings are::
-#
-#   bindkey ^kv snippet-view
-#   bindkey ^ke snippet-edit
+# :Version: 20210412
 
 snippet="snippet"
 
@@ -25,12 +19,18 @@ function snippet_view() {
 }
 
 function snippet_edit() {
-  BUFFER="$BUFFER $EDITOR $($snippet get --file $(snippet_list dc))"
+  BUFFER="$EDITOR $($snippet get --file $(snippet_list dc))"
+  zle accept-line
+}
+
+function snippet_url() {
+  BUFFER="$BROWSER $($snippet get --url $(snippet_list dc))"
   zle accept-line
 }
 
 # Define a widget, mapped to our function above.
 zle -N snippet-view snippet_view
 zle -N snippet-edit snippet_edit
+zle -N snippet-url snippet_url
 
 # vim: set shiftwidth=2:

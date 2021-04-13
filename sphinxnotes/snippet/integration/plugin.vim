@@ -3,16 +3,9 @@
 "
 " :Author: Shengyu Zhang
 " :Date: 2021-04-01
-" :License: BSD
-" :Version: 20210401
+" :Version: 20210412
 "
 " NOTE: junegunn/fzf.vim is required
-"
-" The recommanded key bindings are::
-"
-"   nmap <C-k>v :call g:SphinxNotesSnippetListAndView()<CR>
-"   nmap <C-k>e :call g:SphinxNotesSnippetListAndEdit()<CR>
-
 
 let s:snippet = 'snippet'
 
@@ -86,5 +79,16 @@ function! g:SphinxNotesSnippetListAndEdit()
   call g:SphinxNotesSnippetList(function('s:CallEdit'), 'dc')
 endfunction
 
+function! g:SphinxNotesSnippetUrl(id)
+  let cmd = [s:snippet, 'get', '--url', a:id]
+  execute '!xdg-open ' . system(join(cmd, ' '))
+endfunction
+
+function! g:SphinxNotesSnippetListAndUrl()
+  function! s:CallUrl(selection)
+    call g:SphinxNotesSnippetUrl(s:SplitID(a:selection))
+  endfunction
+  call g:SphinxNotesSnippetList(function('s:CallUrl'), 'dc')
+endfunction
+
 " vim: set shiftwidth=2:
-" vim: set filetype=vim:

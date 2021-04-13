@@ -13,6 +13,7 @@ from typing import List
 from os import path
 from textwrap import dedent
 from shutil import get_terminal_size
+import posixpath
 
 from xdg.BaseDirectory import xdg_config_home
 
@@ -54,10 +55,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Init subcommands
     subparsers = parser.add_subparsers()
-    mgmtparser = subparsers.add_parser('stat', aliases=['s'],
+    statparser = subparsers.add_parser('stat', aliases=['s'],
                                        formatter_class=HelpFormatter,
-                                       help='snippets statistic')
-    mgmtparser.set_defaults(func=_on_command_mgmt)
+                                       help='show snippets statistic information')
+    statparser.set_defaults(func=_on_command_stat)
 
     listparser = subparsers.add_parser('list', aliases=['l'],
                                        formatter_class=HelpFormatter,
@@ -74,8 +75,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                       help='get information of snippet by index ID')
     getparser.add_argument('--file', '-f', action='store_true',
                            help='get source file path of snippet')
-    getparser.add_argument('--text', '-t', action='store_true', default=True,
+    getparser.add_argument('--text', '-t', action='store_true',
                            help='get source reStructuredText of snippet')
+    getparser.add_argument('--url', '-u', action='store_true',
+                           help='get URL of HTML documentation of snippet')
     getparser.add_argument('index_id', type=str, nargs='+', help='index ID')
     getparser.set_defaults(func=_on_command_get)
 
@@ -83,7 +86,9 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                       formatter_class=HelpFormatter,
                                       help='integration related commands')
     igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh integration script')
-    igparser.add_argument('--nvim', '-n', action='store_true', help='dump neovim integration script')
+    igparser.add_argument('--zsh-binding', action='store_true', help='dump recommended zsh key binding')
+    igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script (NOTE: for now, only neovim is supported)')
+    igparser.add_argument('--vim-binding', action='store_true', help='dump recommended (neo)vim key binding')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
 
 
@@ -96,7 +101,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
         cfg = Config({})
     else:
         cfg = Config.load(args.config)
-    setattr(args, 'config', cfg)
+    setattr(args, 'cfg', cfg)
 
     # Load snippet cache
     cache = Cache(cfg.cache_dir)
@@ -110,13 +115,14 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
         parser.print_help()
 
 
-def _on_command_mgmt(args:argparse.Namespace):
+def _on_command_stat(args:argparse.Namespace):
     cache = args.cache
 
     num_projects = len(cache.num_snippets_by_project)
     num_docs = len(cache.num_snippets_by_docid)
     num_snippets = sum(cache.num_snippets_by_project.values())
     print(f'snippets are loaded from {cache.dirname}')
+    print(f'configuration are loaded from {args.config}')
     print(f'integration files are located at {get_integration_file("")}')
     print('')
     print(f'I have {num_projects} project(s), {num_docs} documentation(s) and {num_snippets} snippet(s)')
@@ -137,23 +143,36 @@ def _on_command_get(args:argparse.Namespace):
         if not item:
             print('no such index ID', file=sys.stderr)
             sys.exit(1)
-        # FIXME: get multi attrs at once
+        if args.text:
+            print('\n'.join(item.snippet.text()))
         if args.file:
             print(item.snippet.file())
-        elif args.text:
-            print('\n'.join(item.snippet.text()))
+        if args.url:
+            # HACK: get doc id in better way
+            doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
+            base_url = args.cfg.base_urls.get(doc_id[0])
+            if not base_url:
+                print(f'base URL for project {doc_id[0]} not configurated', file=sys.stderr)
+                sys.exit(1)
+            url = posixpath.join(base_url, doc_id[1] + '.html')
+            if item.snippet.refid():
+                url +=  '#' + item.snippet.refid()
+            print(url)
 
 
 def _on_command_integration(args:argparse.Namespace):
     if args.zsh:
         with open(get_integration_file('plugin.zsh'), 'r') as f:
             print(f.read())
-        return
-    if args.nvim:
-        with open(get_integration_file('plugin.nvim'), 'r') as f:
+    if args.zsh_binding:
+        with open(get_integration_file('binding.zsh'), 'r') as f:
             print(f.read())
-        return
-    args.parser.print_help()
+    if args.vim:
+        with open(get_integration_file('plugin.vim'), 'r') as f:
+            print(f.read())
+    if args.vim_binding:
+        with open(get_integration_file('binding.vim'), 'r') as f:
+            print(f.read())
 
 
 if __name__ == '__main__':
