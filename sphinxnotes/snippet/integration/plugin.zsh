@@ -3,34 +3,23 @@
 #
 # :Author: Shengyu Zhang
 # :Date: 2021-03-20
-# :Version: 20210412
+# :Version: 20210420
+#
+# NOTE: Must source :file:`./plugin.sh` to get snippet_* functions.
 
-snippet="snippet"
-
-# $1: kinds
-function snippet_list() {
-  $snippet list --kinds $1 --width $(($(tput cols) - 2))| \
-    fzf --with-nth 2.. --no-hscroll --header-lines 1 | \
-    cut -d ' ' -f1
+# $1: One of snippet_* functions
+function z-wrapper() {
+  cmd=$($1)
+  [ ! -z "$cmd" ] && eval $cmd
 }
 
-function snippet_view() {
-  $snippet get --text $(snippet_list c)
-}
+function snippet-view(){ z-wrapper snippet_view }
+function snippet-edit(){ z-wrapper snippet_edit }
+function snippet-url(){ z-wrapper snippet_url }
 
-function snippet_edit() {
-  BUFFER="$EDITOR $($snippet get --file $(snippet_list dc))"
-  zle accept-line
-}
-
-function snippet_url() {
-  BUFFER="$BROWSER $($snippet get --url $(snippet_list dc))"
-  zle accept-line
-}
-
-# Define a widget, mapped to our function above.
-zle -N snippet-view snippet_view
-zle -N snippet-edit snippet_edit
-zle -N snippet-url snippet_url
+# Define a widget
+zle -N snippet-view
+zle -N snippet-edit
+zle -N snippet-url
 
 # vim: set shiftwidth=2:
