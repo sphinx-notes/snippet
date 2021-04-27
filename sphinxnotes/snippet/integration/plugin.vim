@@ -3,7 +3,7 @@
 "
 " :Author: Shengyu Zhang
 " :Date: 2021-04-01
-" :Version: 20210412
+" :Version: 20210413
 "
 " NOTE: junegunn/fzf.vim is required
 
@@ -81,7 +81,9 @@ endfunction
 
 function! g:SphinxNotesSnippetUrl(id)
   let cmd = [s:snippet, 'get', '--url', a:id]
-  execute '!xdg-open ' . system(join(cmd, ' '))
+  for url in systemlist(join(cmd, ' '))
+    echo system('xdg-open ' . shellescape(url))
+  endfor
 endfunction
 
 function! g:SphinxNotesSnippetListAndUrl()
