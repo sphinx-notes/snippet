@@ -152,6 +152,15 @@ class Headline(Snippet):
         return 'd'
 
 
+    def text(self) -> List[str]:
+        """
+        Headline represents a reStructuredText document,
+        so return the whole source file.
+        """
+        with open(self.file()) as f:
+            return f.read().splitlines()
+
+
 @dataclass
 class Notes(Snippet):
     """An abstract :class:`Snippet` subclass."""
