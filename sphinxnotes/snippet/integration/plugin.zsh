@@ -10,7 +10,10 @@
 # $1: One of snippet_* functions
 function z-wrapper() {
   cmd=$($1)
-  [ ! -z "$cmd" ] && eval $cmd
+  if [ ! -z "$cmd" ]; then
+    BUFFER="$cmd"
+    zle accept-line
+  fi
 }
 
 function snippet-view(){ z-wrapper snippet_view }
