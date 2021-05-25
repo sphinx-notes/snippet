@@ -29,7 +29,7 @@ function! g:SphinxNotesSnippetListAndView()
   function! s:CallView(selection)
     call g:SphinxNotesSnippetView(s:SplitID(a:selection))
   endfunction
-  call g:SphinxNotesSnippetList(function('s:CallView'), 'c')
+  call g:SphinxNotesSnippetList(function('s:CallView'), 'dc')
 endfunction
 
 " https://github.com/anhmv/vim-float-window/blob/master/plugin/float-window.vim
