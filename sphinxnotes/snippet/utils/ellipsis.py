@@ -9,7 +9,7 @@
 """
 
 from __future__ import annotations
-from typing import List 
+from typing import List
 from wcwidth import wcswidth
 
 def ellipsis(text:str, width:int, ellipsis_sym:str='..', blank_sym:str=None) -> str:

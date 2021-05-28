@@ -94,7 +94,7 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         if doctitle:
             doc.append(Item(titlepath=resolve_docpath(app.env, docname),
                             snippet=doctitle,
-                            keywords=extract_keywords(doctitle)))
+                            keywords=[docname] + extract_keywords(doctitle)))
 
     # Pick code snippet from doctree
     if is_matched(pats, Code, docname):
