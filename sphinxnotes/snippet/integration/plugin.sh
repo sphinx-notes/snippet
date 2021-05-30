@@ -54,7 +54,7 @@ function snippet_edit() {
     fi
   fi
 
-  echo "$EDITOR $($SNIPPET get --file $index_id)"
+  echo "$EDITOR \$($SNIPPET get --file $index_id)"
 }
 
 function snippet_url() {
@@ -77,7 +77,7 @@ function snippet_url() {
     fi
   fi
 
-  echo "$BROWSER $($SNIPPET get --url $index_id)"
+  echo "$BROWSER \$($SNIPPET get --url $index_id)"
 }
 
 # vim: set shiftwidth=2:
