@@ -23,8 +23,6 @@ __url__ = 'https://sphinx-notes.github.io/snippet'
 __description__ = 'Non-intrusive snippet manager for Sphinx documentation'
 __keywords__ = 'documentation, sphinx, extension, utility'
 
-NODE_METADATA = 'node'
-
 @dataclass
 class Snippet(ABC):
     """
@@ -58,20 +56,6 @@ class Snippet(ABC):
                 if node.parent['ids']:
                     self._refid = node.parent['ids'][0]
                     break
-
-        # Separate all nodes from doctree
-        for f in self.__class__.__dataclass_fields__.values():
-            if not f.metadata.get(NODE_METADATA, False):
-                continue
-            v = getattr(self, f.name)
-            if v is None:
-                continue
-            elif isinstance(v, nodes.Node):
-                setattr(self, f.name, v.deepcopy())
-            elif isinstance(v, list):
-                setattr(self, f.name, [n.deepcopy() for n in v])
-            else:
-                raise NotImplementedError(type(v))
 
 
     @abstractclassmethod
@@ -132,8 +116,8 @@ class Snippet(ABC):
 @dataclass
 class Headline(Snippet):
     """Documentation title and possible subtitle."""
-    title:nodes.title = field(metadata={NODE_METADATA:True})
-    subtitle:Optional[nodes.title] = field(metadata={NODE_METADATA:True})
+    title:nodes.title
+    subtitle:Optional[nodes.title]
 
     def nodes(self) -> List[nodes.Node]:
         if not self.subtitle:
@@ -161,10 +145,18 @@ class Headline(Snippet):
             return f.read().splitlines()
 
 
+    def __getstate__(self) -> bool:
+        """Implement :py:meth:`pickle.object.__getstate__`."""
+        self.title = self.title.deepcopy()
+        if self.subtitle:
+            self.subtitle = self.subtitle.deepcopy()
+        return False
+
+
 @dataclass
 class Notes(Snippet):
     """An abstract :class:`Snippet` subclass."""
-    description:List[nodes.Body] = field(metadata={NODE_METADATA:True})
+    description:List[nodes.Body]
 
     def nodes(self) -> List[nodes.Node]:
         return self.description.copy()
@@ -174,10 +166,16 @@ class Notes(Snippet):
         return self.description[0].astext().replace('\n', '')
 
 
+    def __getstate__(self) -> bool:
+        """Implement :py:meth:`pickle.object.__getstate__`."""
+        self.description = self.description.deepcopy()
+        return False
+
+
 @dataclass
 class Code(Notes):
     """A piece of :class:`Notes` with code block."""
-    block:nodes.literal_block = field(metadata={NODE_METADATA:True})
+    block:nodes.literal_block
 
     def nodes(self) -> List[nodes.Node]:
         return super().nodes() + [self.block]
@@ -196,14 +194,17 @@ class Code(Notes):
         """Return the (programing) language that appears in code."""
         return self.block['language']
 
+    def __getstate__(self) -> bool:
+        """Implement :py:meth:`pickle.object.__getstate__`."""
+        self.block = self.block.deepcopy()
+        return False
+
 
 @dataclass
 class Procedure(Notes):
     """
     A piece of :class:`Notes` that describes a sequence of :class:`Code`
     to do something.
-
-    FIXME: how to use NODE_METADATA
     """
     steps:List[Code]
 
