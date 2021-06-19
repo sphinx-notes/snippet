@@ -16,7 +16,8 @@ if TYPE_CHECKING:
     from sphinx.enviornment import BuilderEnviornment
 
 
-def safe_descend(node:nodes.Node, *args: int) -> Optional[nodes.Node]:
+def _safe_descend(node:nodes.Node, *args: int) -> Optional[nodes.Node]:
+    """Get node descend in a safe way."""
     try:
         for index in args:
             node = node[index]
@@ -25,10 +26,10 @@ def safe_descend(node:nodes.Node, *args: int) -> Optional[nodes.Node]:
         return None
 
 
-def resolve_fullpath(env: BuilderEnviornment, doctree:nodes.document,
-                     docname:str, node:nodes.Node) -> List[str]:
-    return [x.astext() for x in resolve_sectpath(doctree, node)] + \
-        resolve_docpath(env, docname)
+def resolve_fullpath(env: BuilderEnviornment, docname:str, node:nodes.Node,
+                     include_project:bool=False) -> List[str]:
+    return [x.astext() for x in resolve_sectpath(node.document, node)] + \
+        resolve_docpath(env, docname, include_project=include_project)
 
 
 def resolve_sectpath(doctree:nodes.document, node:nodes.Node) -> List[nodes.title]:
@@ -45,14 +46,18 @@ def resolve_sectpath(doctree:nodes.document, node:nodes.Node) -> List[nodes.titl
 
 
 def resolve_secttitle(node:nodes.Node) -> Optional[nodes.title]:
-    titlenode = safe_descend(node.parent, 0)
+    titlenode = _safe_descend(node.parent, 0)
     if not isinstance(titlenode, nodes.title):
         return None
     return titlenode
 
 
-def resolve_docpath(env:BuilderEnviornment, docname:str) -> List[str]:
+def resolve_docpath(env:BuilderEnviornment, docname:str, include_project:bool=False) -> List[str]:
     titles = []
+
+    if include_project:
+        titles.append(env.config.project)
+
     master_doc = env.config.master_doc
     v = docname.split('/')
     if v.pop() == master_doc:
@@ -70,18 +75,18 @@ def resolve_docpath(env:BuilderEnviornment, docname:str) -> List[str]:
             title = v[-1].title()
         titles.append(title)
         v.pop()
-    titles.reverse()
-    return titles
+
+    return titles[::-1]  # Reverse inplace
 
 
 def resolve_doctitle(doctree:nodes.document) -> Tuple[Optional[nodes.title],
-                                                          Optional[nodes.title]]:
+                                                      Optional[nodes.title]]:
 
     toplevel_sectnode = doctree.next_node(nodes.section)
     if not toplevel_sectnode:
         return (None, None)
 
-    titlenode = safe_descend(toplevel_sectnode, 0)
+    titlenode = _safe_descend(toplevel_sectnode, 0)
     # NOTE: nodes.subtitle does not make senses beacuse Sphinx doesn't support
     # subtitle:
     #

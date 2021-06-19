@@ -92,7 +92,9 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         matched = True
         doctitle = pick_doctitle(doctree)
         if doctitle:
-            doc.append(Item(titlepath=resolve_docpath(app.env, docname),
+            doc.append(Item(titlepath=resolve_docpath(app.env,
+                                                      docname,
+                                                      include_project=True),
                             snippet=doctitle,
                             keywords=[docname] + extract_keywords(doctitle)))
 
@@ -101,7 +103,10 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         matched = True
         codes = pick_codes(doctree)
         for code in codes:
-            doc.append(Item(titlepath=resolve_fullpath(app.env, doctree, docname, code.nodes()[0]),
+            doc.append(Item(titlepath=resolve_fullpath(app.env,
+                                                       docname,
+                                                       code.nodes()[0],
+                                                       include_project=True),
                             snippet=code,
                             keywords=extract_keywords(code)))
 
