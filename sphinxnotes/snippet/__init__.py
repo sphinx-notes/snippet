@@ -172,7 +172,7 @@ class Notes(Snippet):
 
     def __getstate__(self) -> Dict[str,Any]:
         """Implement :py:meth:`pickle.object.__getstate__`."""
-        self.description = self.description.deepcopy()
+        self.description = [x.deepcopy() for x in self.description]
         return super().__getstate__()
 
 
