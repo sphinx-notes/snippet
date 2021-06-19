@@ -26,6 +26,7 @@ from .picker import pick_doctitle, pick_codes
 from .cache import Cache, Item
 from .keyword import Extractor
 from .utils.titlepath import resolve_fullpath, resolve_docpath
+from .builder import Builder
 
 
 logger = logging.getLogger(__name__)
@@ -119,6 +120,8 @@ def on_builder_finished(app:Sphinx, exception) -> None:
 
 
 def setup(app:Sphinx):
+    app.add_builder(Builder)
+
     app.add_config_value('snippet_config', {}, '')
     app.add_config_value('snippet_patterns', {'*':'.*'}, '')
 
