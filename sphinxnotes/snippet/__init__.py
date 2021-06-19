@@ -7,7 +7,7 @@
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, Set
+from typing import List, Tuple, Optional, Set, Any, Dict
 from dataclasses import dataclass, field
 from abc import ABC, abstractclassmethod
 import itertools
@@ -113,6 +113,11 @@ class Snippet(ABC):
         return self._refid
 
 
+    def __getstate__(self) -> Dict[str,Any]:
+        """Implement :py:meth:`pickle.object.__getstate__`."""
+        return self.__dict__.copy()
+
+
 @dataclass
 class Headline(Snippet):
     """Documentation title and possible subtitle."""
@@ -145,12 +150,11 @@ class Headline(Snippet):
             return f.read().splitlines()
 
 
-    def __getstate__(self) -> bool:
-        """Implement :py:meth:`pickle.object.__getstate__`."""
+    def __getstate__(self) -> Dict[str,Any]:
         self.title = self.title.deepcopy()
         if self.subtitle:
             self.subtitle = self.subtitle.deepcopy()
-        return False
+        return super().__getstate__()
 
 
 @dataclass
@@ -166,10 +170,10 @@ class Notes(Snippet):
         return self.description[0].astext().replace('\n', '')
 
 
-    def __getstate__(self) -> bool:
+    def __getstate__(self) -> Dict[str,Any]:
         """Implement :py:meth:`pickle.object.__getstate__`."""
         self.description = self.description.deepcopy()
-        return False
+        return super().__getstate__()
 
 
 @dataclass
@@ -194,10 +198,10 @@ class Code(Notes):
         """Return the (programing) language that appears in code."""
         return self.block['language']
 
-    def __getstate__(self) -> bool:
+    def __getstate__(self) -> Dict[str,Any]:
         """Implement :py:meth:`pickle.object.__getstate__`."""
         self.block = self.block.deepcopy()
-        return False
+        return super().__getstate__()
 
 
 @dataclass
