@@ -22,7 +22,7 @@ from .config import Config
 from .cache import Cache
 from .table import tablify, COLUMNS
 
-DEFAULT_CONFIG_FILE = path.join(xdg_config_home, __title__, 'conf.py')
+DEFAULT_CONFIG_FILE = path.join(xdg_config_home, *__title__.split('-'), 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                     argparse.RawDescriptionHelpFormatter): pass

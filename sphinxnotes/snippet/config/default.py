@@ -17,10 +17,10 @@ from .. import __title__
 """
 ``cache_dir``
     (Type: ``str``)
-    (Default: ``"$XDG_CACHE_HOME/sphinxnotes-snippet"``)
+    (Default: ``"$XDG_CACHE_HOME/sphinxnotes/snippet"``)
     Path to snippet cache directory.
 """
-cache_dir = __path.join(__xdg_cache_home, __title__)
+cache_dir = __path.join(__xdg_cache_home, *__title__.split('-'))
 
 """
 ``base_urls``
