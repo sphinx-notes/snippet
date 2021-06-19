@@ -92,7 +92,7 @@ class PDict(MutableMapping):
 
         # Makesure dir exists
         if not path.exists(self.dirname):
-            os.mkdir(self.dirname)
+            os.makedirs(self.dirname)
 
         # Purge orphan items
         for key, value in status_iterator(self._orphan_items.items(),
