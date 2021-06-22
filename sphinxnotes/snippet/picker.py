@@ -13,7 +13,7 @@ from typing import List, Optional, Dict
 
 from docutils import nodes
 
-from . import Headline, Code, Procedure
+from . import Headline, Code
 from .utils.titlepath import resolve_doctitle
 
 
@@ -36,8 +36,6 @@ class CodePicker(nodes.SparseNodeVisitor):
     """Node visitor for picking code snippet from document."""
     # Code snippets that picked from document
     codes:List[Code]
-    # Procedures that picked from document, TODO
-    procedures:List[Procedure]
     # (container, pointer) that Recording the read pointer inside container
     offset:Dict[nodes.Node,int]
     # List of unsupported languages (:class:`pygments.lexers.Lexer`)
@@ -47,7 +45,6 @@ class CodePicker(nodes.SparseNodeVisitor):
     def __init__(self, document:nodes.document) -> None:
         super().__init__(document)
         self.codes = []
-        self.procedures = []
         self.offset = {}
 
 
@@ -82,15 +79,9 @@ class CodePicker(nodes.SparseNodeVisitor):
                                    block=node))
 
 
-    def visit_enumerated_list(self, node:nodes.enumerated_list) -> None:
-        pass
-
-    def depart_enumerated_list(self, node:nodes.enumerated_list) -> None:
-        pass
-
-
     def unknown_visit(self, node:nodes.Node) -> None:
         pass # Ignore any unknown node
+
 
     def unknown_departure(self, node:nodes.Node) -> None:
         pass # Ignore any unknown node

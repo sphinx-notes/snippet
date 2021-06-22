@@ -158,35 +158,18 @@ class Headline(Snippet):
 
 
 @dataclass
-class Notes(Snippet):
-    """An abstract :class:`Snippet` subclass."""
+class Code(Snippet):
+    """A code block with description."""
     description:List[nodes.Body]
-
-    def nodes(self) -> List[nodes.Node]:
-        return self.description.copy()
-
-
-    def excerpt(self) -> str:
-        return self.description[0].astext().replace('\n', '')
-
-
-    def __getstate__(self) -> Dict[str,Any]:
-        """Implement :py:meth:`pickle.object.__getstate__`."""
-        self.description = [x.deepcopy() for x in self.description]
-        return super().__getstate__()
-
-
-@dataclass
-class Code(Notes):
-    """A piece of :class:`Notes` with code block."""
     block:nodes.literal_block
 
     def nodes(self) -> List[nodes.Node]:
-        return super().nodes() + [self.block]
+        return self.description.copy() + [self.block]
 
 
     def excerpt(self) -> str:
-        return '/%s/ ' % self.language() + super().excerpt()
+        return '/%s/ ' % self.language() + \
+            self.description[0].astext().replace('\n', '')
 
 
     @classmethod
@@ -198,39 +181,11 @@ class Code(Notes):
         """Return the (programing) language that appears in code."""
         return self.block['language']
 
+
     def __getstate__(self) -> Dict[str,Any]:
-        """Implement :py:meth:`pickle.object.__getstate__`."""
+        self.description = [x.deepcopy() for x in self.description]
         self.block = self.block.deepcopy()
         return super().__getstate__()
-
-
-@dataclass
-class Procedure(Notes):
-    """
-    A piece of :class:`Notes` that describes a sequence of :class:`Code`
-    to do something.
-    """
-    steps:List[Code]
-
-    def nodes(self) -> List[nodes.Node]:
-        nodes_ = []
-        for code in self.steps:
-            nodes_ += code.nodes()
-        return super().nodes() + nodes_
-
-
-    def excerpt(self) -> str:
-        return '/%s/ ' % ','.join(self.languages()) + super().excerpt()
-
-
-    @classmethod
-    def kind(cls) -> str:
-        return 'p'
-
-
-    def languages(self) -> Set[str]:
-        """Return the (programing) language(s) that appear in procedure."""
-        return set(c.block['language'] for c in self.steps)
 
 
 def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]:
@@ -241,7 +196,6 @@ def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]
         for line in itertools.islice(f, start, stop):
             lines.append(line.strip('\n'))
     return lines
-
 
 def merge_scopes(scopes:List[Tuple[int,int]]) -> List[Tuple[int,int]]:
     """"Merge the overlap scope, the pass-in scopes must be sorted."""

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 from sphinx.util import logging
 
 from .config import Config
-from . import Snippet, Headline, Notes, Code
+from . import Snippet, Headline, Code
 from .picker import pick_doctitle, pick_codes
 from .cache import Cache, Item
 from .keyword import Extractor
@@ -36,7 +36,7 @@ extractor:Extractor = Extractor()
 
 def extract_keywords(s:Snippet) -> List[str]:
     # TODO: Deal with more snippet
-    if isinstance(s, Notes):
+    if isinstance(s, Code):
         return extractor.extract('\n'.join(map(lambda x:x.astext(), s.description)),
                                  top_n=10)
     elif isinstance(s, Headline):
