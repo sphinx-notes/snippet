@@ -75,6 +75,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                       help='get information of snippet by index ID')
     getparser.add_argument('--file', '-f', action='store_true',
                            help='get source file path of snippet')
+    getparser.add_argument('--line-start', action='store_true',
+                           help='get line number where snippet starts in source file')
+    getparser.add_argument('--line-end', action='store_true',
+                           help='get line number where snippet ends in source file')
     getparser.add_argument('--text', '-t', action='store_true',
                            help='get source reStructuredText of snippet')
     getparser.add_argument('--url', '-u', action='store_true',
@@ -159,6 +163,10 @@ def _on_command_get(args:argparse.Namespace):
             if item.snippet.refid():
                 url +=  '#' + item.snippet.refid()
             print(url)
+        if args.line_start:
+            print(item.snippet.scope()[0])
+        if args.line_end:
+            print(item.snippet.scope()[1])
 
 
 def _on_command_integration(args:argparse.Namespace):
