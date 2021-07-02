@@ -7,7 +7,7 @@
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, Set, Any, Dict
+from typing import List, Tuple, Optional, Any, Dict
 from dataclasses import dataclass, field
 from abc import ABC, abstractclassmethod
 import itertools
@@ -30,19 +30,20 @@ class Snippet(ABC):
     documentation. Note that it is not always continuous fragment at text (rst)
     level.
     """
-    _scopes:List[Tuple[int,int]] = field(init=False)
+    _scope:Tuple[int,int] = field(init=False)
     _refid:Optional[str] = field(init=False)
 
     def __post_init__(self) -> None:
         """Post-init processing routine of dataclass"""
 
         # Calcuate scope before deepcopy
-        scopes = []
+        scope = [float('inf'), -float('inf')]
         for node in self.nodes():
             if not node.line:
                 continue # Skip node that have None line, I dont know why :'(
-            scopes.append((line_of_start(node), line_of_end(node)))
-        self._scopes = merge_scopes(scopes)
+            scope[0] = min(scope[0], line_of_start(node))
+            scope[1] = max(scope[1], line_of_end(node))
+        self._scope = scope
 
         # Find exactly one id attr in nodes
         self._refid = None
@@ -82,25 +83,20 @@ class Snippet(ABC):
         return self.nodes()[0].source
 
 
-    def scopes(self) -> List[Tuple[int,int]]:
+    def scope(self) -> Tuple[int,int]:
         """
-        Return the scopes of snippet, which corresponding to the line
+        Return the scope of snippet, which corresponding to the line
         number in the source file.
 
         A scope is a left closed and right open interval of the line number
-        ``[left, right)``. Snippet is not continuous in source file so we return
-        a list of scope.
+        ``[left, right)``.
         """
-        return self._scopes
+        return self._scope
 
 
     def text(self) -> List[str]:
         """Return the original reStructuredText text of snippet."""
-        srcfn = self.file()
-        lines = []
-        for scope in self.scopes():
-            lines += read_partial_file(srcfn, scope)
-        return lines
+        return read_partial_file(self.file(), self.scope())
 
 
     def refid(self) -> Optional[str]:
@@ -196,22 +192,6 @@ def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]
         for line in itertools.islice(f, start, stop):
             lines.append(line.strip('\n'))
     return lines
-
-def merge_scopes(scopes:List[Tuple[int,int]]) -> List[Tuple[int,int]]:
-    """"Merge the overlap scope, the pass-in scopes must be sorted."""
-    merged = [scopes[0]]
-    for tup in scopes:
-        if merged[-1][1] >= tup[0]:
-            if merged[-1][1] >= tup[1]:
-                # Completely overlap
-                continue
-            else:
-                # Partial overlap
-                merged[-1] = (merged[-1][0], tup[1])
-        else:
-            # No overlap
-            merged.append(tup)
-    return merged
 
 
 def line_of_start(node:nodes.Node) -> int:
