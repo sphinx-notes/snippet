@@ -148,9 +148,9 @@ def _on_command_get(args:argparse.Namespace):
             print('no such index ID', file=sys.stderr)
             sys.exit(1)
         if args.text:
-            print('\n'.join(item.snippet.text()))
+            print('\n'.join(item.snippet.rst))
         if args.file:
-            print(item.snippet.file())
+            print(item.snippet.file)
         if args.url:
             # HACK: get doc id in better way
             doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
@@ -159,13 +159,13 @@ def _on_command_get(args:argparse.Namespace):
                 print(f'base URL for project {doc_id[0]} not configurated', file=sys.stderr)
                 sys.exit(1)
             url = posixpath.join(base_url, doc_id[1] + '.html')
-            if item.snippet.refid():
-                url +=  '#' + item.snippet.refid()
+            if item.snippet.refid:
+                url +=  '#' + item.snippet.refid
             print(url)
         if args.line_start:
-            print(item.snippet.scope()[0])
+            print(item.snippet.lineno[0])
         if args.line_end:
-            print(item.snippet.scope()[1])
+            print(item.snippet.lineno[1])
 
 
 def _on_command_integration(args:argparse.Namespace):
