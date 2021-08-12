@@ -16,7 +16,7 @@ function snippet_list() {
 }
 
 function snippet_view() {
-  index_id=$(snippet_list dc)
+  index_id=$(snippet_list ds)
   [ -z "$index_id" ] && return
 
   # Make sure we have $PAGER
@@ -37,7 +37,7 @@ function snippet_view() {
 }
 
 function snippet_edit() {
-  index_id=$(snippet_list dc)
+  index_id=$(snippet_list ds)
   [ -z "$index_id" ] && return
 
   # Make sure we have $EDITOR
@@ -58,7 +58,7 @@ function snippet_edit() {
 }
 
 function snippet_url() {
-  index_id=$(snippet_list dc)
+  index_id=$(snippet_list ds)
   [ -z "$index_id" ] && return
 
   # Make sure we have $BROWSER

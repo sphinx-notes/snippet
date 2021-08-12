@@ -45,11 +45,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
                                      formatter_class=HelpFormatter,
                                      epilog=dedent("""
                                      snippet kinds:
-                                       d (headline)          documentation title and possible subtitle
-                                       c (code)              notes with code block
-                                       p (procedure)         notes with a sequence of code for doing something (TODO)
-                                       i (image)             notes with an image (TODO)
-                                       * (any)               wildcard kind for any kind of snippet"""))
+                                       d (document)          a complete reST document 
+                                       s (section)           a reST section
+                                       c (code)              a snippet with code blocks
+                                       * (any)               wildcard for any snippet"""))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file')
 

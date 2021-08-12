@@ -16,6 +16,8 @@ from .utils.pdict import PDict
 class Item(object):
     """ Item of snippet cache. """
     snippet:Snippet
+    kinds:List[str]
+    excerpt:str
     titlepath:List[str]
     keywords:List[str]
 
@@ -52,8 +54,8 @@ class Cache(PDict):
         # Add new index to every where
         for i, item in enumerate(items):
             index_id = self.gen_index_id()
-            self.indexes[index_id] = (item.snippet.kind(),
-                                      item.snippet.excerpt(),
+            self.indexes[index_id] = (item.kinds,
+                                      item.excerpt,
                                       item.titlepath,
                                       item.keywords)
             self.index_id_to_doc_id[index_id] = (key, i)

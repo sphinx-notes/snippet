@@ -21,11 +21,11 @@ if TYPE_CHECKING:
 from sphinx.util import logging
 
 from .config import Config
-from . import Snippet, Headline, Code
-from .picker import pick_doctitle, pick_codes
+from . import Snippet, WithTitle, Document, Section, WithCodeBlock
+from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor
-from .utils.titlepath import resolve_fullpath, resolve_docpath
+from .utils.titlepath import resolve_fullpath
 from .builder import Builder
 
 
@@ -34,26 +34,42 @@ logger = logging.getLogger(__name__)
 cache:Cache = None
 extractor:Extractor = Extractor()
 
+
+def extract_kinds(s:Snippet) -> str:
+    kinds = ''
+    if isinstance(s, Document):
+        kinds += 'd'
+    elif isinstance(s, Section):
+        kinds += 's'
+    if isinstance(s, WithCodeBlock):
+        kinds += 'c'
+    return kinds
+
+
+def extract_excerpt(s:Snippet) -> str:
+    if isinstance(s, WithTitle) and s.title is not None:
+        return '<' + s.title.text + '>'
+    return ''
+
+
 def extract_keywords(s:Snippet) -> List[str]:
+    keywords = []
     # TODO: Deal with more snippet
-    if isinstance(s, Code):
-        return extractor.extract('\n'.join(map(lambda x:x.astext(), s.description)),
-                                 top_n=10)
-    elif isinstance(s, Headline):
-        return extractor.extract('\n'.join(map(lambda x:x.astext(), s.nodes())),
-                                 strip_stopwords=False)
-    else:
-        logger.warning('unknown snippet instance %s', s)
+    if isinstance(s, WithTitle) and s.title is not None:
+        keywords.extend(extractor.extract(s.title.text, strip_stopwords=False))
+    return keywords
 
 
-def is_matched(pats:Dict[str,List[str]], cls:Type[Snippet], docname:str) -> bool:
+def is_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
     # Wildcard
     if '*' in pats:
         for pat in pats['*']:
             if re.match(pat, docname):
                 return True
-    if cls.kind() in pats:
-        for pat in pats[cls.kind()]:
+    for k in extract_kinds(s):
+        if k not in pats:
+            continue
+        for pat in pats[k]:
             if re.match(pat, docname):
                 return True
     return False
@@ -85,33 +101,19 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         return
 
     pats = app.config.snippet_patterns
-    matched = False
-
     doc = cache.setdefault((app.config.project, docname), [])
-    # Pick document title from doctree
-    if is_matched(pats, Headline, docname):
-        matched = True
-        doctitle = pick_doctitle(doctree)
-        if doctitle:
-            doc.append(Item(titlepath=resolve_docpath(app.env,
-                                                      docname,
-                                                      include_project=True),
-                            snippet=doctitle,
-                            keywords=[docname] + extract_keywords(doctitle)))
-
-    # Pick code snippet from doctree
-    if is_matched(pats, Code, docname):
-        matched = True
-        codes = pick_codes(doctree)
-        for code in codes:
-            doc.append(Item(titlepath=resolve_fullpath(app.env,
-                                                       docname,
-                                                       code.nodes()[0],
-                                                       include_project=True),
-                            snippet=code,
-                            keywords=extract_keywords(code)))
-
-    if not matched:
+    for s, n in pick(doctree):
+        if not is_matched(pats, s, docname):
+            continue
+        doc.append(Item(snippet=s,
+                        kinds=extract_kinds(s),
+                        excerpt=extract_excerpt(s),
+                        keywords=extract_keywords(s),
+                        titlepath=resolve_fullpath(app.env,
+                                                   docname,
+                                                   n,
+                                                   include_project=True)))
+    if len(doc) == 0:
         del cache[(app.config.project, docname)]
 
 

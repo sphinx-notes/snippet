@@ -29,7 +29,7 @@ function! g:SphinxNotesSnippetListAndView()
   function! s:CallView(selection)
     call g:SphinxNotesSnippetView(s:SplitID(a:selection))
   endfunction
-  call g:SphinxNotesSnippetList(function('s:CallView'), 'dc')
+  call g:SphinxNotesSnippetList(function('s:CallView'), 'ds')
 endfunction
 
 " https://github.com/anhmv/vim-float-window/blob/master/plugin/float-window.vim
@@ -76,7 +76,7 @@ function! g:SphinxNotesSnippetListAndEdit()
   function! s:CallEdit(selection)
     call g:SphinxNotesSnippetEdit(s:SplitID(a:selection))
   endfunction
-  call g:SphinxNotesSnippetList(function('s:CallEdit'), 'dc')
+  call g:SphinxNotesSnippetList(function('s:CallEdit'), 'ds')
 endfunction
 
 function! g:SphinxNotesSnippetUrl(id)
@@ -90,7 +90,7 @@ function! g:SphinxNotesSnippetListAndUrl()
   function! s:CallUrl(selection)
     call g:SphinxNotesSnippetUrl(s:SplitID(a:selection))
   endfunction
-  call g:SphinxNotesSnippetList(function('s:CallUrl'), 'dc')
+  call g:SphinxNotesSnippetList(function('s:CallUrl'), 'ds')
 endfunction
 
 " vim: set shiftwidth=2:
