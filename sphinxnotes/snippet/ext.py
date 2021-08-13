@@ -35,15 +35,15 @@ cache:Cache = None
 extractor:Extractor = Extractor()
 
 
-def extract_kinds(s:Snippet) -> str:
-    kinds = ''
+def extract_tags(s:Snippet) -> str:
+    tags = ''
     if isinstance(s, Document):
-        kinds += 'd'
+        tags += 'd'
     elif isinstance(s, Section):
-        kinds += 's'
+        tags += 's'
     if isinstance(s, WithCodeBlock):
-        kinds += 'c'
-    return kinds
+        tags += 'c'
+    return tags
 
 
 def extract_excerpt(s:Snippet) -> str:
@@ -68,7 +68,7 @@ def is_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
         for pat in pats['*']:
             if re.match(pat, docname):
                 return True
-    for k in extract_kinds(s):
+    for k in extract_tags(s):
         if k not in pats:
             continue
         for pat in pats[k]:
@@ -109,7 +109,7 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         if not is_matched(pats, s, docname):
             continue
         doc.append(Item(snippet=s,
-                        kinds=extract_kinds(s),
+                        tags=extract_tags(s),
                         excerpt=extract_excerpt(s),
                         keywords=extract_keywords(s),
                         titlepath=resolve_fullpath(app.env,

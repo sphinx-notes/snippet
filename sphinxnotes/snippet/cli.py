@@ -44,10 +44,10 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     parser = argparse.ArgumentParser(prog=__name__, description=__description__,
                                      formatter_class=HelpFormatter,
                                      epilog=dedent("""
-                                     snippet kinds:
-                                       d (document)          a complete reST document 
+                                     snippet tags:
+                                       d (document)          a reST document 
                                        s (section)           a reST section
-                                       c (code)              a snippet with code blocks
+                                       c (code)              snippet with code blocks
                                        * (any)               wildcard for any snippet"""))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file')
@@ -62,8 +62,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     listparser = subparsers.add_parser('list', aliases=['l'],
                                        formatter_class=HelpFormatter,
                                        help='list snippet indexes, columns of indexes: %s' % COLUMNS)
-    listparser.add_argument('--kinds', '-k', type=str, default='*',
-                            help='list specified kinds only')
+    listparser.add_argument('--tags', '-t', type=str, default='*',
+                            help='list specified tags only')
     listparser.add_argument('--width', '-w', type=int,
                             default=get_terminal_size((120, 0)).columns,
                             help='width in characters of output')
@@ -136,7 +136,7 @@ def _on_command_stat(args:argparse.Namespace):
 
 
 def _on_command_list(args:argparse.Namespace):
-    rows = tablify(args.cache.indexes, args.kinds, args.width)
+    rows = tablify(args.cache.indexes, args.tags, args.width)
     for row in rows:
         print(row)
 
