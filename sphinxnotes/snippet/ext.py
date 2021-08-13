@@ -47,8 +47,10 @@ def extract_kinds(s:Snippet) -> str:
 
 
 def extract_excerpt(s:Snippet) -> str:
-    if isinstance(s, WithTitle) and s.title is not None:
+    if isinstance(s, Document) and s.title is not None:
         return '<' + s.title.text + '>'
+    elif isinstance(s, Section) and s.title is not None:
+        return '[' + s.title.text + ']'
     return ''
 
 
@@ -83,7 +85,7 @@ def on_config_inited(app:Sphinx, appcfg:SphinxConfig) -> None:
     try:
         cache.load()
     except Exception as e:
-        logger.warning("failed to laod cache: %s" % e)
+        logger.warning("[snippet] failed to laod cache: %s" % e)
 
 
 def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
@@ -97,12 +99,13 @@ def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
 def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
     if not isinstance(doctree, nodes.document):
         # XXX: It may caused by ablog
-        logger.debug('node %s is not nodes.document', type(doctree), location=doctree)
+        logger.debug('[snippet] node %s is not nodes.document', type(doctree), location=doctree)
         return
 
     pats = app.config.snippet_patterns
     doc = cache.setdefault((app.config.project, docname), [])
-    for s, n in pick(doctree):
+    snippets = pick(doctree)
+    for s, n in snippets:
         if not is_matched(pats, s, docname):
             continue
         doc.append(Item(snippet=s,
@@ -115,6 +118,9 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
                                                    include_project=True)))
     if len(doc) == 0:
         del cache[(app.config.project, docname)]
+
+    logger.debug('[snippet] picked %s/%s snippetes in %s',
+                 len(doc), len(snippets), docname)
 
 
 def on_builder_finished(app:Sphinx, exception) -> None:
