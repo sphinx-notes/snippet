@@ -88,10 +88,11 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     igparser = subparsers.add_parser('integration', aliases=['i'],
                                       formatter_class=HelpFormatter,
                                       help='integration related commands')
-    igparser.add_argument('--sh', '-s', action='store_true', help='dump POSIX shell integration script')
+    igparser.add_argument('--sh', '-s', action='store_true', help='dump bash shell integration script')
+    igparser.add_argument('--sh-binding', action='store_true', help='dump recommended bash key binding')
     igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh integration script')
     igparser.add_argument('--zsh-binding', action='store_true', help='dump recommended zsh key binding')
-    igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script (NOTE: for now, only neovim is supported)')
+    igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script')
     igparser.add_argument('--vim-binding', action='store_true', help='dump recommended (neo)vim key binding')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
 
@@ -172,13 +173,17 @@ def _on_command_integration(args:argparse.Namespace):
     if args.sh:
         with open(get_integration_file('plugin.sh'), 'r') as f:
             print(f.read())
+    if args.sh_binding:
+        with open(get_integration_file('binding.sh'), 'r') as f:
+            print(f.read())
     if args.zsh:
-        # Zsh plugin depends on POSIX shell plugin
+        # Zsh plugin depends on Bash shell plugin
         with open(get_integration_file('plugin.sh'), 'r') as f:
             print(f.read())
-        with open(get_integration_file('plugin.zsh'), 'r') as f:
-            print(f.read())
     if args.zsh_binding:
+        # Zsh binding depends on Bash shell binding
+        with open(get_integration_file('binding.sh'), 'r') as f:
+            print(f.read())
         with open(get_integration_file('binding.zsh'), 'r') as f:
             print(f.read())
     if args.vim:
