@@ -25,7 +25,7 @@ from . import Snippet, WithTitle, Document, Section
 from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor
-from .utils.titlepath import resolve_fullpath
+from .utils import titlepath
 from .builder import Builder
 
 
@@ -110,10 +110,7 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
                         tags=extract_tags(s),
                         excerpt=extract_excerpt(s),
                         keywords=extract_keywords(s),
-                        titlepath=resolve_fullpath(app.env,
-                                                   docname,
-                                                   n,
-                                                   include_project=True)))
+                        titlepath=[x.astext() for x in titlepath.resolve(app.env, docname, n)]))
     if len(doc) == 0:
         del cache[(app.config.project, docname)]
 

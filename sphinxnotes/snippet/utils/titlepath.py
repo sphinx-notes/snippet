@@ -8,7 +8,7 @@
     :license: BSD, see LICENSE for details.
 """
 from __future__ import annotations
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from docutils import nodes
 
@@ -16,95 +16,46 @@ if TYPE_CHECKING:
     from sphinx.enviornment import BuilderEnviornment
 
 
-def _safe_descend(node:nodes.Node, *args: int) -> Optional[nodes.Node]:
-    """Get node descend in a safe way."""
-    try:
-        for index in args:
-            node = node[index]
-        return node
-    except:
-        return None
+def resolve(env: BuilderEnviornment, docname:str, node:nodes.Node) -> List[nodes.title]:
+    return resolve_section(node) + resolve_document(env, docname)
 
 
-def resolve_fullpath(env: BuilderEnviornment, docname:str, node:nodes.Node,
-                     include_project:bool=False) -> List[str]:
-    return [x.astext() for x in resolve_sectpath(node.document, node)] + \
-        resolve_docpath(env, docname, include_project=include_project)
-
-
-def resolve_sectpath(doctree:nodes.document, node:nodes.Node) -> List[nodes.title]:
+def resolve_section(node:nodes.section) -> List[nodes.title]:
     # FIXME: doc is None
-    _, subtitlenode = resolve_doctitle(doctree)
     titlenodes = []
     while node:
-        secttitle = resolve_secttitle(node)
+        if len(node) > 0 and isinstance(node[0], nodes.title):
+            titlenodes.append(node[0])
         node = node.parent
-        if not secttitle or secttitle == subtitlenode:
-            continue
-        titlenodes.append(secttitle)
     return titlenodes
 
 
-def resolve_secttitle(node:nodes.Node) -> Optional[nodes.title]:
-    titlenode = _safe_descend(node.parent, 0)
-    if not isinstance(titlenode, nodes.title):
-        return None
-    return titlenode
-
-
-def resolve_docpath(env:BuilderEnviornment, docname:str, include_project:bool=False) -> List[str]:
+def resolve_document(env:BuilderEnviornment, docname:str) -> List[nodes.title]:
+    """
+    .. note:: Title of document itself does not included in the returned list
+    """
     titles = []
-
-    if include_project:
-        titles.append(env.config.project)
-
     master_doc = env.config.master_doc
     v = docname.split('/')
-    if v.pop() == master_doc:
-        if v:
-            # If docname is "a/b/index", we need titles of "a"
-            v.pop()
-        else:
-            # docname is "index", no need to get docpath, it is root doc
-            return []
+
+    # Exclude self
+    if v.pop() == master_doc and v:
+        # If self is master_doc, like: "a/b/c/index", we only return titles
+        # of "a/b/", so pop again
+        v.pop()
+
+    # Collect master doc title in docname
     while v:
         master_docname = '/'.join(v + [master_doc])
         if master_docname in env.titles:
-            title = env.titles[master_docname].astext()
+            title = env.titles[master_docname]
         else:
-            title = v[-1].title()
+            title = nodes.title(text=v[-1].title()) # FIXME: Create mock title for now
         titles.append(title)
         v.pop()
 
-    return titles[::-1]  # Reverse inplace
+    # Include title of top-level master doc
+    if master_doc in env.titles:
+        titles.append(env.titles[master_doc])
 
-
-def resolve_doctitle(doctree:nodes.document) -> Tuple[Optional[nodes.title],
-                                                      Optional[nodes.title]]:
-
-    toplevel_sectnode = doctree.next_node(nodes.section)
-    if not toplevel_sectnode:
-        return (None, None)
-
-    titlenode = _safe_descend(toplevel_sectnode, 0)
-    # NOTE: nodes.subtitle does not make senses beacuse Sphinx doesn't support
-    # subtitle:
-    #
-    # > Sphinx does not support a "subtitle".
-    # > Sphinx recognizes it as a mere second level section
-    #
-    # ref:
-    # - https://github.com/sphinx-doc/sphinx/issues/3574#issuecomment-288722585
-    # - https://github.com/sphinx-doc/sphinx/issues/3567#issuecomment-288093991
-    if len(toplevel_sectnode) != 2:
-        return (titlenode, None)
-    # HACK: For our convenience, we regard second level section title
-    # (under document) as subtitle::
-    # <section>
-    #   <title>
-    #   <section>
-    #       <(sub)title>
-    subtitlenode = toplevel_sectnode[1][0]
-    if not isinstance(subtitlenode, nodes.title):
-        return (titlenode, None)
-    return (titlenode, subtitlenode)
+    return titles
