@@ -204,12 +204,14 @@ The configuration of CLI tools is a python script, located at :file:`$XDG_CONFIG
 Change Log
 ==========
 
-2021-08-?? 1.0
---------------
+2021-08-14 1.0b7
+----------------
 
 .. sectionauthor:: Shengyu Zhang
 
-The first stable version is out, enjoy~
+- snippet: Add support for section
+- integration: Drop snippet view support
+- Complete document
 
 2021-03-20 1.0b2
 ----------------
