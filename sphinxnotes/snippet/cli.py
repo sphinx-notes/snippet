@@ -96,7 +96,6 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     igparser.add_argument('--vim-binding', action='store_true', help='dump recommended (neo)vim key binding')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
 
-
     # Parse command line arguments
     args = parser.parse_args(argv)
 

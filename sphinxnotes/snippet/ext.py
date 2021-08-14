@@ -9,7 +9,7 @@
 """
 
 from __future__ import annotations
-from typing import List, Set, TYPE_CHECKING, Type, Dict
+from typing import List, Set, TYPE_CHECKING, Dict
 import re
 
 from docutils import nodes
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 from sphinx.util import logging
 
 from .config import Config
-from . import Snippet, WithTitle, Document, Section, WithCodeBlock
+from . import Snippet, WithTitle, Document, Section
 from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor
@@ -41,8 +41,6 @@ def extract_tags(s:Snippet) -> str:
         tags += 'd'
     elif isinstance(s, Section):
         tags += 's'
-    if isinstance(s, WithCodeBlock):
-        tags += 'c'
     return tags
 
 
@@ -63,8 +61,8 @@ def extract_keywords(s:Snippet) -> List[str]:
 
 
 def is_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
-    # Wildcard
-    if '*' in pats:
+    """Whether the snippet's tags and docname matched by given patterns pats"""
+    if '*' in pats: # Wildcard
         for pat in pats['*']:
             if re.match(pat, docname):
                 return True
