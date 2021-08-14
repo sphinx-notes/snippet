@@ -7,194 +7,143 @@
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, Any, Dict
-from dataclasses import dataclass, field
-from abc import ABC, abstractclassmethod
+from typing import List, Tuple, Optional
 import itertools
 
 from docutils import nodes
 
 
 __title__= 'sphinxnotes-snippet'
-__license__ = 'BSD',
+__license__ = 'BSD'
 __version__ = '1.0b6'
 __author__ = 'Shengyu Zhang'
 __url__ = 'https://sphinx-notes.github.io/snippet'
 __description__ = 'Non-intrusive snippet manager for Sphinx documentation'
 __keywords__ = 'documentation, sphinx, extension, utility'
 
-@dataclass
-class Snippet(ABC):
+class Snippet(object):
     """
-    Snippet is a {abstract,data}class represents a snippet of reStructuredText
-    documentation. Note that it is not always continuous fragment at text (rst)
-    level.
+    Snippet is base class of reStructuredText snippet.
+
+    :param nodes: Document nodes that make up this snippet 
     """
-    _scope:Tuple[int,int] = field(init=False)
-    _refid:Optional[str] = field(init=False)
 
-    def __post_init__(self) -> None:
-        """Post-init processing routine of dataclass"""
+    #: Source file path of snippet
+    file:str
 
-        # Calcuate scope before deepcopy
-        scope = [float('inf'), -float('inf')]
-        for node in self.nodes():
+    #: Line number range of snippet, in the source file which is left closed
+    #: and right opened.
+    lineno:Tuple[int,int]
+
+    #: The original reStructuredText of snippet
+    rst:List[str]
+
+    #: The possible identifier key of snippet, which is picked from nodes'
+    #: (or nodes' parent's) `ids attr`_.
+    #:
+    #: .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
+    refid:Optional[str]
+
+    def __init__(self, *nodes:nodes.Node) -> None:
+        assert len(nodes) != 0
+
+        self.file = nodes[0].source
+
+        lineno = [float('inf'), -float('inf')]
+        for node in nodes:
             if not node.line:
-                continue # Skip node that have None line, I dont know why :'(
-            scope[0] = min(scope[0], line_of_start(node))
-            scope[1] = max(scope[1], line_of_end(node))
-        self._scope = scope
+                continue # Skip node that have None line, I dont know why
+            lineno[0] = min(lineno[0], _line_of_start(node))
+            lineno[1] = max(lineno[1], _line_of_end(node))
+        self.lineno = lineno
 
-        # Find exactly one id attr in nodes
-        self._refid = None
-        for node in self.nodes():
+        lines = []
+        with open(self.file, "r") as f:
+            start = self.lineno[0] - 1
+            stop = self.lineno[1] - 1
+            for line in itertools.islice(f, start, stop):
+                lines.append(line.strip('\n'))
+        self.rst = lines
+
+        # Find exactly one ID attr in nodes
+        self.refid = None
+        for node in nodes:
             if node['ids']:
-                self._refid = node['ids'][0]
+                self.refid = node['ids'][0]
                 break
-        # If no node has id, use parent's
-        if not self._refid:
-            for node in self.nodes():
+
+        # If no ID found, try parent
+        if not self.refid:
+            for node in nodes:
                 if node.parent['ids']:
-                    self._refid = node.parent['ids'][0]
+                    self.refid = node.parent['ids'][0]
                     break
 
 
-    @abstractclassmethod
-    def nodes(self) -> List[nodes.Node]:
-        """Return the out of tree nodes that make up this snippet."""
-        pass
+
+class Text(Snippet):
+    #: Text of snippet
+    text:str
+
+    def __init__(self, node:nodes.Node) -> None:
+        super().__init__(node)
+        self.text = node.astext()
 
 
-    @abstractclassmethod
-    def excerpt(self) -> str:
-        """Return excerpt of snippet (for preview)."""
-        pass
+class CodeBlock(Text):
+    #: Language of code block
+    language:str
+    #: Caption of code block
+    caption:Optional[str]
+
+    def __init__(self, node:nodes.literal_block) -> None:
+        assert isinstance(node, nodes.literal_block)
+        super().__init__(node)
+        self.language = node['language']
+        self.caption = node.get('caption')
 
 
-    @abstractclassmethod
-    def kind(self) -> str:
-        """Return kind of snippet (for filtering)."""
-        pass
+class WithCodeBlock(object):
+    code_blocks:List[CodeBlock]
+
+    def __init__(self, nodes:nodes.Nodes) -> None:
+        self.code_blocks = []
+        for n in nodes.traverse(nodes.literal_block):
+            self.code_blocks.append(self.CodeBlock(n))
 
 
-    def file(self) -> str:
-        """Return source file path of snippet"""
-        # All nodes should have same source file
-        return self.nodes()[0].source
+class Title(Text):
+    def __init__(self, node:nodes.title) -> None:
+        assert isinstance(node, nodes.title)
+        super().__init__(node)
 
 
-    def scope(self) -> Tuple[int,int]:
-        """
-        Return the scope of snippet, which corresponding to the line
-        number in the source file.
+class WithTitle(object):
+    title:Optional[Title]
 
-        A scope is a left closed and right open interval of the line number
-        ``[left, right)``.
-        """
-        return self._scope
+    def __init__(self, node:nodes.Node) -> None:
+        title_node = node.next_node(nodes.title)
+        self.title = Title(title_node) if title_node else None
 
 
-    def text(self) -> List[str]:
-        """Return the original reStructuredText text of snippet."""
-        return read_partial_file(self.file(), self.scope())
+class Section(Snippet, WithTitle):
+    def __init__(self, node:nodes.section) -> None:
+        assert isinstance(node, nodes.section)
+        Snippet.__init__(self, node)
+        WithTitle.__init__(self, node)
 
 
-    def refid(self) -> Optional[str]:
-        """
-        Return the possible identifier key of snippet.
-        It is picked from nodes' (or nodes' parent's) `ids attr`_.
-
-        .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
-        """
-        return self._refid
+class Document(Section):
+    def __init__(self, node:nodes.document) -> None:
+        assert isinstance(node, nodes.document)
+        super().__init__(node.next_node(nodes.section))
 
 
-    def __getstate__(self) -> Dict[str,Any]:
-        """Implement :py:meth:`pickle.object.__getstate__`."""
-        return self.__dict__.copy()
+################
+# Nodes helper #
+################
 
-
-@dataclass
-class Headline(Snippet):
-    """Documentation title and possible subtitle."""
-    title:nodes.title
-    subtitle:Optional[nodes.title]
-
-    def nodes(self) -> List[nodes.Node]:
-        if not self.subtitle:
-            return [self.title]
-        return [self.title, self.subtitle]
-
-
-    def excerpt(self) -> str:
-        if not self.subtitle:
-            return '<%s>' % self.title.astext()
-        return '<%s ~%s~>' % (self.title.astext(), self.subtitle.astext())
-
-
-    @classmethod
-    def kind(cls) -> str:
-        return 'd'
-
-
-    def text(self) -> List[str]:
-        """
-        Headline represents a reStructuredText document,
-        so return the whole source file.
-        """
-        with open(self.file()) as f:
-            return f.read().splitlines()
-
-
-    def __getstate__(self) -> Dict[str,Any]:
-        self.title = self.title.deepcopy()
-        if self.subtitle:
-            self.subtitle = self.subtitle.deepcopy()
-        return super().__getstate__()
-
-
-@dataclass
-class Code(Snippet):
-    """A code block with description."""
-    description:List[nodes.Body]
-    block:nodes.literal_block
-
-    def nodes(self) -> List[nodes.Node]:
-        return self.description.copy() + [self.block]
-
-
-    def excerpt(self) -> str:
-        return '/%s/ ' % self.language() + \
-            self.description[0].astext().replace('\n', '')
-
-
-    @classmethod
-    def kind(cls) -> str:
-        return 'c'
-
-
-    def language(self) -> str:
-        """Return the (programing) language that appears in code."""
-        return self.block['language']
-
-
-    def __getstate__(self) -> Dict[str,Any]:
-        self.description = [x.deepcopy() for x in self.description]
-        self.block = self.block.deepcopy()
-        return super().__getstate__()
-
-
-def read_partial_file(filename:str, scope:Tuple[int,Optional[int]]) -> List[str]:
-    lines = []
-    with open(filename, "r") as f:
-        start = scope[0] - 1
-        stop = scope[1] - 1 if scope[1] else None
-        for line in itertools.islice(f, start, stop):
-            lines.append(line.strip('\n'))
-    return lines
-
-
-def line_of_start(node:nodes.Node) -> int:
+def _line_of_start(node:nodes.Node) -> int:
     assert node.line
     if isinstance(node, nodes.title):
         if isinstance(node.parent.parent, nodes.document):
@@ -213,11 +162,11 @@ def line_of_start(node:nodes.Node) -> int:
     return node.line
 
 
-def line_of_end(node:nodes.Node) -> Optional[int]:
+def _line_of_end(node:nodes.Node) -> Optional[int]:
     next_node = node.next_node(descend=False, siblings=True, ascend=True)
     while next_node:
         if next_node.line:
-            return line_of_start(next_node)
+            return _line_of_start(next_node)
         next_node = next_node.next_node(
             # Some nodes' line attr is always None, but their children has
             # valid line attr

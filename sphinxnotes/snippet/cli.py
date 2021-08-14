@@ -44,12 +44,11 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     parser = argparse.ArgumentParser(prog=__name__, description=__description__,
                                      formatter_class=HelpFormatter,
                                      epilog=dedent("""
-                                     snippet kinds:
-                                       d (headline)          documentation title and possible subtitle
-                                       c (code)              notes with code block
-                                       p (procedure)         notes with a sequence of code for doing something (TODO)
-                                       i (image)             notes with an image (TODO)
-                                       * (any)               wildcard kind for any kind of snippet"""))
+                                     snippet tags:
+                                       d (document)          a reST document 
+                                       s (section)           a reST section
+                                       c (code)              snippet with code blocks
+                                       * (any)               wildcard for any snippet"""))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file')
 
@@ -63,8 +62,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     listparser = subparsers.add_parser('list', aliases=['l'],
                                        formatter_class=HelpFormatter,
                                        help='list snippet indexes, columns of indexes: %s' % COLUMNS)
-    listparser.add_argument('--kinds', '-k', type=str, default='*',
-                            help='list specified kinds only')
+    listparser.add_argument('--tags', '-t', type=str, default='*',
+                            help='list specified tags only')
     listparser.add_argument('--width', '-w', type=int,
                             default=get_terminal_size((120, 0)).columns,
                             help='width in characters of output')
@@ -89,13 +88,13 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     igparser = subparsers.add_parser('integration', aliases=['i'],
                                       formatter_class=HelpFormatter,
                                       help='integration related commands')
-    igparser.add_argument('--sh', '-s', action='store_true', help='dump POSIX shell integration script')
+    igparser.add_argument('--sh', '-s', action='store_true', help='dump bash shell integration script')
+    igparser.add_argument('--sh-binding', action='store_true', help='dump recommended bash key binding')
     igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh integration script')
     igparser.add_argument('--zsh-binding', action='store_true', help='dump recommended zsh key binding')
-    igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script (NOTE: for now, only neovim is supported)')
+    igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script')
     igparser.add_argument('--vim-binding', action='store_true', help='dump recommended (neo)vim key binding')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
-
 
     # Parse command line arguments
     args = parser.parse_args(argv)
@@ -137,7 +136,7 @@ def _on_command_stat(args:argparse.Namespace):
 
 
 def _on_command_list(args:argparse.Namespace):
-    rows = tablify(args.cache.indexes, args.kinds, args.width)
+    rows = tablify(args.cache.indexes, args.tags, args.width)
     for row in rows:
         print(row)
 
@@ -149,9 +148,9 @@ def _on_command_get(args:argparse.Namespace):
             print('no such index ID', file=sys.stderr)
             sys.exit(1)
         if args.text:
-            print('\n'.join(item.snippet.text()))
+            print('\n'.join(item.snippet.rst))
         if args.file:
-            print(item.snippet.file())
+            print(item.snippet.file)
         if args.url:
             # HACK: get doc id in better way
             doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
@@ -160,26 +159,30 @@ def _on_command_get(args:argparse.Namespace):
                 print(f'base URL for project {doc_id[0]} not configurated', file=sys.stderr)
                 sys.exit(1)
             url = posixpath.join(base_url, doc_id[1] + '.html')
-            if item.snippet.refid():
-                url +=  '#' + item.snippet.refid()
+            if item.snippet.refid:
+                url +=  '#' + item.snippet.refid
             print(url)
         if args.line_start:
-            print(item.snippet.scope()[0])
+            print(item.snippet.lineno[0])
         if args.line_end:
-            print(item.snippet.scope()[1])
+            print(item.snippet.lineno[1])
 
 
 def _on_command_integration(args:argparse.Namespace):
     if args.sh:
         with open(get_integration_file('plugin.sh'), 'r') as f:
             print(f.read())
+    if args.sh_binding:
+        with open(get_integration_file('binding.sh'), 'r') as f:
+            print(f.read())
     if args.zsh:
-        # Zsh plugin depends on POSIX shell plugin
+        # Zsh plugin depends on Bash shell plugin
         with open(get_integration_file('plugin.sh'), 'r') as f:
             print(f.read())
-        with open(get_integration_file('plugin.zsh'), 'r') as f:
-            print(f.read())
     if args.zsh_binding:
+        # Zsh binding depends on Bash shell binding
+        with open(get_integration_file('binding.sh'), 'r') as f:
+            print(f.read())
         with open(get_integration_file('binding.zsh'), 'r') as f:
             print(f.read())
     if args.vim:
