@@ -53,7 +53,6 @@ setup(
         'jieba',
         'python-pinyin',
         'pyxdg',
-        'summa',
         'stopwordsiso',
         'wcwidth',
         'wordsegment',
