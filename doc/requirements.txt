@@ -1,1 +1,11 @@
-../requirements.txt
+# deps of sphinxnotes-snippet
+langid
+jieba
+python-pinyin
+pyxdg
+stopwordsiso
+wcwidth
+wordsegment
+
+# deps of documentation
+sphinxcontrib.asciinema

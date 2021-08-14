@@ -35,6 +35,7 @@ version = release = proj.__version__
 extensions = [
     'sphinx.ext.githubpages',
     'snippet.ext',
+    'sphinxcontrib.asciinema'
 ]
 
 snippet_config = {
