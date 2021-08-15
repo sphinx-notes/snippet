@@ -101,7 +101,7 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         return
 
     pats = app.config.snippet_patterns
-    doc = cache.setdefault((app.config.project, docname), [])
+    doc = []
     snippets = pick(doctree)
     for s, n in snippets:
         if not is_matched(pats, s, docname):
@@ -111,8 +111,12 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
                         excerpt=extract_excerpt(s),
                         keywords=extract_keywords(s),
                         titlepath=[x.astext() for x in titlepath.resolve(app.env, docname, n)]))
-    if len(doc) == 0:
-        del cache[(app.config.project, docname)]
+
+    cache_key = (app.config.project, docname)
+    if len(doc) != 0:
+        cache[cache_key] = doc
+    elif cache_key in cache:
+        del cache[cache_key]
 
     logger.debug('[snippet] picked %s/%s snippetes in %s',
                  len(doc), len(snippets), docname)
