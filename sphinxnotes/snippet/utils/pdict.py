@@ -19,6 +19,7 @@ from hashlib import sha1
 K = TypeVar('K')
 V = TypeVar('V')
 
+# FIXME: PDict is buggy
 class PDict(MutableMapping):
     """A persistent dict with event handlers."""
 
@@ -53,18 +54,19 @@ class PDict(MutableMapping):
 
     def __setitem__(self, key:K, value:V) -> None:
         assert value is not None
-        self._store[key] = value
+        if key in self._store:
+            self.__delitem__(key)
         self._dirty_items[key] = value
-        if key in self._orphan_items:
-            del self._orphan_items[key]
+        self._store[key] = value
 
 
     def __delitem__(self, key:K) -> None:
         value = self.__getitem__(key)
         del self._store[key]
-        self._orphan_items[key] = value
         if key in self._dirty_items:
             del self._dirty_items[key]
+        else:
+            self._orphan_items[key] = value
 
 
     def __iter__(self) -> Iterable:
