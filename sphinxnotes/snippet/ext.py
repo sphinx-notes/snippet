@@ -60,7 +60,17 @@ def extract_keywords(s:Snippet) -> List[str]:
     return keywords
 
 
-def is_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
+def is_document_matched(pats:Dict[str,List[str]], docname:str) -> Dict[str,List[str]]:
+    """Whether the docname matched by given patterns pats"""
+    new_pats = {}
+    for tag, ps in pats.items():
+        for pat in ps:
+            if re.match(pat, docname):
+                new_pats.setdefault(tag, []).append(pat)
+    return new_pats
+
+
+def is_snippet_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
     """Whether the snippet's tags and docname matched by given patterns pats"""
     if '*' in pats: # Wildcard
         for pat in pats['*']:
@@ -100,11 +110,15 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         logger.debug('[snippet] node %s is not nodes.document', type(doctree), location=doctree)
         return
 
-    pats = app.config.snippet_patterns
+    pats = is_document_matched(app.config.snippet_patterns, docname)
+    if len(pats) == 0:
+        logger.debug('[snippet] skip picking because %s is not matched', docname)
+        return
+
     doc = []
     snippets = pick(doctree)
     for s, n in snippets:
-        if not is_matched(pats, s, docname):
+        if not is_snippet_matched(pats, s, docname):
             continue
         doc.append(Item(snippet=s,
                         tags=extract_tags(s),
@@ -130,7 +144,7 @@ def setup(app:Sphinx):
     app.add_builder(Builder)
 
     app.add_config_value('snippet_config', {}, '')
-    app.add_config_value('snippet_patterns', {'*':'.*'}, '')
+    app.add_config_value('snippet_patterns', {'*':['.*']}, '')
 
     app.connect('config-inited', on_config_inited)
     app.connect('env-get-outdated', on_env_get_outdated)
