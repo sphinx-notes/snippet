@@ -26,6 +26,10 @@ def pick(doctree:nodes.document) -> List[Tuple[Snippet,nodes.section]]:
     Pick snippets from document, return a list of snippet and the section
     it belongs to.
     """
+    if doctree.source is None or doctree.source == "":
+        logger.debug('Skipped document with empty source')
+        return []
+
     snippets = []
 
     # Pick document
