@@ -101,7 +101,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Load config from file
     if args.config == DEFAULT_CONFIG_FILE and not path.isfile(DEFAULT_CONFIG_FILE):
-        print('the default configuration file does not exist, ignore it')
+        print('the default configuration file does not exist, ignore it', file=sys.stderr))
         cfg = Config({})
     else:
         cfg = Config.load(args.config)
