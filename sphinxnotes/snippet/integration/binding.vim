@@ -6,8 +6,8 @@
 " :Version: 20210814
 "
 function! g:SphinxNotesSnippetEdit(id)
-  let file = system(join([s:snippet, 'get', '--file', a:id], ' '))
-  let line = system(join([s:snippet, 'get', '--line-start', a:id], ' '))
+  let file = system(join([s:snippet, 'get', '--file', a:id, '2>/dev/null'], ' '))
+  let line = system(join([s:snippet, 'get', '--line-start', a:id, '2>/dev/null'], ' '))
   execute 'tabedit ' . file
   execute line
 endfunction
@@ -20,7 +20,7 @@ function! g:SphinxNotesSnippetListAndEdit()
 endfunction
 
 function! g:SphinxNotesSnippetUrl(id)
-  let url_list = systemlist(join([s:snippet, 'get', '--url', a:id], ' '))
+  let url_list = systemlist(join([s:snippet, 'get', '--url', a:id, '2>/dev/null'], ' '))
   for url in url_list
     echo system('xdg-open ' . shellescape(url))
   endfor
