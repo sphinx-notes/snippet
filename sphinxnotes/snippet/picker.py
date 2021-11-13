@@ -84,8 +84,8 @@ class SectionPicker(nodes.SparseNodeVisitor):
         self._section_level -= 1
         self._has_code_block = False
 
-        # Skip section without content
-        if not self._secion_has_content(node):
+        # Skip non-leaf section without content
+        if self._is_empty_non_leaf_secion(node):
             return
         # Skip toplevel section, we generate :class:`Document` for it
         if self._section_level == 0:
@@ -106,12 +106,14 @@ class SectionPicker(nodes.SparseNodeVisitor):
     # Helper methods #
     ##################
 
-    def _secion_has_content(self, node:nodes.section) -> bool:
+    def _is_empty_non_leaf_secion(self, node:nodes.section) -> bool:
         """
-        A section has content when it has non-section child node
-        (except the title)
+        A section is a leaf section it has non-child section.
+        A section is empty when it has not non-section child node
+        (except the title).
         """
         num_subsection = len(list(node[0].traverse(nodes.section,
                                                    descend=False,
                                                    siblings=True)))
-        return num_subsection + 1 < len(node)
+        num_nonsection_child = len(node) - num_subsection - 1 # -1 for title
+        return num_subsection != 0 and num_nonsection_child == 0
