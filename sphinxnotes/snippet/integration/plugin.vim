@@ -3,7 +3,7 @@
 "
 " :Author: Shengyu Zhang
 " :Date: 2021-04-01
-" :Version: 20210814
+" :Version: 20211114
 "
 " NOTE: junegunn/fzf.vim is required
 

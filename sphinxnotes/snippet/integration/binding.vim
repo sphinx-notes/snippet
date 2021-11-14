@@ -3,12 +3,16 @@
 "
 " :Author: Shengyu Zhang
 " :Date: 2021-04-12
-" :Version: 20210814
+" :Version: 20211114
 "
 function! g:SphinxNotesSnippetEdit(id)
   let file = system(join([s:snippet, 'get', '--file', a:id, '2>/dev/null'], ' '))
   let line = system(join([s:snippet, 'get', '--line-start', a:id, '2>/dev/null'], ' '))
-  execute 'tabedit ' . file
+  if &modified
+    execute 'tabedit ' . file
+  else
+    execute 'edit ' . file
+  endif
   execute line
 endfunction
 
