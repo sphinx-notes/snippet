@@ -120,11 +120,14 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
     for s, n in snippets:
         if not is_snippet_matched(pats, s, docname):
             continue
+        tpath = [x.astext() for x in titlepath.resolve(app.env, docname, n)]
+        if isinstance(s, Section):
+            tpath = tpath[1:]
         doc.append(Item(snippet=s,
                         tags=extract_tags(s),
                         excerpt=extract_excerpt(s),
                         keywords=extract_keywords(s),
-                        titlepath=[x.astext() for x in titlepath.resolve(app.env, docname, n)]))
+                        titlepath=tpath))
 
     cache_key = (app.config.project, docname)
     if len(doc) != 0:
