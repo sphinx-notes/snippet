@@ -3,7 +3,7 @@
 #
 # :Author: Shengyu Zhang
 # :Date: 2021-08-114
-# :Version: 20210814
+# :Version: 20211114
 #
 # .. note:: Must source :file:`./plugin.sh` to get `snippet_list` functions.
 
@@ -22,16 +22,15 @@ function snippet_url() {
 }
 
 function snippet_sh_bind_wrapper() {
-  READLINE_LINE="$($1)"
-  READLINE_POINT=${#READLINE_LINE}
+  cmd=$($1)
+  if [ ! -z "$cmd" ]; then
+    eval "$cmd"
+  fi
 }
 
 function snippet_sh_do_bind() {
-  bind '"\XXacceptline": accept-line'
-  bind -x '"\XXsnippetedit": snippet_sh_bind_wrapper snippet_edit'
-  bind -x '"\XXsnippeturl": snippet_sh_bind_wrapper snippet_url'
-  bind '"\C-ke": "\XXsnippetedit\XXacceptline"'
-  bind '"\C-ku": "\XXsnippeturl\XXacceptline"'
+  bind -x '"\C-ke": snippet_sh_bind_wrapper snippet_edit'
+  bind -x '"\C-ku": snippet_sh_bind_wrapper snippet_url'
 }
 
 # Bind key if bind command exists

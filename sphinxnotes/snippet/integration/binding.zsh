@@ -3,15 +3,12 @@
 #
 # :Author: Shengyu Zhang
 # :Date: 2021-04-12
-# :Version: 20210814
+# :Version: 20211114
 
 # $1: One of snippet_* functions
 function snippet_z_bind_wrapper() {
-  cmd=$($1)
-  if [ ! -z "$cmd" ]; then
-    BUFFER="$cmd"
-    zle accept-line
-  fi
+  snippet_sh_bind_wrapper $1
+  zle redisplay
 }
 
 function snippet_z_edit() {
