@@ -12,8 +12,12 @@
 # Returns: snippet_id
 function snippet_list() {
   $SNIPPET list --tags $1 --width $(($(tput cols) - 2)) | \
-    fzf --with-nth 2.. --no-hscroll --header-lines 1    | \
-    cut -d ' ' -f1
+    fzf --with-nth 2..      \
+        --no-hscroll        \
+        --header-lines 1    \
+        --margin=2          \
+        --border=rounded    \
+        --height=60% | cut -d ' ' -f1
 }
 
 # vim: set shiftwidth=2:

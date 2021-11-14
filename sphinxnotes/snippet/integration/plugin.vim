@@ -14,14 +14,17 @@ function! s:SplitID(row)
 endfunction
 
 function! g:SphinxNotesSnippetList(callback, tags)
+  let l:width = 0.9
   let cmd = [s:snippet, 'list',
         \ '--tags', a:tags,
-        \ '--width', &columns - 2,
+        \ '--width', float2nr(&columns * l:width) - 2,
         \ ]
+  " https://github.com/junegunn/fzf/blob/master/README-VIM.md#fzfrun
   call fzf#run({
         \ 'source': join(cmd, ' '),
         \ 'sink': a:callback,
         \ 'options': ['--with-nth', '2..', '--no-hscroll', '--header-lines', '1'],
+        \ 'window': {'width': l:width, 'height': 0.6},
         \ })
 endfunction
 
