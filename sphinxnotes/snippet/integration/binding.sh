@@ -2,10 +2,24 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # :Author: Shengyu Zhang
-# :Date: 2021-08-114
+# :Date: 2021-08-14
 # :Version: 20211114
-#
-# .. note:: Must source :file:`./plugin.sh` to get `snippet_list` functions.
+
+function snippet_view() {
+  selection=$(snippet_list ds)
+  [ -z "$selection" ] && return
+
+  # Make sure we have $PAGER
+  if [ -z "$PAGER" ]; then
+    if  [ ! -z "$(where less)" ]; then
+      PAGER='less'
+    else
+      PAGER='cat'
+    fi
+  fi
+
+  echo "$SNIPPET get --text $selection | $PAGER"
+}
 
 function snippet_edit() {
   selection=$(snippet_list ds)
@@ -29,6 +43,7 @@ function snippet_sh_bind_wrapper() {
 }
 
 function snippet_sh_do_bind() {
+  bind -x '"\C-kv": snippet_sh_bind_wrapper snippet_view'
   bind -x '"\C-ke": snippet_sh_bind_wrapper snippet_edit'
   bind -x '"\C-ku": snippet_sh_bind_wrapper snippet_url'
 }

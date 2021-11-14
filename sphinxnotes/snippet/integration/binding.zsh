@@ -11,6 +11,10 @@ function snippet_z_bind_wrapper() {
   zle redisplay
 }
 
+function snippet_z_view() {
+  snippet_z_bind_wrapper snippet_view
+}
+
 function snippet_z_edit() {
   snippet_z_bind_wrapper snippet_edit
 }
@@ -20,9 +24,11 @@ function snippet_z_url() {
 }
 
 # Define widgets
+zle -N snippet_z_view
 zle -N snippet_z_edit
 zle -N snippet_z_url
 
+bindkey '^kv' snippet_z_view
 bindkey '^ke' snippet_z_edit
 bindkey '^ku' snippet_z_url
 

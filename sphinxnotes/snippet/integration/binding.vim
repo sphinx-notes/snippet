@@ -1,10 +1,11 @@
-" NeoVim key binding for sphinxnotes-snippet
-" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+" Vim key binding for sphinxnotes-snippet
+" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 "
 " :Author: Shengyu Zhang
 " :Date: 2021-04-12
 " :Version: 20211114
 "
+
 function! g:SphinxNotesSnippetEdit(id)
   let file = system(join([s:snippet, 'get', '--file', a:id, '2>/dev/null'], ' '))
   let line = system(join([s:snippet, 'get', '--line-start', a:id, '2>/dev/null'], ' '))

@@ -93,7 +93,8 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     igparser.add_argument('--zsh', '-z', action='store_true', help='dump zsh integration script')
     igparser.add_argument('--zsh-binding', action='store_true', help='dump recommended zsh key binding')
     igparser.add_argument('--vim', '-v', action='store_true', help='dump (neo)vim integration script')
-    igparser.add_argument('--vim-binding', action='store_true', help='dump recommended (neo)vim key binding')
+    igparser.add_argument('--vim-binding', action='store_true', help='dump recommended vim key binding')
+    igparser.add_argument('--nvim-binding', action='store_true', help='dump recommended neovim key binding')
     igparser.set_defaults(func=_on_command_integration, parser=igparser)
 
     # Parse command line arguments
@@ -191,7 +192,12 @@ def _on_command_integration(args:argparse.Namespace):
     if args.vim_binding:
         with open(get_integration_file('binding.vim'), 'r') as f:
             print(f.read())
-
+    if args.nvim_binding:
+        # NeoVim binding depends on Vim binding
+        with open(get_integration_file('binding.vim'), 'r') as f:
+            print(f.read())
+        with open(get_integration_file('binding.nvim'), 'r') as f:
+            print(f.read())
 
 if __name__ == '__main__':
     sys.exit(main())
