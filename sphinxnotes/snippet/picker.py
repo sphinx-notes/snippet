@@ -85,7 +85,7 @@ class SectionPicker(nodes.SparseNodeVisitor):
         self._has_code_block = False
 
         # Skip non-leaf section without content
-        if self._is_empty_non_leaf_secion(node):
+        if self._is_empty_non_leaf_section(node):
             return
         # Skip toplevel section, we generate :class:`Document` for it
         if self._section_level == 0:
@@ -106,7 +106,7 @@ class SectionPicker(nodes.SparseNodeVisitor):
     # Helper methods #
     ##################
 
-    def _is_empty_non_leaf_secion(self, node:nodes.section) -> bool:
+    def _is_empty_non_leaf_section(self, node:nodes.section) -> bool:
         """
         A section is a leaf section it has non-child section.
         A section is empty when it has not non-section child node
