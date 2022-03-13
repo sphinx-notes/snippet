@@ -76,13 +76,16 @@ def is_snippet_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bo
         for pat in pats['*']:
             if re.match(pat, docname):
                 return True
+
+    not_in_pats = True
     for k in extract_tags(s):
         if k not in pats:
             continue
+        not_in_pats = False
         for pat in pats[k]:
             if re.match(pat, docname):
                 return True
-    return False
+    return not_in_pats
 
 
 def on_config_inited(app:Sphinx, appcfg:SphinxConfig) -> None:
