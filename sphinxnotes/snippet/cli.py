@@ -22,7 +22,8 @@ from .config import Config
 from .cache import Cache
 from .table import tablify, COLUMNS
 
-DEFAULT_CONFIG_FILE = path.join(xdg_config_home, *__title__.split('-'), 'conf.py')
+# Neovim's $XDG_CONFIG_HOME is "$HOME/.config", expand for it.
+DEFAULT_CONFIG_FILE = path.join(path.expandvars(xdg_config_home), *__title__.split('-'), 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                     argparse.RawDescriptionHelpFormatter): pass
@@ -102,7 +103,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
 
     # Load config from file
     if args.config == DEFAULT_CONFIG_FILE and not path.isfile(DEFAULT_CONFIG_FILE):
-        print('the default configuration file does not exist, ignore it', file=sys.stderr)
+        print(f'the default configuration file {DEFAULT_CONFIG_FILE} does not exist, ignore it', file=sys.stderr)
         cfg = Config({})
     else:
         cfg = Config.load(args.config)
@@ -119,6 +120,7 @@ def main(argv:List[str]=sys.argv[1:]) -> int:
     else:
         parser.print_help()
 
+    return 0
 
 def _on_command_stat(args:argparse.Namespace):
     cache = args.cache
