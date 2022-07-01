@@ -16,7 +16,7 @@ from .utils.pdict import PDict
 class Item(object):
     """ Item of snippet cache. """
     snippet:Snippet
-    tags:List[str]
+    tags:str
     excerpt:str
     titlepath:List[str]
     keywords:List[str]
@@ -92,7 +92,9 @@ class Cache(PDict):
         doc_id, item_index = self.index_id_to_doc_id.get(key, (None,None))
         if not doc_id:
             return None
-        return self[doc_id][item_index]
+        doc = self[doc_id]
+        assert doc is not None
+        return doc[item_index]
 
 
     def gen_index_id(self) -> str:

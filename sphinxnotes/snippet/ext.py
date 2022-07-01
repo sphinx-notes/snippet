@@ -31,7 +31,7 @@ from .builder import Builder
 
 logger = logging.getLogger(__name__)
 
-cache:Cache = None
+cache:Cache
 extractor:Extractor = Extractor()
 
 
@@ -70,7 +70,7 @@ def is_document_matched(pats:Dict[str,List[str]], docname:str) -> Dict[str,List[
     return new_pats
 
 
-def is_snippet_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
+def is_snippet_matched(pats:Dict[str,List[str]], s:Snippet, docname:str) -> bool:
     """Whether the snippet's tags and docname matched by given patterns pats"""
     if '*' in pats: # Wildcard
         for pat in pats['*']:

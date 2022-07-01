@@ -13,6 +13,7 @@ from . import default
 
 class Config(object):
     """Snippet configuration object."""
+    cache_dir: str
 
     def __init__(self, config:Dict[str,Any]) -> None:
         # Load default

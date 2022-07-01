@@ -11,7 +11,7 @@
 from __future__ import annotations
 import os
 from os import path
-from typing import Dict, Optional, Iterable, TypeVar
+from typing import Dict, Optional, Iterable, TypeVar, Generic
 import pickle
 from collections.abc import MutableMapping
 from hashlib import sha1
@@ -20,15 +20,16 @@ K = TypeVar('K')
 V = TypeVar('V')
 
 # FIXME: PDict is buggy
-class PDict(MutableMapping):
+class PDict(MutableMapping, Generic[K, V]):
     """A persistent dict with event handlers."""
 
     dirname:str
-    # The real in memory store of values
-    _store:Dict[K,V]
-    # Items that need write back to store
+    #: The real in memory store of values.
+    # None value indicates value is dumpped to disk.
+    _store:Dict[K,Optional[V]]
+    #: Items that need write back to store
     _dirty_items:Dict[K,V]
-    # Items that need purge from store
+    #: Items that need purge from store
     _orphan_items:Dict[K,V]
 
 
@@ -62,6 +63,7 @@ class PDict(MutableMapping):
 
     def __delitem__(self, key:K) -> None:
         value = self.__getitem__(key)
+        assert value is not None
         del self._store[key]
         if key in self._dirty_items:
             del self._dirty_items[key]
@@ -116,7 +118,7 @@ class PDict(MutableMapping):
         # Clear all in-memory items
         self._orphan_items = {}
         self._dirty_items = {}
-        self._store = {key: None for key in self._store}
+        self._store = {key: None for key in self._store} # None indicates value is dumpped to disk
 
         # Dump store itself
         with open(self.dictfile(), 'wb') as f:
@@ -134,12 +136,12 @@ class PDict(MutableMapping):
 
 
     def post_dump(self, key:K, value:V) -> None:
-        pass
+        raise NotImplementedError
 
 
     def post_purge(self, key:K, value:V) -> None:
-        pass
+        raise NotImplementedError
 
 
     def stringify(self, key:K, value:V) -> str:
-        return key
+        raise NotImplementedError

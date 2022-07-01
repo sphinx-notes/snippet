@@ -9,10 +9,10 @@
 """
 
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 from wcwidth import wcswidth
 
-def ellipsis(text:str, width:int, ellipsis_sym:str='..', blank_sym:str=None) -> str:
+def ellipsis(text:str, width:int, ellipsis_sym:str='..', blank_sym:Optional[str]=None) -> str:
     text_width = wcswidth(text)
     if text_width <= width:
         if blank_sym:
@@ -31,7 +31,7 @@ def ellipsis(text:str, width:int, ellipsis_sym:str='..', blank_sym:str=None) -> 
 
 
 def join(lst:List[str], total_width:int, title_width:int,
-         separate_sym:str='/', ellipsis_sym:str='..', blank_sym:str=None):
+         separate_sym:str='/', ellipsis_sym:str='..', blank_sym:Optional[str]=None):
     # TODO: position
     total_width -= wcswidth(ellipsis_sym)
     result = []

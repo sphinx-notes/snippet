@@ -9,6 +9,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Optional
 import itertools
+import sys
 
 from docutils import nodes
 
@@ -44,18 +45,19 @@ class Snippet(object):
     #: .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
     refid:Optional[str]
 
-    def __init__(self, *nodes:nodes.Node) -> None:
+    def __init__(self, *nodes:nodes.Element) -> None:
         assert len(nodes) != 0
 
+        assert nodes[0].source is not None
         self.file = nodes[0].source
 
-        lineno = [float('inf'), -float('inf')]
+        lineno = [sys.maxsize, ~sys.maxsize]
         for node in nodes:
             if not node.line:
                 continue # Skip node that have None line, I dont know why
             lineno[0] = min(lineno[0], _line_of_start(node))
             lineno[1] = max(lineno[1], _line_of_end(node))
-        self.lineno = lineno
+        self.lineno = tuple(lineno)
 
         lines = []
         with open(self.file, "r") as f:
@@ -85,7 +87,7 @@ class Text(Snippet):
     #: Text of snippet
     text:str
 
-    def __init__(self, node:nodes.Node) -> None:
+    def __init__(self, node:nodes.Element) -> None:
         super().__init__(node)
         self.text = node.astext()
 
@@ -106,10 +108,10 @@ class CodeBlock(Text):
 class WithCodeBlock(object):
     code_blocks:List[CodeBlock]
 
-    def __init__(self, nodes:nodes.Nodes) -> None:
+    def __init__(self, nodes:nodes.Element) -> None:
         self.code_blocks = []
         for n in nodes.traverse(nodes.literal_block):
-            self.code_blocks.append(self.CodeBlock(n))
+            self.code_blocks.append(CodeBlock(n))
 
 
 class Title(Text):
@@ -162,7 +164,7 @@ def _line_of_start(node:nodes.Node) -> int:
     return node.line
 
 
-def _line_of_end(node:nodes.Node) -> Optional[int]:
+def _line_of_end(node:nodes.Node) -> int:
     next_node = node.next_node(descend=False, siblings=True, ascend=True)
     while next_node:
         if next_node.line:
@@ -177,5 +179,5 @@ def _line_of_end(node:nodes.Node) -> Optional[int]:
     # No line found, return the max line of source file
     if node.source:
         with open(node.source) as f:
-            return sum(1 for line in f)
+            return sum(1 for _ in f)
     raise AttributeError('None source attr of node %s' % node)

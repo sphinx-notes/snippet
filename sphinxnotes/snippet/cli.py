@@ -38,7 +38,7 @@ def get_integration_file(fn:str) -> str:
     return path.join(prefix, 'integration', fn)
 
 
-def main(argv:List[str]=sys.argv[1:]) -> int:
+def main(argv:List[str]=sys.argv[1:]) -> None:
     """Command line entrypoint."""
 
     parser = argparse.ArgumentParser(prog=__name__, description=__description__,
