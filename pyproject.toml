@@ -1,0 +1,10 @@
+[tool.pyright]
+include = ["sphinxnotes"]
+exclude = ["**/__pycache__"]
+ignore = []
+defineConstant = { DEBUG = true }
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+pythonVersion = "3.6"
