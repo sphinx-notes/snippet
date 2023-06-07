@@ -12,7 +12,6 @@
 # configuration item
 from os import path as __path
 from xdg.BaseDirectory import xdg_cache_home as __xdg_cache_home
-from .. import __title__
 
 """
 ``cache_dir``
@@ -20,7 +19,7 @@ from .. import __title__
     (Default: ``"$XDG_CACHE_HOME/sphinxnotes/snippet"``)
     Path to snippet cache directory.
 """
-cache_dir = __path.join(__xdg_cache_home, *__title__.split('-'))
+cache_dir = __path.join(__xdg_cache_home, 'sphinxnotes', 'snippet')
 
 """
 ``base_urls``

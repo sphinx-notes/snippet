@@ -17,12 +17,12 @@ import posixpath
 
 from xdg.BaseDirectory import xdg_config_home
 
-from . import __title__, __version__, __description__
+from . import __version__
 from .config import Config
 from .cache import Cache
 from .table import tablify, COLUMNS
 
-DEFAULT_CONFIG_FILE = path.join(xdg_config_home, *__title__.split('-'), 'conf.py')
+DEFAULT_CONFIG_FILE = path.join(xdg_config_home, 'sphinxnotes', 'snippet', 'conf.py')
 
 class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter,
                     argparse.RawDescriptionHelpFormatter): pass
@@ -38,10 +38,10 @@ def get_integration_file(fn:str) -> str:
     return path.join(prefix, 'integration', fn)
 
 
-def main(argv:List[str]=sys.argv[1:]) -> int:
+def main(argv:List[str]=sys.argv[1:]):
     """Command line entrypoint."""
 
-    parser = argparse.ArgumentParser(prog=__name__, description=__description__,
+    parser = argparse.ArgumentParser(prog=__name__, description='Sphinx documentation snippets manager',
                                      formatter_class=HelpFormatter,
                                      epilog=dedent("""
                                      snippet tags:
