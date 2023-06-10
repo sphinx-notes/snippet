@@ -12,14 +12,7 @@ import itertools
 
 from docutils import nodes
 
-
-__title__= 'sphinxnotes-snippet'
-__license__ = 'BSD'
 __version__ = '1.1.1'
-__author__ = 'Shengyu Zhang'
-__url__ = 'https://sphinx-notes.github.io/snippet'
-__description__ = 'Non-intrusive snippet manager for Sphinx documentation'
-__keywords__ = 'documentation, sphinx, extension, utility'
 
 class Snippet(object):
     """
