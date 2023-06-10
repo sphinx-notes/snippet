@@ -7,7 +7,7 @@
       "namespace": "sphinxnotes",
       "name": "snippet",
       "full_name": "sphinxnotes-snippet",
-      "author": "Sphinx documentation snippets manager",
+      "author": "Shengyu Zhang",
       "description": "Sphinx documentation snippets manager",
       "version": "1.0",
       "github_owner": "sphinx-notes",

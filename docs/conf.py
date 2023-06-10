@@ -13,7 +13,7 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = 'sphinxnotes-snippet'
-author = 'Sphinx documentation snippets manager'
+author = 'Shengyu Zhang'
 copyright = "2023, " + author
 
 # The full version, including alpha/beta/rc tags

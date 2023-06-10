@@ -65,7 +65,7 @@ Contents
 The Sphinx Notes Project
 ========================
 
-This project is a developed by `Sphinx documentation snippets manager`__,
+This project is a developed by `Shengyu Zhang`__,
 as part of **The Sphinx Notes Project**.
 
 .. toctree::

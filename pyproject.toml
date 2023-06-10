@@ -10,8 +10,8 @@ name = "sphinxnotes-snippet"
 description = "Sphinx documentation snippets manager"
 readme = "README.rst"
 license = { file = "BSD-3-Clause" }
-authors = [ { name = "Sphinx documentation snippets manager" } ]
-maintainers = [ { name = "Sphinx documentation snippets manager" } ]
+authors = [ { name = "Shengyu Zhang" } ]
+maintainers = [ { name = "Shengyu Zhang" } ]
 keywords = ["sphinx", "extension", "documentation"] # TOOD: additional_keywords
 classifiers = [
     "Development Status :: 4 - Beta",
