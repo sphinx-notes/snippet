@@ -97,6 +97,9 @@ extlinks = {
     'tag': ('https://github.com/sphinx-notes/snippet/releases/tag/%s', '🏷️ %s'),
 }
 
+extensions.append('sphinxcontrib.gtagjs')
+gtagjs_ids = ['G-E4SNX0WZYV']
+
 extensions.append('sphinxcontrib.asciinema')
 
 # -- Eat your own dog food --------------------------------------------------
