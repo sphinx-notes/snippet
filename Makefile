@@ -32,6 +32,7 @@ upload: dist
 test-upload: dist
 	$(PY) -m twine upload --repository testpypi $</*
 
-.PHONY: update-template
-update-template:
-	$(PY) -m cruft update
+# Usage: make cli args=--help
+.PHONY: cli
+cli:
+	$(PY) ./utils/cli.py --config ./utils/conf.py $(args)
