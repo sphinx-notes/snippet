@@ -11,14 +11,19 @@
 from __future__ import annotations
 from typing import List, Set, TYPE_CHECKING, Dict
 import re
+from os import path
+import time
 
 from docutils import nodes
+from sphinx.locale import __
+from sphinx.util import logging
+from sphinx.builders import Builder
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment
     from sphinx.config import Config as SphinxConfig
-from sphinx.util import logging
+    from collections.abc import Iterator
 
 from .config import Config
 from . import Snippet, WithTitle, Document, Section
@@ -26,12 +31,11 @@ from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor
 from .utils import titlepath
-from .builder import Builder
 
 
 logger = logging.getLogger(__name__)
 
-cache:Cache = None
+cache:Cache|None = None
 extractor:Extractor = Extractor()
 
 
@@ -146,8 +150,48 @@ def on_builder_finished(app:Sphinx, exception) -> None:
     cache.dump()
 
 
+class SnippetBuilder(Builder):
+    name = 'snippet'
+    epilog = __('The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool')
+
+    def get_outdated_docs(self) -> Iterator[str]:
+        """ Modified from :py:meth:`sphinx.builders.html.StandaloneHTMLBuilder.get_outdated_docs`."""
+        for docname in self.env.found_docs:
+            if docname not in self.env.all_docs:
+                logger.debug('[build target] did not in env: %r', docname)
+                yield docname
+                continue
+
+            assert cache is not None
+            targetname = cache.itemfile((self.app.config.project, docname))
+            try:
+                targetmtime = path.getmtime(targetname)
+            except Exception:
+                targetmtime = 0
+            try:
+                srcmtime = path.getmtime(self.env.doc2path(docname))
+                if srcmtime > targetmtime:
+                    logger.debug(
+                        '[build target] targetname %r(%s), docname %r(%s)',
+                        targetname,
+                        _format_modified_time(targetmtime),
+                        docname,
+                        _format_modified_time(path.getmtime(self.env.doc2path(docname))),
+                    )
+                    yield docname
+            except OSError:
+                # source doesn't exist anymore
+                pass
+
+
+def _format_modified_time(timestamp: float) -> str:
+    """Return an RFC 3339 formatted string representing the given timestamp."""
+    seconds, fraction = divmod(timestamp, 1)
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(seconds)) + f'.{fraction:.3f}'
+
+
 def setup(app:Sphinx):
-    app.add_builder(Builder)
+    app.add_builder(SnippetBuilder)
 
     app.add_config_value('snippet_config', {}, '')
     app.add_config_value('snippet_patterns', {'*':['.*']}, '')
