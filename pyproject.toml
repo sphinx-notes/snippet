@@ -84,4 +84,6 @@ version_scheme = "no-guess-dev"
 where = ["src"]
 
 [tool.setuptools.package-data]
-integration = ["integration/*"]
+# A maps from PACKAGE NAMES to lists of glob patterns,
+# see also https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+"sphinxnotes.snippet.integration" = ["*.*"]

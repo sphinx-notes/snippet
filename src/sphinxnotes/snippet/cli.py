@@ -32,8 +32,12 @@ def get_integration_file(fn:str) -> str:
     """
     Get file path of integration files.
 
-    .. note:: files are included by ``setup(package_data=xxx)``
+    .. seealso::
+
+       see ``[tool.setuptools.package-data]`` section of pyproject.toml to know
+        how files are included.
     """
+    # TODO: use https://docs.python.org/3/library/importlib.resources.html#importlib.resources.files
     prefix = path.abspath(path.dirname(__file__))
     return path.join(prefix, 'integration', fn)
 
