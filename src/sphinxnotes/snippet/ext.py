@@ -17,7 +17,7 @@ import time
 from docutils import nodes
 from sphinx.locale import __
 from sphinx.util import logging
-from sphinx.builders import Builder
+from sphinx.builders.dummy import DummyBuilder
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -150,7 +150,7 @@ def on_builder_finished(app:Sphinx, exception) -> None:
     cache.dump()
 
 
-class SnippetBuilder(Builder):
+class SnippetBuilder(DummyBuilder): # DummyBuilder has dummy impls we need.
     name = 'snippet'
     epilog = __('The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool')
 
