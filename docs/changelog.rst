@@ -18,6 +18,15 @@ Change Log
 Version 1.x
 ===========
 
+.. version:: 1.2
+   :date: 2024-03-23
+
+   - Re-org project with https://github.com/sphinx-notes/template (:pull:`20`)
+   - Add increasement build support for SnippetBuilder
+
+.. version:: 1.1
+   :date: 2022-05-07
+
 .. version:: 1.0
    :date: 2021-09-09
 
