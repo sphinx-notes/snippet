@@ -9,7 +9,7 @@
       "full_name": "sphinxnotes-snippet",
       "author": "Shengyu Zhang",
       "description": "Sphinx documentation snippets manager",
-      "version": "1.0",
+      "version": "1.2",
       "github_owner": "sphinx-notes",
       "github_repo": "snippet",
       "pypi_name": "sphinxnotes-snippet",
