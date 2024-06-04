@@ -90,7 +90,12 @@ class PDict(MutableMapping):
 
     def dump(self):
         """Dump store to disk."""
-        from sphinx.util import status_iterator
+        # sphinx.util.status_iterator alias has been deprecated since sphinx 6.1
+        # and will be removed in sphinx 8.0
+        try:
+            from sphinx.util.display import status_iterator
+        except ImportError:
+            from sphinx.util import status_iterator
 
         # Makesure dir exists
         if not path.exists(self.dirname):
