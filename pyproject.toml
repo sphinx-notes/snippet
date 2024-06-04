@@ -35,6 +35,7 @@ dependencies = [
     "python-pinyin",
     "pyxdg",
     "stopwordsiso",
+    "setuptools", # req by stopwordsiso, https://stackoverflow.com/a/39930983/4799273
     "wcwidth",
     "wordsegment",
 ]
