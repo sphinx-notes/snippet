@@ -23,11 +23,16 @@ class Extractor(object):
 
     def __init__(self):
         # Import NLP libs here to prevent import overhead
+        import logging
         from langid import rank
-        from jieba import cut_for_search
+        from jieba import cut_for_search, setLogLevel
         from pypinyin import lazy_pinyin
         from stopwordsiso import stopwords
         from wordsegment import load, segment
+
+        # Turn off jieba debug log.
+        # https://github.com/fxsjy/jieba/issues/255
+        setLogLevel(logging.INFO)
 
         load()
         self._detect_langs = rank
