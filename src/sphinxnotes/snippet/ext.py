@@ -123,7 +123,7 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         return
 
     doc = []
-    snippets = pick(doctree)
+    snippets = pick(app, doctree, docname)
     for s, n in snippets:
         if not is_snippet_matched(pats, s, docname):
             continue
