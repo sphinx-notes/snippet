@@ -5,26 +5,31 @@
 sphinxnotes-snippet
 ===================
 
-.. image:: https://img.shields.io/github/actions/workflow/status/sphinx-notes/snippet/pages.yml
+.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages
    :target: https://sphinx.silverrainz.me/snippet
    :alt: Documentation Status
 
-.. image:: https://img.shields.io/github/license/sphinx-notes/snippet
-   :target: https://github.com/sphinx-notes/snippet/LICENSE
+.. |license| image:: https://img.shields.io/github/license/sphinx-notes/snippet
+   :target: https://github.com/sphinx-notes/snippet/blob/master/LICENSE
    :alt: Open Source License
 
-.. image:: https://img.shields.io/pypi/v/sphinxnotes-snippet.svg
+.. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-snippet.svg
    :target: https://pypi.python.org/pypi/sphinxnotes-snippet
    :alt: PyPI Package
 
-.. image:: https://img.shields.io/pypi/dm/sphinxnotes-snippet
+.. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-snippet
    :target: https://pypi.python.org/pypi/sphinxnotes-snippet
    :alt: PyPI Package Downloads
 
+|docs| |license| |pypi| |download|
+
 Sphinx documentation snippets manager.
 
-* Documentation: https://sphinx.silverrainz.me/snippet
-* Source: https://github.com/sphinx-notes/snippet
-* Changelog: https://sphinx.silverrainz.me/snippet/changelog.html
-* Tracker: https://github.com/sphinx-notes/snippet/issues
-* Download: https://pypi.org/project/sphinxnotes-snippet/#files
+.. INTRODUCTION START 
+   (MUST written in standard reStructuredText, without Sphinx stuff)
+
+.. INTRODUCTION END
+
+Please refer to Documentation_ for more details.
+
+.. _Documentation: https://sphinx.silverrainz.me/snippet

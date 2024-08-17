@@ -1,12 +1,32 @@
 .. This file is generated from sphinx-notes/cookiecutter.
    You need to consider modifying the TEMPLATE or modifying THIS FILE.
 
-.. include:: ../README.rst
+===================
+sphinxnotes-snippet
+===================
+
+.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages
+   :target: https://sphinx.silverrainz.me/snippet
+   :alt: Documentation Status
+
+.. |license| image:: https://img.shields.io/github/license/sphinx-notes/snippet
+   :target: https://github.com/sphinx-notes/snippet/blob/master/LICENSE
+   :alt: Open Source License
+
+.. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-snippet.svg
+   :target: https://pypi.python.org/pypi/sphinxnotes-snippet
+   :alt: PyPI Package
+
+.. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-snippet
+   :target: https://pypi.python.org/pypi/sphinxnotes-snippet
+   :alt: PyPI Package Downloads
+
+|docs| |license| |pypi| |download|
 
 Introduction
 ============
 
-.. ADDITIONAL CONTENT START
+.. INTRODUCTION START
 
 Documentations in Sphinx can be parsed into doctree_ (In other words, Abstract Syntax Tree), all contents of documents are parsed into node of this tree. The :ref:`ext` collects snippets (doctree nodes) during the build phase of Sphinx, and provide a :ref:`cli` for your accessing.
 
@@ -14,7 +34,7 @@ For more details, please refer to :doc:`intro`
 
 .. _doctree: https://docutils.sourceforge.io/docs/ref/doctree.html
 
-.. ADDITIONAL CONTENT END
+.. INTRODUCTION END
 
 Getting Started
 ===============
@@ -30,7 +50,8 @@ First, downloading extension from PyPI:
 
    $ pip install sphinxnotes-snippet
 
-Then, add the extension name to ``extensions`` configuration item in your conf.py_:
+Then, add the extension name to ``extensions`` configuration item in your
+:parsed_literal:`conf.py_`:
 
 .. code-block:: python
 
