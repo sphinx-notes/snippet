@@ -22,6 +22,12 @@ Change Log
 Version 1.x
 ===========
 
+.. todo
+
+   .. version:: 1.3
+
+      - Skip document with ``:nosearch:`` metadata (:issue:`22`)
+
 .. version:: 1.2
    :date: 2024-03-23
 

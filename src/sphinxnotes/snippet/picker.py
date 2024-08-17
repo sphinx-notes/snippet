@@ -9,7 +9,7 @@
 """
 
 from __future__ import annotations
-from typing import List, Tuple
+from typing import TYPE_CHECKING
 
 from docutils import nodes
 
@@ -17,11 +17,13 @@ from sphinx.util import logging
 
 from . import Snippet, Section, Document
 
+if TYPE_CHECKING:
+    from sphinx.application import Sphinx
 
 logger = logging.getLogger(__name__)
 
 
-def pick(doctree:nodes.document) -> List[Tuple[Snippet,nodes.section]]:
+def pick(app:Sphinx, doctree:nodes.document, docname: str) -> list[tuple[Snippet,nodes.section]]:
     """
     Pick snippets from document, return a list of snippet and the section
     it belongs to.
@@ -29,6 +31,11 @@ def pick(doctree:nodes.document) -> List[Tuple[Snippet,nodes.section]]:
     # FIXME: Why doctree.source is always None?
     if not doctree.attributes.get('source'):
         logger.debug('Skipped document without source')
+        return []
+
+    metadata = app.env.metadata.get(docname, {})
+    if 'no-search' in metadata or 'nosearch' in metadata:
+        logger.debug('Skipped document with nosearch metadata')
         return []
 
     snippets = []
