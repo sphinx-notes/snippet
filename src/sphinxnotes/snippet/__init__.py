@@ -1,9 +1,9 @@
 """
-    sphinxnotes.snippet
-    ~~~~~~~~~~~~~~~~~~~
+sphinxnotes.snippet
+~~~~~~~~~~~~~~~~~~~
 
-    :copyright: Copyright 2020 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2020 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
@@ -14,30 +14,31 @@ from docutils import nodes
 
 __version__ = '1.1.1'
 
+
 class Snippet(object):
     """
     Snippet is base class of reStructuredText snippet.
 
-    :param nodes: Document nodes that make up this snippet 
+    :param nodes: Document nodes that make up this snippet
     """
 
     #: Source file path of snippet
-    file:str
+    file: str
 
     #: Line number range of snippet, in the source file which is left closed
     #: and right opened.
-    lineno:Tuple[int,int]
+    lineno: Tuple[int, int]
 
     #: The original reStructuredText of snippet
-    rst:List[str]
+    rst: List[str]
 
     #: The possible identifier key of snippet, which is picked from nodes'
     #: (or nodes' parent's) `ids attr`_.
     #:
     #: .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
-    refid:Optional[str]
+    refid: Optional[str]
 
-    def __init__(self, *nodes:nodes.Node) -> None:
+    def __init__(self, *nodes: nodes.Node) -> None:
         assert len(nodes) != 0
 
         self.file = nodes[0].source
@@ -45,13 +46,13 @@ class Snippet(object):
         lineno = [float('inf'), -float('inf')]
         for node in nodes:
             if not node.line:
-                continue # Skip node that have None line, I dont know why
+                continue  # Skip node that have None line, I dont know why
             lineno[0] = min(lineno[0], _line_of_start(node))
             lineno[1] = max(lineno[1], _line_of_end(node))
         self.lineno = lineno
 
         lines = []
-        with open(self.file, "r") as f:
+        with open(self.file, 'r') as f:
             start = self.lineno[0] - 1
             stop = self.lineno[1] - 1
             for line in itertools.islice(f, start, stop):
@@ -73,23 +74,22 @@ class Snippet(object):
                     break
 
 
-
 class Text(Snippet):
     #: Text of snippet
-    text:str
+    text: str
 
-    def __init__(self, node:nodes.Node) -> None:
+    def __init__(self, node: nodes.Node) -> None:
         super().__init__(node)
         self.text = node.astext()
 
 
 class CodeBlock(Text):
     #: Language of code block
-    language:str
+    language: str
     #: Caption of code block
-    caption:Optional[str]
+    caption: Optional[str]
 
-    def __init__(self, node:nodes.literal_block) -> None:
+    def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
         super().__init__(node)
         self.language = node['language']
@@ -97,37 +97,37 @@ class CodeBlock(Text):
 
 
 class WithCodeBlock(object):
-    code_blocks:List[CodeBlock]
+    code_blocks: List[CodeBlock]
 
-    def __init__(self, nodes:nodes.Nodes) -> None:
+    def __init__(self, nodes: nodes.Nodes) -> None:
         self.code_blocks = []
         for n in nodes.traverse(nodes.literal_block):
             self.code_blocks.append(self.CodeBlock(n))
 
 
 class Title(Text):
-    def __init__(self, node:nodes.title) -> None:
+    def __init__(self, node: nodes.title) -> None:
         assert isinstance(node, nodes.title)
         super().__init__(node)
 
 
 class WithTitle(object):
-    title:Optional[Title]
+    title: Optional[Title]
 
-    def __init__(self, node:nodes.Node) -> None:
+    def __init__(self, node: nodes.Node) -> None:
         title_node = node.next_node(nodes.title)
         self.title = Title(title_node) if title_node else None
 
 
 class Section(Snippet, WithTitle):
-    def __init__(self, node:nodes.section) -> None:
+    def __init__(self, node: nodes.section) -> None:
         assert isinstance(node, nodes.section)
         Snippet.__init__(self, node)
         WithTitle.__init__(self, node)
 
 
 class Document(Section):
-    def __init__(self, node:nodes.document) -> None:
+    def __init__(self, node: nodes.document) -> None:
         assert isinstance(node, nodes.document)
         super().__init__(node.next_node(nodes.section))
 
@@ -136,7 +136,8 @@ class Document(Section):
 # Nodes helper #
 ################
 
-def _line_of_start(node:nodes.Node) -> int:
+
+def _line_of_start(node: nodes.Node) -> int:
     assert node.line
     if isinstance(node, nodes.title):
         if isinstance(node.parent.parent, nodes.document):
@@ -155,7 +156,7 @@ def _line_of_start(node:nodes.Node) -> int:
     return node.line
 
 
-def _line_of_end(node:nodes.Node) -> Optional[int]:
+def _line_of_end(node: nodes.Node) -> Optional[int]:
     next_node = node.next_node(descend=False, siblings=True, ascend=True)
     while next_node:
         if next_node.line:
@@ -166,7 +167,9 @@ def _line_of_end(node:nodes.Node) -> Optional[int]:
             descend=True,
             # If node and its children have not valid line attr, try use line
             # of next node
-            ascend=True, siblings=True)
+            ascend=True,
+            siblings=True,
+        )
     # No line found, return the max line of source file
     if node.source:
         with open(node.source) as f:

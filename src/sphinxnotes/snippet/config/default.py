@@ -1,11 +1,11 @@
 """
-    sphinxnotes.snippet.config.default
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.snippet.config.default
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Snippet default configuration.
+Snippet default configuration.
 
-    :copyright: Copyright 2021 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2021 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 # NOTE: All imported name should starts with ``__`` to distinguish from

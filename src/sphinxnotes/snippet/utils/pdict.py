@@ -1,11 +1,11 @@
 """
-    sphinxnotes.utils.pdict
-    ~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.utils.pdict
+~~~~~~~~~~~~~~~~~~~~~~~
 
-    A customized persistent KV store for Sphinx project.
+A customized persistent KV store for Sphinx project.
 
-    :copyright: Copyright 2020 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2020 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
@@ -19,28 +19,27 @@ from hashlib import sha1
 K = TypeVar('K')
 V = TypeVar('V')
 
+
 # FIXME: PDict is buggy
 class PDict(MutableMapping):
     """A persistent dict with event handlers."""
 
-    dirname:str
+    dirname: str
     # The real in memory store of values
-    _store:Dict[K,V]
+    _store: Dict[K, V]
     # Items that need write back to store
-    _dirty_items:Dict[K,V]
+    _dirty_items: Dict[K, V]
     # Items that need purge from store
-    _orphan_items:Dict[K,V]
+    _orphan_items: Dict[K, V]
 
-
-    def __init__(self, dirname:str) -> None:
+    def __init__(self, dirname: str) -> None:
         self.dirname = dirname
         self._store = {}
         self._dirty_items = {}
         self._orphan_items = {}
 
-
-    def __getitem__(self, key:K) -> Optional[V]:
-        if not key in self._store:
+    def __getitem__(self, key: K) -> Optional[V]:
+        if key not in self._store:
             raise KeyError
         value = self._store[key]
         if value is not None:
@@ -51,16 +50,14 @@ class PDict(MutableMapping):
             self._store[key] = value
             return value
 
-
-    def __setitem__(self, key:K, value:V) -> None:
+    def __setitem__(self, key: K, value: V) -> None:
         assert value is not None
         if key in self._store:
             self.__delitem__(key)
         self._dirty_items[key] = value
         self._store[key] = value
 
-
-    def __delitem__(self, key:K) -> None:
+    def __delitem__(self, key: K) -> None:
         value = self.__getitem__(key)
         del self._store[key]
         if key in self._dirty_items:
@@ -68,25 +65,20 @@ class PDict(MutableMapping):
         else:
             self._orphan_items[key] = value
 
-
     def __iter__(self) -> Iterable:
         return iter(self._store)
-
 
     def __len__(self) -> int:
         return len(self._store)
 
-
-    def _keytransform(self, key:K) -> K:
+    def _keytransform(self, key: K) -> K:
         # No used
         return key
-
 
     def load(self) -> None:
         with open(self.dictfile(), 'rb') as f:
             obj = pickle.load(f)
             self.__dict__.update(obj.__dict__)
-
 
     def dump(self):
         """Dump store to disk."""
@@ -102,18 +94,26 @@ class PDict(MutableMapping):
             os.makedirs(self.dirname)
 
         # Purge orphan items
-        for key, value in status_iterator(self._orphan_items.items(),
-                                          'purging orphan document(s)... ',
-                                          'brown', len(self._orphan_items), 0,
-                                          stringify_func=lambda i: self.stringify(i[0], i[1])):
+        for key, value in status_iterator(
+            self._orphan_items.items(),
+            'purging orphan document(s)... ',
+            'brown',
+            len(self._orphan_items),
+            0,
+            stringify_func=lambda i: self.stringify(i[0], i[1]),
+        ):
             os.remove(self.itemfile(key))
             self.post_purge(key, value)
 
         # Dump dirty items
-        for key, value in status_iterator(self._dirty_items.items(),
-                                          'dumping dirty document(s)... ',
-                                          'brown', len(self._dirty_items), 0,
-                                          stringify_func=lambda i: self.stringify(i[0], i[1])):
+        for key, value in status_iterator(
+            self._dirty_items.items(),
+            'dumping dirty document(s)... ',
+            'brown',
+            len(self._dirty_items),
+            0,
+            stringify_func=lambda i: self.stringify(i[0], i[1]),
+        ):
             with open(self.itemfile(key), 'wb') as f:
                 pickle.dump(value, f)
             self.post_dump(key, value)
@@ -127,24 +127,19 @@ class PDict(MutableMapping):
         with open(self.dictfile(), 'wb') as f:
             pickle.dump(self, f)
 
-
     def dictfile(self) -> str:
         return path.join(self.dirname, 'dict.pickle')
 
-
-    def itemfile(self, key:K) -> str:
+    def itemfile(self, key: K) -> str:
         hasher = sha1()
         hasher.update(pickle.dumps(key))
         return path.join(self.dirname, hasher.hexdigest()[:7] + '.pickle')
 
-
-    def post_dump(self, key:K, value:V) -> None:
+    def post_dump(self, key: K, value: V) -> None:
         pass
 
-
-    def post_purge(self, key:K, value:V) -> None:
+    def post_purge(self, key: K, value: V) -> None:
         pass
 
-
-    def stringify(self, key:K, value:V) -> str:
+    def stringify(self, key: K, value: V) -> str:
         return key

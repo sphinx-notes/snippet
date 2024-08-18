@@ -1,11 +1,11 @@
 """
-    sphinxnotes.ext.snippet
-    ~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.ext.snippet
+~~~~~~~~~~~~~~~~~~~~~~~
 
-    Sphinx extension for sphinxnotes.snippet.
+Sphinx extension for sphinxnotes.snippet.
 
-    :copyright: Copyright 2021 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2021 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
@@ -35,11 +35,11 @@ from .utils import titlepath
 
 logger = logging.getLogger(__name__)
 
-cache:Cache|None = None
-extractor:Extractor = Extractor()
+cache: Cache | None = None
+extractor: Extractor = Extractor()
 
 
-def extract_tags(s:Snippet) -> str:
+def extract_tags(s: Snippet) -> str:
     tags = ''
     if isinstance(s, Document):
         tags += 'd'
@@ -48,7 +48,7 @@ def extract_tags(s:Snippet) -> str:
     return tags
 
 
-def extract_excerpt(s:Snippet) -> str:
+def extract_excerpt(s: Snippet) -> str:
     if isinstance(s, Document) and s.title is not None:
         return '<' + s.title.text + '>'
     elif isinstance(s, Section) and s.title is not None:
@@ -56,7 +56,7 @@ def extract_excerpt(s:Snippet) -> str:
     return ''
 
 
-def extract_keywords(s:Snippet) -> List[str]:
+def extract_keywords(s: Snippet) -> List[str]:
     keywords = []
     # TODO: Deal with more snippet
     if isinstance(s, WithTitle) and s.title is not None:
@@ -64,7 +64,9 @@ def extract_keywords(s:Snippet) -> List[str]:
     return keywords
 
 
-def is_document_matched(pats:Dict[str,List[str]], docname:str) -> Dict[str,List[str]]:
+def is_document_matched(
+    pats: Dict[str, List[str]], docname: str
+) -> Dict[str, List[str]]:
     """Whether the docname matched by given patterns pats"""
     new_pats = {}
     for tag, ps in pats.items():
@@ -74,9 +76,9 @@ def is_document_matched(pats:Dict[str,List[str]], docname:str) -> Dict[str,List[
     return new_pats
 
 
-def is_snippet_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bool:
+def is_snippet_matched(pats: Dict[str, List[str]], s: [Snippet], docname: str) -> bool:
     """Whether the snippet's tags and docname matched by given patterns pats"""
-    if '*' in pats: # Wildcard
+    if '*' in pats:  # Wildcard
         for pat in pats['*']:
             if re.match(pat, docname):
                 return True
@@ -92,7 +94,7 @@ def is_snippet_matched(pats:Dict[str,List[str]], s:[Snippet], docname:str) -> bo
     return not_in_pats
 
 
-def on_config_inited(app:Sphinx, appcfg:SphinxConfig) -> None:
+def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
     global cache
     cfg = Config(appcfg.snippet_config)
     cache = Cache(cfg.cache_dir)
@@ -100,21 +102,28 @@ def on_config_inited(app:Sphinx, appcfg:SphinxConfig) -> None:
     try:
         cache.load()
     except Exception as e:
-        logger.warning("[snippet] failed to laod cache: %s" % e)
+        logger.warning('[snippet] failed to laod cache: %s' % e)
 
 
-def on_env_get_outdated(app:Sphinx, env:BuildEnvironment, added:Set[str],
-                         changed:Set[str], removed:Set[str]) -> List[str]:
+def on_env_get_outdated(
+    app: Sphinx,
+    env: BuildEnvironment,
+    added: Set[str],
+    changed: Set[str],
+    removed: Set[str],
+) -> List[str]:
     # Remove purged indexes and snippetes from db
     for docname in removed:
         del cache[(app.config.project, docname)]
     return []
 
 
-def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None:
+def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> None:
     if not isinstance(doctree, nodes.document):
         # XXX: It may caused by ablog
-        logger.debug('[snippet] node %s is not nodes.document', type(doctree), location=doctree)
+        logger.debug(
+            '[snippet] node %s is not nodes.document', type(doctree), location=doctree
+        )
         return
 
     pats = is_document_matched(app.config.snippet_patterns, docname)
@@ -130,11 +139,15 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
         tpath = [x.astext() for x in titlepath.resolve(app.env, docname, n)]
         if isinstance(s, Section):
             tpath = tpath[1:]
-        doc.append(Item(snippet=s,
-                        tags=extract_tags(s),
-                        excerpt=extract_excerpt(s),
-                        keywords=extract_keywords(s),
-                        titlepath=tpath))
+        doc.append(
+            Item(
+                snippet=s,
+                tags=extract_tags(s),
+                excerpt=extract_excerpt(s),
+                keywords=extract_keywords(s),
+                titlepath=tpath,
+            )
+        )
 
     cache_key = (app.config.project, docname)
     if len(doc) != 0:
@@ -142,20 +155,23 @@ def on_doctree_resolved(app:Sphinx, doctree:nodes.document, docname:str) -> None
     elif cache_key in cache:
         del cache[cache_key]
 
-    logger.debug('[snippet] picked %s/%s snippetes in %s',
-                 len(doc), len(snippets), docname)
+    logger.debug(
+        '[snippet] picked %s/%s snippetes in %s', len(doc), len(snippets), docname
+    )
 
 
-def on_builder_finished(app:Sphinx, exception) -> None:
+def on_builder_finished(app: Sphinx, exception) -> None:
     cache.dump()
 
 
-class SnippetBuilder(DummyBuilder): # DummyBuilder has dummy impls we need.
+class SnippetBuilder(DummyBuilder):  # DummyBuilder has dummy impls we need.
     name = 'snippet'
-    epilog = __('The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool')
+    epilog = __(
+        'The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool'
+    )
 
     def get_outdated_docs(self) -> Iterator[str]:
-        """ Modified from :py:meth:`sphinx.builders.html.StandaloneHTMLBuilder.get_outdated_docs`."""
+        """Modified from :py:meth:`sphinx.builders.html.StandaloneHTMLBuilder.get_outdated_docs`."""
         for docname in self.env.found_docs:
             if docname not in self.env.all_docs:
                 logger.debug('[build target] did not in env: %r', docname)
@@ -176,7 +192,9 @@ class SnippetBuilder(DummyBuilder): # DummyBuilder has dummy impls we need.
                         targetname,
                         _format_modified_time(targetmtime),
                         docname,
-                        _format_modified_time(path.getmtime(self.env.doc2path(docname))),
+                        _format_modified_time(
+                            path.getmtime(self.env.doc2path(docname))
+                        ),
                     )
                     yield docname
             except OSError:
@@ -187,14 +205,14 @@ class SnippetBuilder(DummyBuilder): # DummyBuilder has dummy impls we need.
 def _format_modified_time(timestamp: float) -> str:
     """Return an RFC 3339 formatted string representing the given timestamp."""
     seconds, fraction = divmod(timestamp, 1)
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(seconds)) + f'.{fraction:.3f}'
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(seconds)) + f'.{fraction:.3f}'
 
 
-def setup(app:Sphinx):
+def setup(app: Sphinx):
     app.add_builder(SnippetBuilder)
 
     app.add_config_value('snippet_config', {}, '')
-    app.add_config_value('snippet_patterns', {'*':['.*']}, '')
+    app.add_config_value('snippet_patterns', {'*': ['.*']}, '')
 
     app.connect('config-inited', on_config_inited)
     app.connect('env-get-outdated', on_env_get_outdated)

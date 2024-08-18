@@ -1,12 +1,13 @@
 """
-    sphinxnotes.utils.titlepath
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.utils.titlepath
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Utils for ellipsis string.
+Utils for ellipsis string.
 
-    :copyright: Copyright 2020 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2020 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
+
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
 
@@ -16,11 +17,13 @@ if TYPE_CHECKING:
     from sphinx.enviornment import BuilderEnviornment
 
 
-def resolve(env: BuilderEnviornment, docname:str, node:nodes.Node) -> List[nodes.title]:
+def resolve(
+    env: BuilderEnviornment, docname: str, node: nodes.Node
+) -> List[nodes.title]:
     return resolve_section(node) + resolve_document(env, docname)
 
 
-def resolve_section(node:nodes.section) -> List[nodes.title]:
+def resolve_section(node: nodes.section) -> List[nodes.title]:
     # FIXME: doc is None
     titlenodes = []
     while node:
@@ -30,7 +33,7 @@ def resolve_section(node:nodes.section) -> List[nodes.title]:
     return titlenodes
 
 
-def resolve_document(env:BuilderEnviornment, docname:str) -> List[nodes.title]:
+def resolve_document(env: BuilderEnviornment, docname: str) -> List[nodes.title]:
     """
     .. note:: Title of document itself does not included in the returned list
     """
@@ -50,7 +53,7 @@ def resolve_document(env:BuilderEnviornment, docname:str) -> List[nodes.title]:
         if master_docname in env.titles:
             title = env.titles[master_docname]
         else:
-            title = nodes.title(text=v[-1].title()) # FIXME: Create mock title for now
+            title = nodes.title(text=v[-1].title())  # FIXME: Create mock title for now
         titles.append(title)
         v.pop()
 

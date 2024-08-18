@@ -1,11 +1,11 @@
 """
-    sphinxnotes.snippet.picker
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.snippet.picker
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Snippet picker implementations.
+Snippet picker implementations.
 
-    :copyright: Copyright 2020 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2020 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
@@ -23,7 +23,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def pick(app:Sphinx, doctree:nodes.document, docname: str) -> list[tuple[Snippet,nodes.section]]:
+def pick(
+    app: Sphinx, doctree: nodes.document, docname: str
+) -> list[tuple[Snippet, nodes.section]]:
     """
     Pick snippets from document, return a list of snippet and the section
     it belongs to.
@@ -59,16 +61,15 @@ class SectionPicker(nodes.SparseNodeVisitor):
     """Node visitor for picking code snippet from document."""
 
     #: Constant list of unsupported languages (:class:`pygments.lexers.Lexer`)
-    UNSUPPORTED_LANGUAGES:List[str] = ['default']
+    UNSUPPORTED_LANGUAGES: list[str] = ['default']
 
     #: List of picked section snippets and the section it belongs to
-    sections:List[Tuple[Section,nodes.section]]
+    sections: list[tuple[Section, nodes.section]]
 
-    _section_has_code_block:bool
-    _section_level:int
+    _section_has_code_block: bool
+    _section_level: int
 
-
-    def __init__(self, document:nodes.document) -> None:
+    def __init__(self, document: nodes.document) -> None:
         super().__init__(document)
         self.sections = []
         self._section_has_code_block = False
@@ -78,16 +79,15 @@ class SectionPicker(nodes.SparseNodeVisitor):
     # Visitor methods #
     ###################
 
-    def visit_literal_block(self, node:nodes.literal_block) -> None:
+    def visit_literal_block(self, node: nodes.literal_block) -> None:
         if node['language'] in self.UNSUPPORTED_LANGUAGES:
             raise nodes.SkipNode
         self._has_code_block = True
 
-
-    def visit_section(self, node:nodes.section) -> None:
+    def visit_section(self, node: nodes.section) -> None:
         self._section_level += 1
 
-    def depart_section(self, node:nodes.section) -> None:
+    def depart_section(self, node: nodes.section) -> None:
         self._section_level -= 1
         self._has_code_block = False
 
@@ -99,28 +99,26 @@ class SectionPicker(nodes.SparseNodeVisitor):
             return
 
         # TODO: code block
-        self.sections.append((Section(node) , node))
+        self.sections.append((Section(node), node))
 
+    def unknown_visit(self, node: nodes.Node) -> None:
+        pass  # Ignore any unknown node
 
-    def unknown_visit(self, node:nodes.Node) -> None:
-        pass # Ignore any unknown node
-
-    def unknown_departure(self, node:nodes.Node) -> None:
-        pass # Ignore any unknown node
-
+    def unknown_departure(self, node: nodes.Node) -> None:
+        pass  # Ignore any unknown node
 
     ##################
     # Helper methods #
     ##################
 
-    def _is_empty_non_leaf_section(self, node:nodes.section) -> bool:
+    def _is_empty_non_leaf_section(self, node: nodes.section) -> bool:
         """
         A section is a leaf section it has non-child section.
         A section is empty when it has not non-section child node
         (except the title).
         """
-        num_subsection = len(list(node[0].traverse(nodes.section,
-                                                   descend=False,
-                                                   siblings=True)))
-        num_nonsection_child = len(node) - num_subsection - 1 # -1 for title
+        num_subsection = len(
+            list(node[0].traverse(nodes.section, descend=False, siblings=True))
+        )
+        num_nonsection_child = len(node) - num_subsection - 1  # -1 for title
         return num_subsection != 0 and num_nonsection_child == 0

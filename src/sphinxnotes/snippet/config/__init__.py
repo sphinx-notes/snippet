@@ -1,9 +1,9 @@
 """
-    sphinxnotes.snippet.config
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.snippet.config
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: Copyright 2021 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2021 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
@@ -11,10 +11,11 @@ from typing import Dict, Any
 
 from . import default
 
+
 class Config(object):
     """Snippet configuration object."""
 
-    def __init__(self, config:Dict[str,Any]) -> None:
+    def __init__(self, config: Dict[str, Any]) -> None:
         # Load default
         self.__dict__.update(default.__dict__)
         for name in config:
@@ -24,9 +25,8 @@ class Config(object):
             if name in self.__dict__.keys():
                 self.__dict__[name] = config[name]
 
-
     @classmethod
-    def load(cls, filename:str) -> "Config":
+    def load(cls, filename: str) -> 'Config':
         """Load config from configuration file"""
         with open(filename, 'rb') as f:
             source = f.read()

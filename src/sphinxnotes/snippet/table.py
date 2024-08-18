@@ -1,9 +1,9 @@
 """
-    sphinxnotes.snippet.table
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+sphinxnotes.snippet.table
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    :copyright: Copyright 2021 Shengyu Zhang
-    :license: BSD, see LICENSE for details.
+:copyright: Copyright 2021 Shengyu Zhang
+:license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
@@ -16,24 +16,28 @@ COLUMNS = ['id', 'tags', 'excerpt', 'path', 'keywords']
 VISIABLE_COLUMNS = COLUMNS[1:4]
 COLUMN_DELIMITER = '  '
 
-def tablify(indexes: Dict[IndexID,Index], tags:str, width:int) -> Iterator[str]:
-    """ Create a table from sequence of cache.Index. """
+
+def tablify(indexes: Dict[IndexID, Index], tags: str, width: int) -> Iterator[str]:
+    """Create a table from sequence of cache.Index."""
 
     # Calcuate width
     width = width
     tags_width = len(VISIABLE_COLUMNS[0])
     width -= tags_width
-    excerpt_width = max(int(width * 6/10), len(VISIABLE_COLUMNS[1]))
-    path_width = max(int(width * 4/10), len(VISIABLE_COLUMNS[2]))
+    excerpt_width = max(int(width * 6 / 10), len(VISIABLE_COLUMNS[1]))
+    path_width = max(int(width * 4 / 10), len(VISIABLE_COLUMNS[2]))
     path_comp_width = path_width // 3
 
     # Write header
     header = COLUMN_DELIMITER.join(
-        [COLUMNS[0].upper(),
-         ellipsis.ellipsis(COLUMNS[1].upper(), tags_width, blank_sym=' '),
-         ellipsis.ellipsis(COLUMNS[2].upper(), excerpt_width, blank_sym=' '),
-         ellipsis.ellipsis(COLUMNS[3].upper(), path_width, blank_sym=' ' ),
-         COLUMNS[4].upper()])
+        [
+            COLUMNS[0].upper(),
+            ellipsis.ellipsis(COLUMNS[1].upper(), tags_width, blank_sym=' '),
+            ellipsis.ellipsis(COLUMNS[2].upper(), excerpt_width, blank_sym=' '),
+            ellipsis.ellipsis(COLUMNS[3].upper(), path_width, blank_sym=' '),
+            COLUMNS[4].upper(),
+        ]
+    )
     yield header
 
     # Write rows
@@ -42,9 +46,14 @@ def tablify(indexes: Dict[IndexID,Index], tags:str, width:int) -> Iterator[str]:
         if index[0] not in tags and '*' not in tags:
             continue
         row = COLUMN_DELIMITER.join(
-            [index_id, # ID
-             ellipsis.ellipsis(f'[{index[0]}]', tags_width, blank_sym=' '), # Kind
-             ellipsis.ellipsis(index[1], excerpt_width, blank_sym=' '), # Excerpt
-             ellipsis.join(index[2], path_width, path_comp_width, blank_sym=' ' ), # Titleppath
-             ','.join(index[3])]) # Keywords
+            [
+                index_id,  # ID
+                ellipsis.ellipsis(f'[{index[0]}]', tags_width, blank_sym=' '),  # Kind
+                ellipsis.ellipsis(index[1], excerpt_width, blank_sym=' '),  # Excerpt
+                ellipsis.join(
+                    index[2], path_width, path_comp_width, blank_sym=' '
+                ),  # Titleppath
+                ','.join(index[3]),
+            ]
+        )  # Keywords
         yield row
