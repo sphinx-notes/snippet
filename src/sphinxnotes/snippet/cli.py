@@ -101,6 +101,9 @@ def main(argv: List[str] = sys.argv[1:]):
         help='get information of snippet by index ID',
     )
     getparser.add_argument(
+        '--docname', '-d', action='store_true', help='get docname of snippet'
+    )
+    getparser.add_argument(
         '--file', '-f', action='store_true', help='get source file path of snippet'
     )
     getparser.add_argument(
@@ -216,6 +219,8 @@ def _on_command_get(args: argparse.Namespace):
             sys.exit(1)
         if args.text:
             print('\n'.join(item.snippet.rst))
+        if args.docname:
+            print(item.snippet.docname)
         if args.file:
             print(item.snippet.file)
         if args.url:

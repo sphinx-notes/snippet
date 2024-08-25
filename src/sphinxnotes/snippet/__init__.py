@@ -7,10 +7,13 @@ sphinxnotes.snippet
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, TYPE_CHECKING
 import itertools
 
 from docutils import nodes
+
+if TYPE_CHECKING:
+    from sphinx.environment import BuildEnvironment
 
 __version__ = '1.1.1'
 
@@ -21,6 +24,10 @@ class Snippet(object):
 
     :param nodes: Document nodes that make up this snippet
     """
+
+    #: docname where the snippet is located, can be referenced by
+    # :rst:role:`doc`.
+    docname: str
 
     #: Source file path of snippet
     file: str
@@ -41,7 +48,9 @@ class Snippet(object):
     def __init__(self, *nodes: nodes.Node) -> None:
         assert len(nodes) != 0
 
+        env: BuildEnvironment = nodes[0].document.settings.env
         self.file = nodes[0].source
+        self.docname = env.path2doc(self.file)
 
         lineno = [float('inf'), -float('inf')]
         for node in nodes:
