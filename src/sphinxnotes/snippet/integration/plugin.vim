@@ -13,6 +13,7 @@ function! s:SplitID(row)
   return split(a:row, ' ')[0]
 endfunction
 
+" TODO: extra opts
 function! g:SphinxNotesSnippetList(callback, tags)
   let l:width = 0.9
   let cmd = [s:snippet, 'list',

@@ -9,17 +9,18 @@ sphinxnotes.snippet.cli
 from __future__ import annotations
 import sys
 import argparse
-from typing import List
+from typing import List, Iterable, Tuple
 from os import path
 from textwrap import dedent
 from shutil import get_terminal_size
 import posixpath
 
 from xdg.BaseDirectory import xdg_config_home
+from sphinx.util.matching import patmatch
 
 from . import __version__
 from .config import Config
-from .cache import Cache
+from .cache import Cache, IndexID, Index
 from .table import tablify, COLUMNS
 
 DEFAULT_CONFIG_FILE = path.join(xdg_config_home, 'sphinxnotes', 'snippet', 'conf.py')
@@ -83,7 +84,14 @@ def main(argv: List[str] = sys.argv[1:]):
         help='list snippet indexes, columns of indexes: %s' % COLUMNS,
     )
     listparser.add_argument(
-        '--tags', '-t', type=str, default='*', help='list specified tags only'
+        '--tags', '-t', type=str, default='*', help='list snippets with specified tags'
+    )
+    listparser.add_argument(
+        '--docname',
+        '-d',
+        type=str,
+        default='**',
+        help='list snippets whose docname matches shell-style glob pattern',
     )
     listparser.add_argument(
         '--width',
@@ -205,9 +213,23 @@ def _on_command_stat(args: argparse.Namespace):
         print(f'\t {v} snippets(s)')
 
 
+def _filter_list_items(
+    cache: Cache, tags: str, docname_glob: str
+) -> Iterable[Tuple[IndexID, Index]]:
+    for index_id, index in cache.indexes.items():
+        # Filter by tags.
+        if index[0] not in tags and '*' not in tags:
+            continue
+        # Filter by docname.
+        (_, docname), _ = cache.index_id_to_doc_id[index_id]
+        if not patmatch(docname, docname_glob):
+            continue
+        yield (index_id, index)
+
+
 def _on_command_list(args: argparse.Namespace):
-    rows = tablify(args.cache.indexes, args.tags, args.width)
-    for row in rows:
+    items = _filter_list_items(args.cache, args.tags, args.docname)
+    for row in tablify(items, args.width):
         print(row)
 
 
