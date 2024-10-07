@@ -12,10 +12,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from docutils import nodes
-
 from sphinx.util import logging
 
-from . import Snippet, Section, Document
+from .snippet import Snippet, Section, Document
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx

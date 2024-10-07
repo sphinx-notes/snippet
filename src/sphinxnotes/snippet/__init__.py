@@ -2,185 +2,222 @@
 sphinxnotes.snippet
 ~~~~~~~~~~~~~~~~~~~
 
-:copyright: Copyright 2020 Shengyu Zhang
+Sphinx extension entrypoint.
+
+:copyright: Copyright 2024 Shengyu Zhang
 :license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, TYPE_CHECKING
-import itertools
+from typing import List, Set, TYPE_CHECKING, Dict
+import re
+from os import path
+import time
+from importlib.metadata import version
 
 from docutils import nodes
+from sphinx.locale import __
+from sphinx.util import logging
+from sphinx.builders.dummy import DummyBuilder
 
 if TYPE_CHECKING:
+    from sphinx.application import Sphinx
     from sphinx.environment import BuildEnvironment
+    from sphinx.config import Config as SphinxConfig
+    from collections.abc import Iterator
 
-__version__ = '1.1.1'
-
-
-class Snippet(object):
-    """
-    Snippet is base class of reStructuredText snippet.
-
-    :param nodes: Document nodes that make up this snippet
-    """
-
-    #: docname where the snippet is located, can be referenced by
-    # :rst:role:`doc`.
-    docname: str
-
-    #: Source file path of snippet
-    file: str
-
-    #: Line number range of snippet, in the source file which is left closed
-    #: and right opened.
-    lineno: Tuple[int, int]
-
-    #: The original reStructuredText of snippet
-    rst: List[str]
-
-    #: The possible identifier key of snippet, which is picked from nodes'
-    #: (or nodes' parent's) `ids attr`_.
-    #:
-    #: .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
-    refid: Optional[str]
-
-    def __init__(self, *nodes: nodes.Node) -> None:
-        assert len(nodes) != 0
-
-        env: BuildEnvironment = nodes[0].document.settings.env
-        self.file = nodes[0].source
-        self.docname = env.path2doc(self.file)
-
-        lineno = [float('inf'), -float('inf')]
-        for node in nodes:
-            if not node.line:
-                continue  # Skip node that have None line, I dont know why
-            lineno[0] = min(lineno[0], _line_of_start(node))
-            lineno[1] = max(lineno[1], _line_of_end(node))
-        self.lineno = lineno
-
-        lines = []
-        with open(self.file, 'r') as f:
-            start = self.lineno[0] - 1
-            stop = self.lineno[1] - 1
-            for line in itertools.islice(f, start, stop):
-                lines.append(line.strip('\n'))
-        self.rst = lines
-
-        # Find exactly one ID attr in nodes
-        self.refid = None
-        for node in nodes:
-            if node['ids']:
-                self.refid = node['ids'][0]
-                break
-
-        # If no ID found, try parent
-        if not self.refid:
-            for node in nodes:
-                if node.parent['ids']:
-                    self.refid = node.parent['ids'][0]
-                    break
+from .config import Config
+from .snippet import Snippet, WithTitle, Document, Section
+from .picker import pick
+from .cache import Cache, Item
+from .keyword import Extractor
+from .utils import titlepath
 
 
-class Text(Snippet):
-    #: Text of snippet
-    text: str
+logger = logging.getLogger(__name__)
 
-    def __init__(self, node: nodes.Node) -> None:
-        super().__init__(node)
-        self.text = node.astext()
+cache: Cache | None = None
+extractor: Extractor = Extractor()
 
 
-class CodeBlock(Text):
-    #: Language of code block
-    language: str
-    #: Caption of code block
-    caption: Optional[str]
-
-    def __init__(self, node: nodes.literal_block) -> None:
-        assert isinstance(node, nodes.literal_block)
-        super().__init__(node)
-        self.language = node['language']
-        self.caption = node.get('caption')
+def extract_tags(s: Snippet) -> str:
+    tags = ''
+    if isinstance(s, Document):
+        tags += 'd'
+    elif isinstance(s, Section):
+        tags += 's'
+    return tags
 
 
-class WithCodeBlock(object):
-    code_blocks: List[CodeBlock]
-
-    def __init__(self, nodes: nodes.Nodes) -> None:
-        self.code_blocks = []
-        for n in nodes.traverse(nodes.literal_block):
-            self.code_blocks.append(self.CodeBlock(n))
-
-
-class Title(Text):
-    def __init__(self, node: nodes.title) -> None:
-        assert isinstance(node, nodes.title)
-        super().__init__(node)
+def extract_excerpt(s: Snippet) -> str:
+    if isinstance(s, Document) and s.title is not None:
+        return '<' + s.title.text + '>'
+    elif isinstance(s, Section) and s.title is not None:
+        return '[' + s.title.text + ']'
+    return ''
 
 
-class WithTitle(object):
-    title: Optional[Title]
-
-    def __init__(self, node: nodes.Node) -> None:
-        title_node = node.next_node(nodes.title)
-        self.title = Title(title_node) if title_node else None
-
-
-class Section(Snippet, WithTitle):
-    def __init__(self, node: nodes.section) -> None:
-        assert isinstance(node, nodes.section)
-        Snippet.__init__(self, node)
-        WithTitle.__init__(self, node)
+def extract_keywords(s: Snippet) -> List[str]:
+    keywords = [s.docname]
+    # TODO: Deal with more snippet
+    if isinstance(s, WithTitle) and s.title is not None:
+        keywords.extend(extractor.extract(s.title.text, strip_stopwords=False))
+    return keywords
 
 
-class Document(Section):
-    def __init__(self, node: nodes.document) -> None:
-        assert isinstance(node, nodes.document)
-        super().__init__(node.next_node(nodes.section))
+def is_document_matched(
+    pats: Dict[str, List[str]], docname: str
+) -> Dict[str, List[str]]:
+    """Whether the docname matched by given patterns pats"""
+    new_pats = {}
+    for tag, ps in pats.items():
+        for pat in ps:
+            if re.match(pat, docname):
+                new_pats.setdefault(tag, []).append(pat)
+    return new_pats
 
 
-################
-# Nodes helper #
-################
+def is_snippet_matched(pats: Dict[str, List[str]], s: [Snippet], docname: str) -> bool:
+    """Whether the snippet's tags and docname matched by given patterns pats"""
+    if '*' in pats:  # Wildcard
+        for pat in pats['*']:
+            if re.match(pat, docname):
+                return True
+
+    not_in_pats = True
+    for k in extract_tags(s):
+        if k not in pats:
+            continue
+        not_in_pats = False
+        for pat in pats[k]:
+            if re.match(pat, docname):
+                return True
+    return not_in_pats
 
 
-def _line_of_start(node: nodes.Node) -> int:
-    assert node.line
-    if isinstance(node, nodes.title):
-        if isinstance(node.parent.parent, nodes.document):
-            # Spceial case for Document Title / Subtitle
-            return 1
-        else:
-            # Spceial case for section title
-            return node.line - 1
-    elif isinstance(node, nodes.section):
-        if isinstance(node.parent, nodes.document):
-            # Spceial case for top level section
-            return 1
-        else:
-            # Spceial case for section
-            return node.line - 1
-    return node.line
+def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
+    global cache
+    cfg = Config(appcfg.snippet_config)
+    cache = Cache(cfg.cache_dir)
+
+    try:
+        cache.load()
+    except Exception as e:
+        logger.warning('[snippet] failed to laod cache: %s' % e)
 
 
-def _line_of_end(node: nodes.Node) -> Optional[int]:
-    next_node = node.next_node(descend=False, siblings=True, ascend=True)
-    while next_node:
-        if next_node.line:
-            return _line_of_start(next_node)
-        next_node = next_node.next_node(
-            # Some nodes' line attr is always None, but their children has
-            # valid line attr
-            descend=True,
-            # If node and its children have not valid line attr, try use line
-            # of next node
-            ascend=True,
-            siblings=True,
+def on_env_get_outdated(
+    app: Sphinx,
+    env: BuildEnvironment,
+    added: Set[str],
+    changed: Set[str],
+    removed: Set[str],
+) -> List[str]:
+    # Remove purged indexes and snippetes from db
+    for docname in removed:
+        del cache[(app.config.project, docname)]
+    return []
+
+
+def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> None:
+    if not isinstance(doctree, nodes.document):
+        # XXX: It may caused by ablog
+        logger.debug(
+            '[snippet] node %s is not nodes.document', type(doctree), location=doctree
         )
-    # No line found, return the max line of source file
-    if node.source:
-        with open(node.source) as f:
-            return sum(1 for line in f)
-    raise AttributeError('None source attr of node %s' % node)
+        return
+
+    pats = is_document_matched(app.config.snippet_patterns, docname)
+    if len(pats) == 0:
+        logger.debug('[snippet] skip picking because %s is not matched', docname)
+        return
+
+    doc = []
+    snippets = pick(app, doctree, docname)
+    for s, n in snippets:
+        if not is_snippet_matched(pats, s, docname):
+            continue
+        tpath = [x.astext() for x in titlepath.resolve(app.env, docname, n)]
+        if isinstance(s, Section):
+            tpath = tpath[1:]
+        doc.append(
+            Item(
+                snippet=s,
+                tags=extract_tags(s),
+                excerpt=extract_excerpt(s),
+                keywords=extract_keywords(s),
+                titlepath=tpath,
+            )
+        )
+
+    cache_key = (app.config.project, docname)
+    if len(doc) != 0:
+        cache[cache_key] = doc
+    elif cache_key in cache:
+        del cache[cache_key]
+
+    logger.debug(
+        '[snippet] picked %s/%s snippetes in %s', len(doc), len(snippets), docname
+    )
+
+
+def on_builder_finished(app: Sphinx, exception) -> None:
+    cache.dump()
+
+
+class SnippetBuilder(DummyBuilder):  # DummyBuilder has dummy impls we need.
+    name = 'snippet'
+    epilog = __(
+        'The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool'
+    )
+
+    def get_outdated_docs(self) -> Iterator[str]:
+        """Modified from :py:meth:`sphinx.builders.html.StandaloneHTMLBuilder.get_outdated_docs`."""
+        for docname in self.env.found_docs:
+            if docname not in self.env.all_docs:
+                logger.debug('[build target] did not in env: %r', docname)
+                yield docname
+                continue
+
+            assert cache is not None
+            targetname = cache.itemfile((self.app.config.project, docname))
+            try:
+                targetmtime = path.getmtime(targetname)
+            except Exception:
+                targetmtime = 0
+            try:
+                srcmtime = path.getmtime(self.env.doc2path(docname))
+                if srcmtime > targetmtime:
+                    logger.debug(
+                        '[build target] targetname %r(%s), docname %r(%s)',
+                        targetname,
+                        _format_modified_time(targetmtime),
+                        docname,
+                        _format_modified_time(
+                            path.getmtime(self.env.doc2path(docname))
+                        ),
+                    )
+                    yield docname
+            except OSError:
+                # source doesn't exist anymore
+                pass
+
+
+def _format_modified_time(timestamp: float) -> str:
+    """Return an RFC 3339 formatted string representing the given timestamp."""
+    seconds, fraction = divmod(timestamp, 1)
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(seconds)) + f'.{fraction:.3f}'
+
+
+def setup(app: Sphinx):
+    app.add_builder(SnippetBuilder)
+
+    app.add_config_value('snippet_config', {}, '')
+    app.add_config_value('snippet_patterns', {'*': ['.*']}, '')
+
+    app.connect('config-inited', on_config_inited)
+    app.connect('env-get-outdated', on_env_get_outdated)
+    app.connect('doctree-resolved', on_doctree_resolved)
+    app.connect('build-finished', on_builder_finished)
+
+    return {'version': version('sphinxnotes.any')}
