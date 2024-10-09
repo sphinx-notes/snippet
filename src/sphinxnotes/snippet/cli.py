@@ -18,7 +18,7 @@ import posixpath
 from xdg.BaseDirectory import xdg_config_home
 from sphinx.util.matching import patmatch
 
-from . import __version__
+from . import __version__, Document
 from .config import Config
 from .cache import Cache, IndexID, Index
 from .table import tablify, COLUMNS
@@ -113,6 +113,9 @@ def main(argv: List[str] = sys.argv[1:]):
     )
     getparser.add_argument(
         '--file', '-f', action='store_true', help='get source file path of snippet'
+    )
+    getparser.add_argument(
+        '--deps', action='store_true', help='get dependent files of document'
     )
     getparser.add_argument(
         '--line-start',
@@ -234,17 +237,36 @@ def _on_command_list(args: argparse.Namespace):
 
 
 def _on_command_get(args: argparse.Namespace):
+    # Wrapper for warning when nothing is printed
+    printed = False
+
+    def p(*args, **opts):
+        nonlocal printed
+        printed = True
+        print(*args, **opts)
+
     for index_id in args.index_id:
         item = args.cache.get_by_index_id(index_id)
         if not item:
-            print('no such index ID', file=sys.stderr)
+            p('no such index ID', file=sys.stderr)
             sys.exit(1)
         if args.text:
-            print('\n'.join(item.snippet.rst))
+            p('\n'.join(item.snippet.rst))
         if args.docname:
-            print(item.snippet.docname)
+            p(item.snippet.docname)
         if args.file:
-            print(item.snippet.file)
+            p(item.snippet.file)
+        if args.deps:
+            if not isinstance(item.snippet, Document):
+                print(
+                    f'{type(item.snippet)} ({index_id}) is not a document',
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            if len(item.snippet.deps) == 0:
+                p('')  # prevent print nothing warning
+            for dep in item.snippet.deps:
+                p(dep)
         if args.url:
             # HACK: get doc id in better way
             doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
@@ -258,11 +280,15 @@ def _on_command_get(args: argparse.Namespace):
             url = posixpath.join(base_url, doc_id[1] + '.html')
             if item.snippet.refid:
                 url += '#' + item.snippet.refid
-            print(url)
+            p(url)
         if args.line_start:
-            print(item.snippet.lineno[0])
+            p(item.snippet.lineno[0])
         if args.line_end:
-            print(item.snippet.lineno[1])
+            p(item.snippet.lineno[1])
+
+        if not printed:
+            print('please specify at least one argument', file=sys.stderr)
+            sys.exit(1)
 
 
 def _on_command_integration(args: argparse.Namespace):
