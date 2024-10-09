@@ -9,6 +9,7 @@ sphinxnotes.snippet
 from __future__ import annotations
 from typing import List, Tuple, Optional, TYPE_CHECKING
 import itertools
+from os import path
 
 from docutils import nodes
 
@@ -29,7 +30,7 @@ class Snippet(object):
     # :rst:role:`doc`.
     docname: str
 
-    #: Source file path of snippet
+    #: Absolute path of the source file.
     file: str
 
     #: Line number range of snippet, in the source file which is left closed
@@ -136,9 +137,20 @@ class Section(Snippet, WithTitle):
 
 
 class Document(Section):
+    #: A set of absolute paths of dependent files for document.
+    #: Obtained from :attr:`BuildEnvironment.dependencies`.
+    deps: set[str]
+
     def __init__(self, node: nodes.document) -> None:
         assert isinstance(node, nodes.document)
         super().__init__(node.next_node(nodes.section))
+
+        # Record document's dependent files
+        self.deps = set()
+        env: BuildEnvironment = node.settings.env
+        for dep in env.dependencies[self.docname]:
+            # Relative to documentation root -> Absolute path of file system.
+            self.deps.add(path.join(env.srcdir, dep))
 
 
 ################

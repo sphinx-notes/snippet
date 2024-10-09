@@ -40,7 +40,7 @@ def pick(
         logger.debug('Skipped document with nosearch metadata')
         return []
 
-    snippets = []
+    snippets: list[tuple[Snippet, nodes.section]] = []
 
     # Pick document
     toplevel_section = doctree.next_node(nodes.section)
