@@ -7,7 +7,7 @@ sphinxnotes.snippet.table
 """
 
 from __future__ import annotations
-from typing import Iterator, Dict
+from typing import Iterable, Tuple
 
 from .cache import Index, IndexID
 from .utils import ellipsis
@@ -17,8 +17,8 @@ VISIABLE_COLUMNS = COLUMNS[1:4]
 COLUMN_DELIMITER = '  '
 
 
-def tablify(indexes: Dict[IndexID, Index], tags: str, width: int) -> Iterator[str]:
-    """Create a table from sequence of cache.Index."""
+def tablify(indexes: Iterable[Tuple[IndexID, Index]], width: int) -> Iterable[str]:
+    """Create a table from sequence of indices"""
 
     # Calcuate width
     width = width
@@ -41,10 +41,8 @@ def tablify(indexes: Dict[IndexID, Index], tags: str, width: int) -> Iterator[st
     yield header
 
     # Write rows
-    for index_id, index in indexes.items():
+    for index_id, index in indexes:
         # TODO: assert index?
-        if index[0] not in tags and '*' not in tags:
-            continue
         row = COLUMN_DELIMITER.join(
             [
                 index_id,  # ID

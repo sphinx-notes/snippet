@@ -3,10 +3,10 @@
 #
 # :Author: Shengyu Zhang
 # :Date: 2021-08-14
-# :Version: 20211114
+# :Version: 20240828
 
 function snippet_view() {
-  selection=$(snippet_list ds)
+  selection=$(snippet_list --tags ds)
   [ -z "$selection" ] && return
 
   # Make sure we have $PAGER
@@ -22,14 +22,14 @@ function snippet_view() {
 }
 
 function snippet_edit() {
-  selection=$(snippet_list ds)
+  selection=$(snippet_list --tags ds)
   [ -z "$selection" ] && return
 
   echo "vim +\$($SNIPPET get --line-start $selection) \$($SNIPPET get --file $selection)"
 }
 
 function snippet_url() {
-  selection=$(snippet_list ds)
+  selection=$(snippet_list --tags ds)
   [ -z "$selection" ] && return
 
   echo "xdg-open \$($SNIPPET get --url $selection)"
