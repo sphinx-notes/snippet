@@ -2,10 +2,15 @@
 sphinxnotes.snippet.cli
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: Copyright 2020 Shengyu Zhang
+Command line entrypoint.
+
+:copyright: Copyright 2024 Shengyu Zhang
 :license: BSD, see LICENSE for details.
 """
 
+# **NOTE**: Import new packages with caution:
+# Importing complex packages (like sphinx.*) will directly slow down the
+# startup of the CLI tool.
 from __future__ import annotations
 import sys
 import argparse
@@ -14,10 +19,8 @@ from os import path
 from textwrap import dedent
 from shutil import get_terminal_size
 import posixpath
-from importlib.metadata import version
 
 from xdg.BaseDirectory import xdg_config_home
-from sphinx.util.matching import patmatch
 
 from .snippets import Document
 from .config import Config
@@ -40,7 +43,7 @@ def get_integration_file(fn: str) -> str:
     .. seealso::
 
        see ``[tool.setuptools.package-data]`` section of pyproject.toml to know
-        how files are included.
+       how files are included.
     """
     # TODO: use https://docs.python.org/3/library/importlib.resources.html#importlib.resources.files
     prefix = path.abspath(path.dirname(__file__))
@@ -62,10 +65,11 @@ def main(argv: List[str] = sys.argv[1:]):
                                        * (any)               wildcard for any snippet"""),
     )
     parser.add_argument(
-        '-v',
         '--version',
-        action='version',
-        version='%(prog)s ' + version('sphinxnotes.any'),
+        # add_argument provides action='version', but it requires a version
+        # literal and doesn't support lazily obtaining version.
+        action='store_true',
+        help="show program's version number and exit",
     )
     parser.add_argument(
         '-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file'
@@ -180,6 +184,16 @@ def main(argv: List[str] = sys.argv[1:]):
     # Parse command line arguments
     args = parser.parse_args(argv)
 
+    # Print version message.
+    # See parser.add_argument('--version', ...) for more detais.
+    if args.version:
+        # NOTE: Importing is slow, do it on demand.
+        from importlib.metadata import version
+
+        pkgname = 'sphinxnotes.snippet'
+        print(pkgname, version(pkgname))
+        parser.exit()
+
     # Load config from file
     if args.config == DEFAULT_CONFIG_FILE and not path.isfile(DEFAULT_CONFIG_FILE):
         print(
@@ -223,6 +237,9 @@ def _on_command_stat(args: argparse.Namespace):
 def _filter_list_items(
     cache: Cache, tags: str, docname_glob: str
 ) -> Iterable[Tuple[IndexID, Index]]:
+    # NOTE: Importing is slow, do it on demand.
+    from sphinx.util.matching import patmatch
+
     for index_id, index in cache.indexes.items():
         # Filter by tags.
         if index[0] not in tags and '*' not in tags:
