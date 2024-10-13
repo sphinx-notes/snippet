@@ -1,8 +1,10 @@
 """
-sphinxnotes.snippet
-~~~~~~~~~~~~~~~~~~~
+sphinxnotes.snippet.snippets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: Copyright 2020 Shengyu Zhang
+Definitions of various snippets.
+
+:copyright: Copyright 2024 Shengyu Zhang
 :license: BSD, see LICENSE for details.
 """
 
@@ -16,14 +18,13 @@ from docutils import nodes
 if TYPE_CHECKING:
     from sphinx.environment import BuildEnvironment
 
-__version__ = '1.1.1'
-
 
 class Snippet(object):
     """
-    Snippet is base class of reStructuredText snippet.
+    Snippet is structured fragments extracted from a single Sphinx document
+    (can also be said to be a reStructuredText file).
 
-    :param nodes: Document nodes that make up this snippet
+    :param nodes: nodes of doctree that make up this snippet.
     """
 
     #: docname where the snippet is located, can be referenced by

@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 from .config import Config
-from . import Snippet, WithTitle, Document, Section
+from .snippets import Snippet, WithTitle, Document, Section
 from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor

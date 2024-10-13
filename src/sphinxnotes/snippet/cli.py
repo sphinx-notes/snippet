@@ -14,11 +14,12 @@ from os import path
 from textwrap import dedent
 from shutil import get_terminal_size
 import posixpath
+from importlib.metadata import version
 
 from xdg.BaseDirectory import xdg_config_home
 from sphinx.util.matching import patmatch
 
-from . import __version__, Document
+from .snippets import Document
 from .config import Config
 from .cache import Cache, IndexID, Index
 from .table import tablify, COLUMNS
@@ -61,7 +62,10 @@ def main(argv: List[str] = sys.argv[1:]):
                                        * (any)               wildcard for any snippet"""),
     )
     parser.add_argument(
-        '-v', '--version', action='version', version='%(prog)s ' + __version__
+        '-v',
+        '--version',
+        action='version',
+        version='%(prog)s ' + version('sphinxnotes.any'),
     )
     parser.add_argument(
         '-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file'
