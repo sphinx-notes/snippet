@@ -1,10 +1,10 @@
 """
-sphinxnotes.ext.snippet
+sphinxnotes.snippet.ext
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Sphinx extension for sphinxnotes.snippet.
+Sphinx extension implementation, but the entrypoint is located at __init__.py.
 
-:copyright: Copyright 2021 Shengyu Zhang
+:copyright: Copyright 2024 Shengyu Zhang
 :license: BSD, see LICENSE for details.
 """
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 from .config import Config
-from . import Snippet, WithTitle, Document, Section
+from .snippets import Snippet, WithTitle, Document, Section
 from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor
@@ -206,15 +206,3 @@ def _format_modified_time(timestamp: float) -> str:
     """Return an RFC 3339 formatted string representing the given timestamp."""
     seconds, fraction = divmod(timestamp, 1)
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(seconds)) + f'.{fraction:.3f}'
-
-
-def setup(app: Sphinx):
-    app.add_builder(SnippetBuilder)
-
-    app.add_config_value('snippet_config', {}, '')
-    app.add_config_value('snippet_patterns', {'*': ['.*']}, '')
-
-    app.connect('config-inited', on_config_inited)
-    app.connect('env-get-outdated', on_env_get_outdated)
-    app.connect('doctree-resolved', on_doctree_resolved)
-    app.connect('build-finished', on_builder_finished)

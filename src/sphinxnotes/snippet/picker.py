@@ -15,7 +15,7 @@ from docutils import nodes
 
 from sphinx.util import logging
 
-from . import Snippet, Section, Document
+from .snippets import Snippet, Section, Document
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
