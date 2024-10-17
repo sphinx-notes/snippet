@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 
-from . import Snippet
+from .snippets import Snippet
 from .utils.pdict import PDict
 
 
