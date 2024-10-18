@@ -13,9 +13,10 @@ Command line entrypoint.
 # startup of the CLI tool.
 from __future__ import annotations
 import sys
+import os
+from os import path
 import argparse
 from typing import List, Iterable, Tuple
-from os import path
 from textwrap import dedent
 from shutil import get_terminal_size
 import posixpath
@@ -344,4 +345,13 @@ def _on_command_integration(args: argparse.Namespace):
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    # Prevent "[Errno 32] Broken pipe" error.
+    # https://docs.python.org/3/library/signal.html#note-on-sigpipe
+    try:
+        sys.exit(main())
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown.
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        sys.exit(1)  # Python exits with error code 1 on EPIPE
