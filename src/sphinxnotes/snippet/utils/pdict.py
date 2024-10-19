@@ -11,7 +11,7 @@ A customized persistent KV store for Sphinx project.
 from __future__ import annotations
 import os
 from os import path
-from typing import Dict, Optional, Iterable, TypeVar
+from typing import Iterator, TypeVar
 import pickle
 from collections.abc import MutableMapping
 from hashlib import sha1
@@ -21,16 +21,16 @@ V = TypeVar('V')
 
 
 # FIXME: PDict is buggy
-class PDict(MutableMapping):
+class PDict(MutableMapping[K, V]):
     """A persistent dict with event handlers."""
 
     dirname: str
     # The real in memory store of values
-    _store: Dict[K, V]
+    _store: dict[K, V | None]
     # Items that need write back to store
-    _dirty_items: Dict[K, V]
+    _dirty_items: dict[K, V]
     # Items that need purge from store
-    _orphan_items: Dict[K, V]
+    _orphan_items: dict[K, V]
 
     def __init__(self, dirname: str) -> None:
         self.dirname = dirname
@@ -38,7 +38,7 @@ class PDict(MutableMapping):
         self._dirty_items = {}
         self._orphan_items = {}
 
-    def __getitem__(self, key: K) -> Optional[V]:
+    def __getitem__(self, key: K) -> V:
         if key not in self._store:
             raise KeyError
         value = self._store[key]
@@ -65,7 +65,7 @@ class PDict(MutableMapping):
         else:
             self._orphan_items[key] = value
 
-    def __iter__(self) -> Iterable:
+    def __iter__(self) -> Iterator:
         return iter(self._store)
 
     def __len__(self) -> int:
@@ -142,4 +142,4 @@ class PDict(MutableMapping):
         pass
 
     def stringify(self, key: K, value: V) -> str:
-        return key
+        return str(key)

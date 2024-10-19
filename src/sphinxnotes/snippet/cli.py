@@ -16,7 +16,7 @@ import sys
 import os
 from os import path
 import argparse
-from typing import List, Iterable, Tuple
+from typing import Iterable
 from textwrap import dedent
 from shutil import get_terminal_size
 import posixpath
@@ -51,7 +51,7 @@ def get_integration_file(fn: str) -> str:
     return path.join(prefix, 'integration', fn)
 
 
-def main(argv: List[str] = sys.argv[1:]):
+def main(argv: list[str] = sys.argv[1:]):
     """Command line entrypoint."""
 
     parser = argparse.ArgumentParser(
@@ -237,7 +237,7 @@ def _on_command_stat(args: argparse.Namespace):
 
 def _filter_list_items(
     cache: Cache, tags: str, docname_glob: str
-) -> Iterable[Tuple[IndexID, Index]]:
+) -> Iterable[tuple[IndexID, Index]]:
     # NOTE: Importing is slow, do it on demand.
     from sphinx.util.matching import patmatch
 

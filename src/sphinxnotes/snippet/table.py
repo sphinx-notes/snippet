@@ -7,7 +7,7 @@ sphinxnotes.snippet.table
 """
 
 from __future__ import annotations
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from .cache import Index, IndexID
 from .utils import ellipsis
@@ -17,7 +17,7 @@ VISIABLE_COLUMNS = COLUMNS[1:4]
 COLUMN_DELIMITER = '  '
 
 
-def tablify(indexes: Iterable[Tuple[IndexID, Index]], width: int) -> Iterable[str]:
+def tablify(indexes: Iterable[tuple[IndexID, Index]], width: int) -> Iterable[str]:
     """Create a table from sequence of indices"""
 
     # Calcuate width

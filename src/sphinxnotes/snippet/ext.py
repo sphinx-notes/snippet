@@ -9,7 +9,7 @@ Sphinx extension implementation, but the entrypoint is located at __init__.py.
 """
 
 from __future__ import annotations
-from typing import List, Set, TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 import re
 from os import path
 import time
@@ -56,7 +56,7 @@ def extract_excerpt(s: Snippet) -> str:
     return ''
 
 
-def extract_keywords(s: Snippet) -> List[str]:
+def extract_keywords(s: Snippet) -> list[str]:
     keywords = [s.docname]
     # TODO: Deal with more snippet
     if isinstance(s, WithTitle) and s.title is not None:
@@ -65,8 +65,8 @@ def extract_keywords(s: Snippet) -> List[str]:
 
 
 def is_document_matched(
-    pats: Dict[str, List[str]], docname: str
-) -> Dict[str, List[str]]:
+    pats: dict[str, list[str]], docname: str
+) -> dict[str, list[str]]:
     """Whether the docname matched by given patterns pats"""
     new_pats = {}
     for tag, ps in pats.items():
@@ -76,7 +76,7 @@ def is_document_matched(
     return new_pats
 
 
-def is_snippet_matched(pats: Dict[str, List[str]], s: [Snippet], docname: str) -> bool:
+def is_snippet_matched(pats: dict[str, list[str]], s: [Snippet], docname: str) -> bool:
     """Whether the snippet's tags and docname matched by given patterns pats"""
     if '*' in pats:  # Wildcard
         for pat in pats['*']:
@@ -108,10 +108,10 @@ def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
 def on_env_get_outdated(
     app: Sphinx,
     env: BuildEnvironment,
-    added: Set[str],
-    changed: Set[str],
-    removed: Set[str],
-) -> List[str]:
+    added: set[str],
+    changed: set[str],
+    removed: set[str],
+) -> list[str]:
     # Remove purged indexes and snippetes from db
     for docname in removed:
         del cache[(app.config.project, docname)]
@@ -150,6 +150,7 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
         )
 
     cache_key = (app.config.project, docname)
+    assert cache is not None
     if len(doc) != 0:
         cache[cache_key] = doc
     elif cache_key in cache:

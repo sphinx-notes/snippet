@@ -9,7 +9,7 @@ Utils for ellipsis string.
 """
 
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from docutils import nodes
 
@@ -19,11 +19,11 @@ if TYPE_CHECKING:
 
 def resolve(
     env: BuilderEnviornment, docname: str, node: nodes.Node
-) -> List[nodes.title]:
+) -> list[nodes.title]:
     return resolve_section(node) + resolve_document(env, docname)
 
 
-def resolve_section(node: nodes.section) -> List[nodes.title]:
+def resolve_section(node: nodes.section) -> list[nodes.title]:
     # FIXME: doc is None
     titlenodes = []
     while node:
@@ -33,7 +33,7 @@ def resolve_section(node: nodes.section) -> List[nodes.title]:
     return titlenodes
 
 
-def resolve_document(env: BuilderEnviornment, docname: str) -> List[nodes.title]:
+def resolve_document(env: BuilderEnviornment, docname: str) -> list[nodes.title]:
     """
     .. note:: Title of document itself does not included in the returned list
     """

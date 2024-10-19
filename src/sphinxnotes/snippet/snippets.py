@@ -9,7 +9,7 @@ Definitions of various snippets.
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import itertools
 from os import path
 
@@ -36,16 +36,16 @@ class Snippet(object):
 
     #: Line number range of snippet, in the source file which is left closed
     #: and right opened.
-    lineno: Tuple[int, int]
+    lineno: tuple[int, int]
 
     #: The original reStructuredText of snippet
-    rst: List[str]
+    rst: list[str]
 
     #: The possible identifier key of snippet, which is picked from nodes'
     #: (or nodes' parent's) `ids attr`_.
     #:
     #: .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
-    refid: Optional[str]
+    refid: str | None
 
     def __init__(self, *nodes: nodes.Node) -> None:
         assert len(nodes) != 0
@@ -94,26 +94,17 @@ class Text(Snippet):
         self.text = node.astext()
 
 
-class CodeBlock(Text):
+class Code(Text):
     #: Language of code block
     language: str
     #: Caption of code block
-    caption: Optional[str]
+    caption: str | None
 
     def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
         super().__init__(node)
         self.language = node['language']
         self.caption = node.get('caption')
-
-
-class WithCodeBlock(object):
-    code_blocks: List[CodeBlock]
-
-    def __init__(self, nodes: nodes.Nodes) -> None:
-        self.code_blocks = []
-        for n in nodes.traverse(nodes.literal_block):
-            self.code_blocks.append(self.CodeBlock(n))
 
 
 class Title(Text):
@@ -123,7 +114,7 @@ class Title(Text):
 
 
 class WithTitle(object):
-    title: Optional[Title]
+    title: Title | None
 
     def __init__(self, node: nodes.Node) -> None:
         title_node = node.next_node(nodes.title)
@@ -178,7 +169,7 @@ def _line_of_start(node: nodes.Node) -> int:
     return node.line
 
 
-def _line_of_end(node: nodes.Node) -> Optional[int]:
+def _line_of_end(node: nodes.Node) -> int | None:
     next_node = node.next_node(descend=False, siblings=True, ascend=True)
     while next_node:
         if next_node.line:

@@ -58,7 +58,7 @@ def pick(
 
 
 class SectionPicker(nodes.SparseNodeVisitor):
-    """Node visitor for picking code snippet from document."""
+    """Node visitor for picking snippets from document."""
 
     #: Constant list of unsupported languages (:class:`pygments.lexers.Lexer`)
     UNSUPPORTED_LANGUAGES: list[str] = ['default']
