@@ -38,15 +38,20 @@ class Snippet(object):
     # :rst:role:`doc`.
     docname: str
 
-    #: Absolute path of the source file.
+    #: Absolute path to the source file.
     file: str
 
-    #: Line number range of snippet, in the source file which is left closed
-    #: and right opened.
+    #: Line number range of source file (:attr:`Snippet.file`),
+    #: left closed and right opened.
     lineno: tuple[int, int]
 
-    #: The original reStructuredText of snippet
-    rst: list[str]
+    #: The source text read from source file (:attr:`Snippet.file`),
+    # in Markdown or reStructuredText.
+    source: list[str]
+
+    #: Text representation of the snippet, usually generated form
+    # :meth:`nodes.Element.astext`.
+    text: list[str]
 
     #: The possible identifier key of snippet, which is picked from nodes'
     #: (or nodes' parent's) `ids attr`_.
@@ -57,7 +62,7 @@ class Snippet(object):
     def __init__(self, *nodes: nodes.Element) -> None:
         assert len(nodes) != 0
 
-        env: BuildEnvironment = nodes[0].document.settings.env
+        env: BuildEnvironment = nodes[0].document.settings.env  # type: ignore
 
         file, docname = None, None
         for node in nodes:
@@ -66,7 +71,7 @@ class Snippet(object):
                 docname = env.path2doc(file)
                 break
         if not file or not docname:
-            raise ValueError('Missing source file or docname')
+            raise ValueError(f'Nodes {nodes} lacks source file or docname')
         self.file = file
         self.docname = docname
 
@@ -78,13 +83,18 @@ class Snippet(object):
             lineno[1] = max(lineno[1], _line_of_end(node))
         self.lineno = (lineno[0], lineno[1])
 
-        lines = []
+        source = []
         with open(self.file, 'r') as f:
             start = self.lineno[0] - 1
             stop = self.lineno[1] - 1
             for line in itertools.islice(f, start, stop):
-                lines.append(line.strip('\n'))
-        self.rst = lines
+                source.append(line.strip('\n'))
+        self.source = source
+
+        text = []
+        for node in nodes:
+            text.extend(node.astext().split('\n'))
+        self.text = text
 
         # Find exactly one ID attr in nodes
         self.refid = None
@@ -102,19 +112,21 @@ class Snippet(object):
 
 
 class Code(Snippet):
+    ALLOWED_LANGS = ['console']
     #: Language of code block
     lang: str
     #: Description of code block, usually the text of preceding paragraph
     desc: str
-    #: The code itself.
-    code: str
 
     def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
         super().__init__(node)
 
         self.lang = node['language']
-        self.code = node.astext()
+        if self.lang not in self.ALLOWED_LANGS:
+            raise ValueError(
+                f'Language of node {node} {self.lang} not in allowed language list {self.ALLOWED_LANGS}',
+            )
 
         self.desc = ''
         if isinstance(para := node.previous_sibling(), nodes.paragraph):
@@ -131,7 +143,10 @@ class Code(Snippet):
             # In this case, the preceding paragraph "Foo:" is the descritpion
             # of the code block. This convention also applies to the code,
             # code-block, sourcecode directive.
-            self.desc += para.astext().replace('\n', ' ')
+
+            # For better display, the trailing colon is removed.
+            # TODO: https://en.wikipedia.org/wiki/Colon_(punctuation)#Computing
+            self.desc += para.astext().replace('\n', ' ').rstrip(':：：︁︓﹕')
         if caption := node.get('caption'):
             # Use caption as descritpion.
             # In sphinx, all of code-block, sourcecode and code have caption option.
@@ -147,10 +162,9 @@ class WithTitle(object):
     title: str
 
     def __init__(self, node: nodes.Element) -> None:
-        if title := node.next_node(nodes.title):
-            self.title = title.astext()
-        else:
+        if not (title := node.next_node(nodes.title)):
             raise ValueError(f'Node f{node} lacks title')
+        self.title = title.astext()
 
 
 class Section(Snippet, WithTitle):

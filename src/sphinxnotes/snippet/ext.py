@@ -56,7 +56,7 @@ def extract_excerpt(s: Snippet) -> str:
     elif isinstance(s, Section) and s.title is not None:
         return '[' + s.title + ']'
     elif isinstance(s, Code):
-        return s.lang + '`' + s.desc + '`'
+        return '`' + (s.lang + ':').ljust(8, ' ') + ' ' + s.desc + '`'
     return ''
 
 

@@ -6,7 +6,7 @@
 # :Version: 20240828
 
 function snippet_view() {
-  selection=$(snippet_list --tags ds)
+  selection=$(snippet_list --tags c)
   [ -z "$selection" ] && return
 
   # Make sure we have $PAGER
