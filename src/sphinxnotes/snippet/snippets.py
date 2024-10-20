@@ -120,7 +120,6 @@ class Code(Snippet):
             # of the code block. This convention also applies to the code,
             # code-block, sourcecode directive.
             self.desc = para
-            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             super().__init__(para, node)
         elif caption := node.get('caption'):
             # Use caption as descritpion.
