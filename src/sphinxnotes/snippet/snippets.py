@@ -94,7 +94,7 @@ class Text(Snippet):
         self.text = node.astext()
 
 
-class Code(Text):
+class Code(Snippet):
     #: Language of code block
     lang: str
     #: Description of code block, usually the text of preceding paragraph
@@ -102,7 +102,6 @@ class Code(Text):
 
     def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
-        super().__init__(node)
 
         self.lang = node['language']
 
@@ -121,11 +120,14 @@ class Code(Text):
             # of the code block. This convention also applies to the code,
             # code-block, sourcecode directive.
             self.desc = para
+            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            super().__init__(para, node)
         elif caption := node.get('caption'):
             # Use caption as descritpion.
             # In sphinx, code-block, sourcecode and code may have caption option.
             # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-code-block
             self.desc = caption
+            super().__init__(node)
         else:
             raise ValueError('Lack of description: preceding paragraph or caption')
 

@@ -56,8 +56,8 @@ def extract_excerpt(s: Snippet) -> str:
     elif isinstance(s, Section) and s.title is not None:
         return '[' + s.title.text + ']'
     elif isinstance(s, Code):
-        excerpt = s.desc.astext() if s.desc else s.caption or ''  # FIXME
-        return '`' + s.language + ':' + excerpt + '`'
+        excerpt = s.desc.astext() if isinstance(s.desc, nodes.paragraph) else s.desc
+        return '`' + s.lang + ':' + excerpt + '`'
     return ''
 
 
@@ -66,10 +66,10 @@ def extract_keywords(s: Snippet) -> list[str]:
     if isinstance(s, WithTitle) and s.title is not None:
         keywords.extend(extractor.extract(s.title.text, strip_stopwords=False))
     if isinstance(s, Code):
-        if s.desc:
+        if isinstance(s.desc, nodes.paragraph):
             keywords.extend(extractor.extract(s.desc.astext(), strip_stopwords=False))
-        if s.caption:
-            keywords.extend(extractor.extract(s.caption, strip_stopwords=False))
+        else:
+            keywords.extend(extractor.extract(s.desc, strip_stopwords=False))
     return keywords
 
 
