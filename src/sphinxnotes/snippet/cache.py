@@ -93,7 +93,7 @@ class Cache(PDict[DocID, list[Item]]):
     def get_by_index_id(self, key: IndexID) -> Item | None:
         """Like get(), but use IndexID as key."""
         doc_id, item_index = self.index_id_to_doc_id.get(key, (None, None))
-        if not doc_id or not item_index:
+        if not doc_id or item_index is None:
             return None
         return self[doc_id][item_index]
 

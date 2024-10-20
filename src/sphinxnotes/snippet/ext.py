@@ -52,24 +52,20 @@ def extract_tags(s: Snippet) -> str:
 
 def extract_excerpt(s: Snippet) -> str:
     if isinstance(s, Document) and s.title is not None:
-        return '<' + s.title.text + '>'
+        return '<' + s.title + '>'
     elif isinstance(s, Section) and s.title is not None:
-        return '[' + s.title.text + ']'
+        return '[' + s.title + ']'
     elif isinstance(s, Code):
-        excerpt = s.desc.astext() if isinstance(s.desc, nodes.paragraph) else s.desc
-        return '`' + s.lang + ':' + excerpt + '`'
+        return s.lang + '`' + s.desc + '`'
     return ''
 
 
 def extract_keywords(s: Snippet) -> list[str]:
     keywords = [s.docname]
     if isinstance(s, WithTitle) and s.title is not None:
-        keywords.extend(extractor.extract(s.title.text, strip_stopwords=False))
+        keywords.extend(extractor.extract(s.title, strip_stopwords=False))
     if isinstance(s, Code):
-        if isinstance(s.desc, nodes.paragraph):
-            keywords.extend(extractor.extract(s.desc.astext(), strip_stopwords=False))
-        else:
-            keywords.extend(extractor.extract(s.desc, strip_stopwords=False))
+        keywords.extend(extractor.extract(s.desc, strip_stopwords=False))
     return keywords
 
 

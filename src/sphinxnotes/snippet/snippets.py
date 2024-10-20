@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import itertools
 from os import path
+import sys
 
 from docutils import nodes
 
@@ -22,9 +23,15 @@ if TYPE_CHECKING:
 class Snippet(object):
     """
     Snippet is structured fragments extracted from a single Sphinx document
-    (can also be said to be a reStructuredText file).
+    (usually, also a single reStructuredText file).
 
     :param nodes: nodes of doctree that make up this snippet.
+
+    .. warning::
+
+       Snippet will be persisted to disk via pickle, to keep it simple,
+       it CAN NOT holds reference to any doctree ``nodes``
+       (or even any non-std module).
     """
 
     #: docname where the snippet is located, can be referenced by
@@ -47,20 +54,29 @@ class Snippet(object):
     #: .. _ids attr: https://docutils.sourceforge.io/docs/ref/doctree.html#ids
     refid: str | None
 
-    def __init__(self, *nodes: nodes.Node) -> None:
+    def __init__(self, *nodes: nodes.Element) -> None:
         assert len(nodes) != 0
 
         env: BuildEnvironment = nodes[0].document.settings.env
-        self.file = nodes[0].source
-        self.docname = env.path2doc(self.file)
 
-        lineno = [float('inf'), -float('inf')]
+        file, docname = None, None
+        for node in nodes:
+            if (src := nodes[0].source) and path.exists(src):
+                file = src
+                docname = env.path2doc(file)
+                break
+        if not file or not docname:
+            raise ValueError('Missing source file or docname')
+        self.file = file
+        self.docname = docname
+
+        lineno = [sys.maxsize, -sys.maxsize]
         for node in nodes:
             if not node.line:
                 continue  # Skip node that have None line, I dont know why
             lineno[0] = min(lineno[0], _line_of_start(node))
             lineno[1] = max(lineno[1], _line_of_end(node))
-        self.lineno = lineno
+        self.lineno = (lineno[0], lineno[1])
 
         lines = []
         with open(self.file, 'r') as f:
@@ -85,26 +101,22 @@ class Snippet(object):
                     break
 
 
-class Text(Snippet):
-    #: Text of snippet
-    text: str
-
-    def __init__(self, node: nodes.Node) -> None:
-        super().__init__(node)
-        self.text = node.astext()
-
-
 class Code(Snippet):
     #: Language of code block
     lang: str
     #: Description of code block, usually the text of preceding paragraph
-    desc: nodes.paragraph | str
+    desc: str
+    #: The code itself.
+    code: str
 
     def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
+        super().__init__(node)
 
         self.lang = node['language']
+        self.code = node.astext()
 
+        self.desc = ''
         if isinstance(para := node.previous_sibling(), nodes.paragraph):
             # Use the preceding paragraph as descritpion.
             #
@@ -119,30 +131,26 @@ class Code(Snippet):
             # In this case, the preceding paragraph "Foo:" is the descritpion
             # of the code block. This convention also applies to the code,
             # code-block, sourcecode directive.
-            self.desc = para
-            super().__init__(para, node)
-        elif caption := node.get('caption'):
+            self.desc += para.astext().replace('\n', ' ')
+        if caption := node.get('caption'):
             # Use caption as descritpion.
-            # In sphinx, code-block, sourcecode and code may have caption option.
+            # In sphinx, all of code-block, sourcecode and code have caption option.
             # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-code-block
-            self.desc = caption
-            super().__init__(node)
-        else:
-            raise ValueError('Lack of description: preceding paragraph or caption')
-
-
-class Title(Text):
-    def __init__(self, node: nodes.title) -> None:
-        assert isinstance(node, nodes.title)
-        super().__init__(node)
+            self.desc += caption
+        if not self.desc:
+            raise ValueError(
+                f'Node f{node} lacks description: a preceding paragraph or a caption'
+            )
 
 
 class WithTitle(object):
-    title: Title | None
+    title: str
 
-    def __init__(self, node: nodes.Node) -> None:
-        title_node = node.next_node(nodes.title)
-        self.title = Title(title_node) if title_node else None
+    def __init__(self, node: nodes.Element) -> None:
+        if title := node.next_node(nodes.title):
+            self.title = title.astext()
+        else:
+            raise ValueError(f'Node f{node} lacks title')
 
 
 class Section(Snippet, WithTitle):
@@ -193,7 +201,7 @@ def _line_of_start(node: nodes.Node) -> int:
     return node.line
 
 
-def _line_of_end(node: nodes.Node) -> int | None:
+def _line_of_end(node: nodes.Node) -> int:
     next_node = node.next_node(descend=False, siblings=True, ascend=True)
     while next_node:
         if next_node.line:
@@ -208,7 +216,7 @@ def _line_of_end(node: nodes.Node) -> int | None:
             siblings=True,
         )
     # No line found, return the max line of source file
-    if node.source:
+    if node.source and path.exists(node.source):
         with open(node.source) as f:
-            return sum(1 for line in f)
+            return sum(1 for _ in f)
     raise AttributeError('None source attr of node %s' % node)

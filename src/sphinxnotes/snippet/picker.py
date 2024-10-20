@@ -25,19 +25,22 @@ logger = logging.getLogger(__name__)
 
 def pick(
     app: Sphinx, doctree: nodes.document, docname: str
-) -> list[tuple[Snippet, nodes.section]]:
+) -> list[tuple[Snippet, nodes.Element]]:
     """
-    Pick snippets from document, return a list of snippet and the section
-    it belongs to.
+    Pick snippets from document, return a list of snippet and the related node.
+
+    As :class:`Snippet` can not hold any refs to doctree, we additionly returns
+    the related nodes here. To ensure the caller can back reference to original
+    document node and do more things (e.g. generate title path).
     """
     # FIXME: Why doctree.source is always None?
     if not doctree.attributes.get('source'):
-        logger.debug('Skipped document without source')
+        logger.debug('Skip document without source')
         return []
 
     metadata = app.env.metadata.get(docname, {})
     if 'no-search' in metadata or 'nosearch' in metadata:
-        logger.debug('Skipped document with nosearch metadata')
+        logger.debug('Skip document with nosearch metadata')
         return []
 
     # Walk doctree and pick snippets.
@@ -51,7 +54,7 @@ class SnippetPicker(nodes.SparseNodeVisitor):
     """Node visitor for picking snippets from document."""
 
     #: List of picked snippets and the section it belongs to
-    snippets: list[tuple[Snippet, nodes.section]]
+    snippets: list[tuple[Snippet, nodes.Element]]
 
     #: Stack of nested sections.
     _sections: list[nodes.section]
@@ -71,7 +74,7 @@ class SnippetPicker(nodes.SparseNodeVisitor):
         except ValueError as e:
             logger.debug(f'skip {node}: {e}')
             raise nodes.SkipNode
-        self.snippets.append((code, self._sections[-1]))
+        self.snippets.append((code, node))
 
     def visit_section(self, node: nodes.section) -> None:
         self._sections.append(node)
