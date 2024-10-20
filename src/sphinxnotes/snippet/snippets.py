@@ -96,15 +96,38 @@ class Text(Snippet):
 
 class Code(Text):
     #: Language of code block
-    language: str
-    #: Caption of code block
-    caption: str | None
+    lang: str
+    #: Description of code block, usually the text of preceding paragraph
+    desc: nodes.paragraph | str
 
     def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
         super().__init__(node)
-        self.language = node['language']
-        self.caption = node.get('caption')
+
+        self.lang = node['language']
+
+        if isinstance(para := node.previous_sibling(), nodes.paragraph):
+            # Use the preceding paragraph as descritpion.
+            #
+            # We usually write some descritpions before a code block, for example,
+            # The ``::`` syntax is a common way to create code block::
+            #
+            #   | Foo::       | <paragraph>
+            #   |             |     Foo:
+            #   |     Bar     | <literal_block xml:space="preserve">
+            #   |             |     Bar
+            #
+            # In this case, the preceding paragraph "Foo:" is the descritpion
+            # of the code block. This convention also applies to the code,
+            # code-block, sourcecode directive.
+            self.desc = para
+        elif caption := node.get('caption'):
+            # Use caption as descritpion.
+            # In sphinx, code-block, sourcecode and code may have caption option.
+            # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-code-block
+            self.desc = caption
+        else:
+            raise ValueError('Lack of description: preceding paragraph or caption')
 
 
 class Title(Text):

@@ -15,7 +15,7 @@ from docutils import nodes
 
 from sphinx.util import logging
 
-from .snippets import Snippet, Section, Document
+from .snippets import Snippet, Section, Document, Code
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -40,66 +40,53 @@ def pick(
         logger.debug('Skipped document with nosearch metadata')
         return []
 
-    snippets: list[tuple[Snippet, nodes.section]] = []
+    # Walk doctree and pick snippets.
+    picker = SnippetPicker(doctree)
+    doctree.walkabout(picker)
 
-    # Pick document
-    toplevel_section = doctree.next_node(nodes.section)
-    if toplevel_section:
-        snippets.append((Document(doctree), toplevel_section))
-    else:
-        logger.warning('can not pick document without child section: %s', doctree)
-
-    # Pick sections
-    section_picker = SectionPicker(doctree)
-    doctree.walkabout(section_picker)
-    snippets.extend(section_picker.sections)
-
-    return snippets
+    return picker.snippets
 
 
-class SectionPicker(nodes.SparseNodeVisitor):
+class SnippetPicker(nodes.SparseNodeVisitor):
     """Node visitor for picking snippets from document."""
 
-    #: Constant list of unsupported languages (:class:`pygments.lexers.Lexer`)
-    UNSUPPORTED_LANGUAGES: list[str] = ['default']
+    #: List of picked snippets and the section it belongs to
+    snippets: list[tuple[Snippet, nodes.section]]
 
-    #: List of picked section snippets and the section it belongs to
-    sections: list[tuple[Section, nodes.section]]
+    #: Stack of nested sections.
+    _sections: list[nodes.section]
 
-    _section_has_code_block: bool
-    _section_level: int
-
-    def __init__(self, document: nodes.document) -> None:
-        super().__init__(document)
-        self.sections = []
-        self._section_has_code_block = False
-        self._section_level = 0
+    def __init__(self, doctree: nodes.document) -> None:
+        super().__init__(doctree)
+        self.snippets = []
+        self._sections = []
 
     ###################
     # Visitor methods #
     ###################
 
     def visit_literal_block(self, node: nodes.literal_block) -> None:
-        if node['language'] in self.UNSUPPORTED_LANGUAGES:
+        try:
+            code = Code(node)
+        except ValueError as e:
+            logger.debug(f'skip {node}: {e}')
             raise nodes.SkipNode
-        self._has_code_block = True
+        self.snippets.append((code, self._sections[-1]))
 
     def visit_section(self, node: nodes.section) -> None:
-        self._section_level += 1
+        self._sections.append(node)
 
     def depart_section(self, node: nodes.section) -> None:
-        self._section_level -= 1
-        self._has_code_block = False
+        section = self._sections.pop()
+        assert section == node
 
         # Skip non-leaf section without content
         if self._is_empty_non_leaf_section(node):
             return
-        # Skip toplevel section, we generate :class:`Document` for it
-        if self._section_level == 0:
-            return
-
-        # TODO: code block
-        self.sections.append((Section(node), node))
+        if len(self._sections) == 0:
+            self.snippets.append((Document(self.document), node))
+        else:
+            self.snippets.append((Section(node), node))
 
     def unknown_visit(self, node: nodes.Node) -> None:
         pass  # Ignore any unknown node

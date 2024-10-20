@@ -60,9 +60,9 @@ def main(argv: list[str] = sys.argv[1:]):
         formatter_class=HelpFormatter,
         epilog=dedent("""
                                      snippet tags:
-                                       d (document)          a reST document 
-                                       s (section)           a reST section
-                                       c (code)              snippet with code blocks
+                                       d (document)          a document
+                                       s (section)           a section
+                                       c (code)              a code block
                                        * (any)               wildcard for any snippet"""),
     )
     parser.add_argument(
