@@ -6,7 +6,7 @@
 # :Version: 20240828
 
 function snippet_view() {
-  selection=$(snippet_list --tags c)
+  selection=$(snippet_list)
   [ -z "$selection" ] && return
 
   # Make sure we have $PAGER
@@ -18,7 +18,7 @@ function snippet_view() {
     fi
   fi
 
-  echo "$SNIPPET get --text $selection | $PAGER"
+  echo "$SNIPPET get --src $selection | $PAGER"
 }
 
 function snippet_edit() {

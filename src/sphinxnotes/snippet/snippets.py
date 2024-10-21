@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import itertools
 from os import path
 import sys
+from pygments.lexers.shell import BashSessionLexer
 
 from docutils import nodes
 
@@ -112,7 +113,6 @@ class Snippet(object):
 
 
 class Code(Snippet):
-    ALLOWED_LANGS = ['console']
     #: Language of code block
     lang: str
     #: Description of code block, usually the text of preceding paragraph
@@ -120,42 +120,46 @@ class Code(Snippet):
 
     def __init__(self, node: nodes.literal_block) -> None:
         assert isinstance(node, nodes.literal_block)
-        super().__init__(node)
 
         self.lang = node['language']
-        if self.lang not in self.ALLOWED_LANGS:
+        if self.lang not in BashSessionLexer.aliases:  # TODO: support more language
             raise ValueError(
-                f'Language of node {node} {self.lang} not in allowed language list {self.ALLOWED_LANGS}',
+                f'Language {self.lang} is not supported',
             )
 
         self.desc = ''
+        # Use the preceding paragraph as descritpion. We usually write some
+        # descritpions before a code block. For example, The ``::`` syntax is
+        # a common way to create code block::
+        #
+        #   | Foo::       | <paragraph>
+        #   |             |     Foo:
+        #   |     Bar     | <literal_block xml:space="preserve">
+        #   |             |     Bar
+        #
+        # In this case, the paragraph "Foo:" is the descritpion of the code block.
+        # This convention also applies to the code, code-block, sourcecode directive.
         if isinstance(para := node.previous_sibling(), nodes.paragraph):
-            # Use the preceding paragraph as descritpion.
-            #
-            # We usually write some descritpions before a code block, for example,
-            # The ``::`` syntax is a common way to create code block::
-            #
-            #   | Foo::       | <paragraph>
-            #   |             |     Foo:
-            #   |     Bar     | <literal_block xml:space="preserve">
-            #   |             |     Bar
-            #
-            # In this case, the preceding paragraph "Foo:" is the descritpion
-            # of the code block. This convention also applies to the code,
-            # code-block, sourcecode directive.
-
             # For better display, the trailing colon is removed.
             # TODO: https://en.wikipedia.org/wiki/Colon_(punctuation)#Computing
             self.desc += para.astext().replace('\n', ' ').rstrip(':：：︁︓﹕')
         if caption := node.get('caption'):
             # Use caption as descritpion.
-            # In sphinx, all of code-block, sourcecode and code have caption option.
+            # All of code-block, sourcecode and code directives have caption option.
             # https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-code-block
             self.desc += caption
         if not self.desc:
             raise ValueError(
                 f'Node f{node} lacks description: a preceding paragraph or a caption'
             )
+
+        if isinstance(para, nodes.paragraph):
+            # If we have a paragraph preceding code block, include it.
+            super().__init__(para, node)
+            # Fixup text field, it should be pure code.
+            self.text = node.astext().split('\n')
+        else:
+            super().__init__(node)
 
 
 class WithTitle(object):
