@@ -69,34 +69,14 @@ def extract_keywords(s: Snippet) -> list[str]:
     return keywords
 
 
-def is_document_matched(
-    pats: dict[str, list[str]], docname: str
-) -> dict[str, list[str]]:
-    """Whether the docname matched by given patterns pats"""
-    new_pats = {}
-    for tag, ps in pats.items():
+def _get_document_allowed_tags(pats: dict[str, list[str]], docname: str) -> str:
+    """Return the tags of snippets that are allowed to be picked from the document."""
+    allowed_tags = ''
+    for tags, ps in pats.items():
         for pat in ps:
             if re.match(pat, docname):
-                new_pats.setdefault(tag, []).append(pat)
-    return new_pats
-
-
-def is_snippet_matched(pats: dict[str, list[str]], s: Snippet, docname: str) -> bool:
-    """Whether the snippet's tags and docname matched by given patterns pats"""
-    if '*' in pats:  # Wildcard
-        for pat in pats['*']:
-            if re.match(pat, docname):
-                return True
-
-    not_in_pats = True
-    for k in extract_tags(s):
-        if k not in pats:
-            continue
-        not_in_pats = False
-        for pat in pats[k]:
-            if re.match(pat, docname):
-                return True
-    return not_in_pats
+                allowed_tags += tags
+    return allowed_tags
 
 
 def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
@@ -132,15 +112,16 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
         )
         return
 
-    pats = is_document_matched(app.config.snippet_patterns, docname)
-    if len(pats) == 0:
-        logger.debug('[snippet] skip picking because %s is not matched', docname)
+    allowed_tags = _get_document_allowed_tags(app.config.snippet_patterns, docname)
+    if not allowed_tags:
+        logger.debug('[snippet] skip picking: no tag allowed for document %s', docname)
         return
 
     doc = []
     snippets = pick(app, doctree, docname)
     for s, n in snippets:
-        if not is_snippet_matched(pats, s, docname):
+        # FIXME: Better filter logic.
+        if extract_tags(s) not in allowed_tags:
             continue
         tpath = [x.astext() for x in titlepath.resolve(app.env, docname, n)]
         if isinstance(s, Section):
