@@ -60,9 +60,9 @@ def main(argv: list[str] = sys.argv[1:]):
         formatter_class=HelpFormatter,
         epilog=dedent("""
                                      snippet tags:
-                                       d (document)          a reST document 
-                                       s (section)           a reST section
-                                       c (code)              snippet with code blocks
+                                       d (document)          a document
+                                       s (section)           a section
+                                       c (code)              a code block
                                        * (any)               wildcard for any snippet"""),
     )
     parser.add_argument(
@@ -140,7 +140,12 @@ def main(argv: list[str] = sys.argv[1:]):
         '--text',
         '-t',
         action='store_true',
-        help='get source reStructuredText of snippet',
+        help='get text representation of snippet',
+    )
+    getparser.add_argument(
+        '--src',
+        action='store_true',
+        help='get source text of snippet',
     )
     getparser.add_argument(
         '--url',
@@ -273,7 +278,9 @@ def _on_command_get(args: argparse.Namespace):
             p('no such index ID', file=sys.stderr)
             sys.exit(1)
         if args.text:
-            p('\n'.join(item.snippet.rst))
+            p('\n'.join(item.snippet.text))
+        if args.src:
+            p('\n'.join(item.snippet.source))
         if args.docname:
             p(item.snippet.docname)
         if args.file:
