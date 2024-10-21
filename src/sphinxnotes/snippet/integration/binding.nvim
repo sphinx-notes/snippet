@@ -11,7 +11,7 @@ function! g:SphinxNotesSnippetListAndView()
   function! s:CallView(selection)
     call g:SphinxNotesSnippetView(s:SplitID(a:selection))
   endfunction
-  call g:SphinxNotesSnippetList(function('s:CallView'), 'ds')
+  call g:SphinxNotesSnippetList(function('s:CallView'), '*')
 endfunction
 
 " https://github.com/anhmv/vim-float-window/blob/master/plugin/float-window.vim
@@ -40,7 +40,7 @@ function! g:SphinxNotesSnippetView(id)
   " Press enter to return
   nmap <buffer> <CR> :call nvim_win_close(g:sphinx_notes_snippet_win, v:true)<CR>
 
-  let cmd = [s:snippet, 'get', '--text', a:id]
+  let cmd = [s:snippet, 'get', '--src', a:id]
   call append(line('$'), ['.. hint:: Press <ENTER> to return'])
   execute '$read !' . '..'
   execute '$read !' . join(cmd, ' ')

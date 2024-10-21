@@ -9,12 +9,11 @@ Utils for ellipsis string.
 """
 
 from __future__ import annotations
-from typing import List
 from wcwidth import wcswidth
 
 
 def ellipsis(
-    text: str, width: int, ellipsis_sym: str = '..', blank_sym: str = None
+    text: str, width: int, ellipsis_sym: str = '..', blank_sym: str | None = None
 ) -> str:
     text_width = wcswidth(text)
     if text_width <= width:
@@ -34,7 +33,7 @@ def ellipsis(
 
 
 def join(
-    lst: List[str],
+    lst: list[str],
     total_width: int,
     title_width: int,
     separate_sym: str = '/',
