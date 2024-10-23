@@ -38,27 +38,8 @@ function! g:SphinxNotesSnippetListAndUrl()
   call g:SphinxNotesSnippetList(function('s:CallUrl'), 'ds')
 endfunction
 
-function! g:SphinxNotesSnippetInput(id, item)
-  let content = system(join([s:snippet, 'get', '--' . a:item, a:id, '2>/dev/null'], ' '))
-  let content = substitute(content, '\n\+$', '', '') " skip trailing \n
-  if a:item == 'docname' 
-    " Create doc reference.
-    let content = ':doc:`/' . content . '`'
-  endif
-  execute 'normal! i' . content
-endfunction
-
-function! g:SphinxNotesSnippetListAndInputDocname()
-  function! s:InputDocname(selection)
-    call g:SphinxNotesSnippetInput(s:SplitID(a:selection), 'docname')
-  endfunction
-  call g:SphinxNotesSnippetList(function('s:InputDocname'), 'd')
-endfunction
-
 nmap <C-k>e :call g:SphinxNotesSnippetListAndEdit()<CR>
 nmap <C-k>u :call g:SphinxNotesSnippetListAndUrl()<CR>
-nmap <C-k>d :call g:SphinxNotesSnippetListAndInputDocname()<CR>
-" FIXME: can't return to insert mode even use a/startinsert!/C-o
-imap <C-k>d <C-o>:call g:SphinxNotesSnippetListAndInputDocname()<CR>
+nmap <C-k>i :call g:SphinxNotesSnippetListAndInput()<CR>
 
 " vim: set shiftwidth=2:
