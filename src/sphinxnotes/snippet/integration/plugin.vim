@@ -11,35 +11,39 @@ let s:snippet = 'snippet'
 let s:width = 0.9
 let s:height = 0.6
 
-" TODO: remove
-function! s:SplitID(row)
-  return split(a:row, ' ')[0]
-endfunction
-
-" Use fzf to list all snippets, callback with arguments (selection).
-function! g:SphinxNotesSnippetList(callback, tags)
+" Use fzf to list all snippets, callback with argument id.
+function g:SphinxNotesSnippetList(tags, callback)
   let cmd = [s:snippet, 'list',
         \ '--tags', a:tags,
         \ '--width', float2nr(&columns * s:width) - 2,
         \ ]
+
+  " Use closure keyword so that inner function can access outer one's
+  " localvars (l:) and arguments (a:).
+  " https://vi.stackexchange.com/a/21807
+  function! List_CB(selection) closure
+      let id = split(a:selection, ' ')[0]
+      call a:callback(id)
+  endfunction
+
   " https://github.com/junegunn/fzf/blob/master/README-VIM.md#fzfrun
   call fzf#run({
         \ 'source': join(cmd, ' '),
-        \ 'sink': a:callback,
+        \ 'sink': function('List_CB'),
         \ 'options': ['--with-nth', '2..', '--no-hscroll', '--header-lines', '1'],
         \ 'window': {'width': s:width, 'height': s:height},
         \ })
 endfunction
 
 " Return the attribute value of specific snippet.
-function! g:SphinxNotesSnippetGet(id, attr)
+function g:SphinxNotesSnippetGet(id, attr)
     let cmd = [s:snippet, 'get', a:id, '--' . a:attr]
     return systemlist(join(cmd, ' '))
 endfunction
 
 " Use fzf to list all attr of specific snippet,
 " callback with arguments (attr_name, attr_value).
-function! g:SphinxNotesSnippetListSnippetAttrs(id, callback)
+function g:SphinxNotesSnippetListSnippetAttrs(id, callback)
     " Display attr -> Identify attr (also used as CLI option)
     let attrs = {
                 \ 'Source':             'src',
@@ -55,20 +59,17 @@ function! g:SphinxNotesSnippetListSnippetAttrs(id, callback)
         call add(table, attrs[name] . delim . name)
     endfor
 
-    " Local scope -> script scope, so vars can be access from inner function.
-    let s:id_for_list_snippet_attrs  = a:id
-    let s:cb_for_list_snippet_attrs = a:callback
-    function! s:SphinxNotesSnippetListSnippetAttrs_CB(selection)
+    function! ListSnippetAttrs_CB(selection) closure
         let opt = split(a:selection, ' ')[0]
-        let val = g:SphinxNotesSnippetGet(s:id_for_list_snippet_attrs, opt)
-        call s:cb_for_list_snippet_attrs(opt, val) " finally call user's cb
+        let val = g:SphinxNotesSnippetGet(a:id, opt)
+        call a:callback(opt, val) " finally call user's cb
     endfunction
 
     let preview_cmd = [s:snippet, 'get', a:id, '--$(echo {} | cut -d " " -f1)']
     let info_cmd = ['echo', 'Index ID:', a:id]
     call fzf#run({
                 \ 'source': table,
-                \ 'sink': function('s:SphinxNotesSnippetListSnippetAttrs_CB'),
+                \ 'sink': function('ListSnippetAttrs_CB'),
                 \ 'options': [
                 \               '--header-lines', '1',
                 \               '--with-nth', '2..',
@@ -80,8 +81,8 @@ function! g:SphinxNotesSnippetListSnippetAttrs(id, callback)
                 \ })
 endfunction
 
-function! g:SphinxNotesSnippetInput(id)
-  function! s:SphinxNotesSnippetInput_CB(attr, val)
+function g:SphinxNotesSnippetInput(id)
+  function! Input_CB(attr, val) " TODO: became g:func.
     if a:attr == 'docname' 
       " Create doc reference.
       let content = ':doc:`/' . a:val[0] . '`'
@@ -91,20 +92,18 @@ function! g:SphinxNotesSnippetInput(id)
     else
       let content = join(a:val, '<CR>')
     endif
-
     execute 'normal! i' . content
   endfunction
 
-  call g:SphinxNotesSnippetListSnippetAttrs(a:id, function('s:SphinxNotesSnippetInput_CB'))
+  call g:SphinxNotesSnippetListSnippetAttrs(a:id, function('Input_CB'))
 endfunction
 
-function! g:SphinxNotesSnippetListAndInput()
-  function! s:SphinxNotesSnippetListAndInput_CB(selection)
-    let id = s:SplitID(a:selection)
-    call g:SphinxNotesSnippetInput(id)
+function g:SphinxNotesSnippetListAndInput()
+  function! ListAndInput_CB(id)
+    call g:SphinxNotesSnippetInput(a:id)
   endfunction
 
-  call g:SphinxNotesSnippetList(function('s:SphinxNotesSnippetListAndInput_CB'), '"*"')
+  call g:SphinxNotesSnippetList('"*"', function('ListAndInput_CB'))
 endfunction
 
   " vim: set shiftwidth=2:
