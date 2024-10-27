@@ -8,10 +8,10 @@
 " TODO: Support vim?
 
 function! g:SphinxNotesSnippetListAndView()
-  function! s:CallView(selection)
-    call g:SphinxNotesSnippetView(s:SplitID(a:selection))
+  function! ListAndView_CB(id)
+    call g:SphinxNotesSnippetView(a:id)
   endfunction
-  call g:SphinxNotesSnippetList(function('s:CallView'), '*')
+  call g:SphinxNotesSnippetList('"*"', function('ListAndView_CB'))
 endfunction
 
 " https://github.com/anhmv/vim-float-window/blob/master/plugin/float-window.vim
