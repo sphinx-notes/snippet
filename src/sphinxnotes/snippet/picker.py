@@ -35,15 +35,16 @@ def pick(
     """
     # FIXME: Why doctree.source is always None?
     if not doctree.attributes.get('source'):
-        logger.debug('Skip document without source')
+        logger.debug('Skip document %s: no source', docname)
         return []
 
     metadata = app.env.metadata.get(docname, {})
     if 'no-search' in metadata or 'nosearch' in metadata:
-        logger.debug('Skip document with nosearch metadata')
+        logger.debug('Skip document %s: have :no[-]search: metadata', docname)
         return []
 
     # Walk doctree and pick snippets.
+
     picker = SnippetPicker(doctree)
     doctree.walkabout(picker)
 
@@ -83,13 +84,14 @@ class SnippetPicker(nodes.SparseNodeVisitor):
         section = self._sections.pop()
         assert section == node
 
+        # Always pick document.
+        if len(self._sections) == 0:
+            self.snippets.append((Document(self.document), node))
+            return
         # Skip non-leaf section without content
         if self._is_empty_non_leaf_section(node):
             return
-        if len(self._sections) == 0:
-            self.snippets.append((Document(self.document), node))
-        else:
-            self.snippets.append((Section(node), node))
+        self.snippets.append((Section(node), node))
 
     def unknown_visit(self, node: nodes.Node) -> None:
         pass  # Ignore any unknown node

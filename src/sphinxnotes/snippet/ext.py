@@ -119,9 +119,11 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
 
     doc = []
     snippets = pick(app, doctree, docname)
+    tags = []
     for s, n in snippets:
         # FIXME: Better filter logic.
-        if extract_tags(s) not in allowed_tags:
+        tags.append(extract_tags(s))
+        if tags[-1] not in allowed_tags:
             continue
         tpath = [x.astext() for x in titlepath.resolve(app.env, docname, n)]
         if isinstance(s, Section):
@@ -144,7 +146,12 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
         del cache[cache_key]
 
     logger.debug(
-        '[snippet] picked %s/%s snippetes in %s', len(doc), len(snippets), docname
+        '[snippet] picked %s/%s snippets in %s, tags: %s, allowed tags: %s',
+        len(doc),
+        len(snippets),
+        docname,
+        tags,
+        allowed_tags,
     )
 
 
