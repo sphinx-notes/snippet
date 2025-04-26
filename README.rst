@@ -1,24 +1,24 @@
 .. This file is generated from sphinx-notes/cookiecutter.
    You need to consider modifying the TEMPLATE or modifying THIS FILE.
 
-===================
-sphinxnotes-snippet
-===================
+===============
+sphinxnotes-fzf
+===============
 
-.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages
-   :target: https://sphinx.silverrainz.me/snippet
+.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/fzf/github-pages
+   :target: https://sphinx.silverrainz.me/fzf
    :alt: Documentation Status
 
-.. |license| image:: https://img.shields.io/github/license/sphinx-notes/snippet
-   :target: https://github.com/sphinx-notes/snippet/blob/master/LICENSE
+.. |license| image:: https://img.shields.io/github/license/sphinx-notes/fzf
+   :target: https://github.com/sphinx-notes/fzf/blob/master/LICENSE
    :alt: Open Source License
 
-.. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-snippet.svg
-   :target: https://pypi.python.org/pypi/sphinxnotes-snippet
+.. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-fzf.svg
+   :target: https://pypi.python.org/pypi/sphinxnotes-fzf
    :alt: PyPI Package
 
-.. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-snippet
-   :target: https://pypi.python.org/pypi/sphinxnotes-snippet
+.. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-fzf
+   :target: https://pypi.python.org/pypi/sphinxnotes-fzf
    :alt: PyPI Package Downloads
 
 |docs| |license| |pypi| |download|
@@ -32,4 +32,4 @@ Sphinx documentation snippets manager.
 
 Please refer to Documentation_ for more details.
 
-.. _Documentation: https://sphinx.silverrainz.me/snippet
+.. _Documentation: https://sphinx.silverrainz.me/fzf

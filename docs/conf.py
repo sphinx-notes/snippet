@@ -12,7 +12,7 @@ import sys
 
 # -- Project information -----------------------------------------------------
 
-project = 'sphinxnotes-snippet'
+project = 'sphinxnotes-fzf'
 author = 'Shengyu Zhang'
 copyright = "2023, " + author
 
@@ -61,14 +61,14 @@ html_theme_options = {}
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 html_theme_options = {
-    "source_repository": "https://github.com/sphinx-notes/snippet/",
+    "source_repository": "https://github.com/sphinx-notes/fzf/",
     "source_branch": "master",
     "source_directory": "docs/",
 }
 
 # The URL which points to the root of the HTML documentation.
 # It is used to indicate the location of document like canonical_url
-html_baseurl = 'https://sphinx.silverrainz.me/snippet'
+html_baseurl = 'https://sphinx.silverrainz.me/fzf'
 
 html_logo = html_favicon = '_static/sphinx-notes.png'
 
@@ -76,9 +76,9 @@ html_logo = html_favicon = '_static/sphinx-notes.png'
 
 extensions.append('sphinx.ext.extlinks')
 extlinks = {
-    'issue': ('https://github.com/sphinx-notes/snippet/issues/%s', '💬%s'),
-    'pull': ('https://github.com/sphinx-notes/snippet/pull/%s', '🚀%s'),
-    'tag': ('https://github.com/sphinx-notes/snippet/releases/tag/%s', '🏷️%s'),
+    'issue': ('https://github.com/sphinx-notes/fzf/issues/%s', '💬%s'),
+    'pull': ('https://github.com/sphinx-notes/fzf/pull/%s', '🚀%s'),
+    'tag': ('https://github.com/sphinx-notes/fzf/releases/tag/%s', '🏷️%s'),
 }
 
 extensions.append('sphinxcontrib.gtagjs')
@@ -109,7 +109,7 @@ primary_domain = 'any'
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../src/sphinxnotes'))
-extensions.append('snippet')
+extensions.append('fzf')
 
 # DOG FOOD CONFIGURATION START
 

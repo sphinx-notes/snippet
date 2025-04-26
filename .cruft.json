@@ -5,14 +5,14 @@
   "context": {
     "cookiecutter": {
       "namespace": "sphinxnotes",
-      "name": "snippet",
-      "full_name": "sphinxnotes-snippet",
+      "name": "fzf",
+      "full_name": "sphinxnotes-fzf",
       "author": "Shengyu Zhang",
       "description": "Sphinx documentation snippets manager",
       "version": "1.2",
       "github_owner": "sphinx-notes",
-      "github_repo": "snippet",
-      "pypi_name": "sphinxnotes-snippet",
+      "github_repo": "fzf",
+      "pypi_name": "sphinxnotes-fzf",
       "pypi_owner": "SilverRainZ",
       "_template": "https://github.com/sphinx-notes/template",
       "_commit": "0b096cd7ecff1b28ee8c2887ba3321418be34b9a"

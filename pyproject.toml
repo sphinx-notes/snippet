@@ -6,7 +6,7 @@
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/#declaring-project-metadata
 
 [project]
-name = "sphinxnotes-snippet"
+name = "sphinxnotes-fzf"
 description = "Sphinx documentation snippets manager"
 readme = "README.rst"
 license = { file = "BSD-3-Clause" }
@@ -64,11 +64,11 @@ docs = [
 ]
 
 [project.urls]
-homepage = "https://sphinx.silverrainz.me/snippet"
-documentation = "https://sphinx.silverrainz.me/snippet"
-repository = "https://github.com/sphinx-notes/snippet"
-changelog = "https://sphinx.silverrainz.me/snippet/changelog.html"
-tracker = "https://github.com/sphinx-notes/snippet/issues"
+homepage = "https://sphinx.silverrainz.me/fzf"
+documentation = "https://sphinx.silverrainz.me/fzf"
+repository = "https://github.com/sphinx-notes/fzf"
+changelog = "https://sphinx.silverrainz.me/fzf/changelog.html"
+tracker = "https://github.com/sphinx-notes/fzf/issues"
 
 [project.scripts]
 snippet = "sphinxnotes.snippet.cli:main"
