@@ -5,7 +5,7 @@
 sphinxnotes-snippet
 ===================
 
-.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages
+.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages?label=docs
    :target: https://sphinx.silverrainz.me/snippet
    :alt: Documentation Status
 
@@ -21,7 +21,11 @@ sphinxnotes-snippet
    :target: https://pypi.python.org/pypi/sphinxnotes-snippet
    :alt: PyPI Package Downloads
 
-|docs| |license| |pypi| |download|
+.. |github| image:: https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white/
+   :target: https://github.com/sphinx-notes/snippet
+   :alt: GitHub Repository
+
+|docs| |license| |pypi| |download| |github|
 
 Introduction
 ============
