@@ -45,7 +45,7 @@ dependencies = [
 
     # CUSTOM DEPENDENCIES START
     "langid",
-    "jieba",
+    "jieba-next",
     "python-pinyin",
     "pyxdg",
     "stopwordsiso",
