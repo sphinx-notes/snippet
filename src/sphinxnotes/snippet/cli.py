@@ -2,24 +2,30 @@
 sphinxnotes.snippet.cli
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: Copyright 2020 Shengyu Zhang
+Command line entrypoint.
+
+:copyright: Copyright 2024 Shengyu Zhang
 :license: BSD, see LICENSE for details.
 """
 
+# **NOTE**: Import new packages with caution:
+# Importing complex packages (like sphinx.*) will directly slow down the
+# startup of the CLI tool.
 from __future__ import annotations
 import sys
-import argparse
-from typing import List
+import os
 from os import path
+import argparse
+from typing import Iterable
 from textwrap import dedent
 from shutil import get_terminal_size
 import posixpath
 
 from xdg.BaseDirectory import xdg_config_home
 
-from . import __version__
+from .snippets import Document
 from .config import Config
-from .cache import Cache
+from .cache import Cache, IndexID, Index
 from .table import tablify, COLUMNS
 
 DEFAULT_CONFIG_FILE = path.join(xdg_config_home, 'sphinxnotes', 'snippet', 'conf.py')
@@ -38,14 +44,14 @@ def get_integration_file(fn: str) -> str:
     .. seealso::
 
        see ``[tool.setuptools.package-data]`` section of pyproject.toml to know
-        how files are included.
+       how files are included.
     """
     # TODO: use https://docs.python.org/3/library/importlib.resources.html#importlib.resources.files
     prefix = path.abspath(path.dirname(__file__))
     return path.join(prefix, 'integration', fn)
 
 
-def main(argv: List[str] = sys.argv[1:]):
+def main(argv: list[str] = sys.argv[1:]):
     """Command line entrypoint."""
 
     parser = argparse.ArgumentParser(
@@ -54,13 +60,17 @@ def main(argv: List[str] = sys.argv[1:]):
         formatter_class=HelpFormatter,
         epilog=dedent("""
                                      snippet tags:
-                                       d (document)          a reST document 
-                                       s (section)           a reST section
-                                       c (code)              snippet with code blocks
+                                       d (document)          a document
+                                       s (section)           a section
+                                       c (code)              a code block
                                        * (any)               wildcard for any snippet"""),
     )
     parser.add_argument(
-        '-v', '--version', action='version', version='%(prog)s ' + __version__
+        '--version',
+        # add_argument provides action='version', but it requires a version
+        # literal and doesn't support lazily obtaining version.
+        action='store_true',
+        help="show program's version number and exit",
     )
     parser.add_argument(
         '-c', '--config', default=DEFAULT_CONFIG_FILE, help='path to configuration file'
@@ -83,7 +93,14 @@ def main(argv: List[str] = sys.argv[1:]):
         help='list snippet indexes, columns of indexes: %s' % COLUMNS,
     )
     listparser.add_argument(
-        '--tags', '-t', type=str, default='*', help='list specified tags only'
+        '--tags', '-t', type=str, default='*', help='list snippets with specified tags'
+    )
+    listparser.add_argument(
+        '--docname',
+        '-d',
+        type=str,
+        default='**',
+        help='list snippets whose docname matches shell-style glob pattern',
     )
     listparser.add_argument(
         '--width',
@@ -107,6 +124,9 @@ def main(argv: List[str] = sys.argv[1:]):
         '--file', '-f', action='store_true', help='get source file path of snippet'
     )
     getparser.add_argument(
+        '--deps', action='store_true', help='get dependent files of document'
+    )
+    getparser.add_argument(
         '--line-start',
         action='store_true',
         help='get line number where snippet starts in source file',
@@ -120,7 +140,12 @@ def main(argv: List[str] = sys.argv[1:]):
         '--text',
         '-t',
         action='store_true',
-        help='get source reStructuredText of snippet',
+        help='get text representation of snippet',
+    )
+    getparser.add_argument(
+        '--src',
+        action='store_true',
+        help='get source text of snippet',
     )
     getparser.add_argument(
         '--url',
@@ -165,6 +190,16 @@ def main(argv: List[str] = sys.argv[1:]):
     # Parse command line arguments
     args = parser.parse_args(argv)
 
+    # Print version message.
+    # See parser.add_argument('--version', ...) for more detais.
+    if args.version:
+        # NOTE: Importing is slow, do it on demand.
+        from importlib.metadata import version
+
+        pkgname = 'sphinxnotes.snippet'
+        print(pkgname, version(pkgname))
+        parser.exit()
+
     # Load config from file
     if args.config == DEFAULT_CONFIG_FILE and not path.isfile(DEFAULT_CONFIG_FILE):
         print(
@@ -205,24 +240,62 @@ def _on_command_stat(args: argparse.Namespace):
         print(f'\t {v} snippets(s)')
 
 
+def _filter_list_items(
+    cache: Cache, tags: str, docname_glob: str
+) -> Iterable[tuple[IndexID, Index]]:
+    # NOTE: Importing is slow, do it on demand.
+    from sphinx.util.matching import patmatch
+
+    for index_id, index in cache.indexes.items():
+        # Filter by tags.
+        if index[0] not in tags and '*' not in tags:
+            continue
+        # Filter by docname.
+        (_, docname), _ = cache.index_id_to_doc_id[index_id]
+        if not patmatch(docname, docname_glob):
+            continue
+        yield (index_id, index)
+
+
 def _on_command_list(args: argparse.Namespace):
-    rows = tablify(args.cache.indexes, args.tags, args.width)
-    for row in rows:
+    items = _filter_list_items(args.cache, args.tags, args.docname)
+    for row in tablify(items, args.width):
         print(row)
 
 
 def _on_command_get(args: argparse.Namespace):
+    # Wrapper for warning when nothing is printed
+    printed = False
+
+    def p(*args, **opts):
+        nonlocal printed
+        printed = True
+        print(*args, **opts)
+
     for index_id in args.index_id:
         item = args.cache.get_by_index_id(index_id)
         if not item:
-            print('no such index ID', file=sys.stderr)
+            p('no such index ID', file=sys.stderr)
             sys.exit(1)
         if args.text:
-            print('\n'.join(item.snippet.rst))
+            p('\n'.join(item.snippet.text))
+        if args.src:
+            p('\n'.join(item.snippet.source))
         if args.docname:
-            print(item.snippet.docname)
+            p(item.snippet.docname)
         if args.file:
-            print(item.snippet.file)
+            p(item.snippet.file)
+        if args.deps:
+            if not isinstance(item.snippet, Document):
+                print(
+                    f'{type(item.snippet)} ({index_id}) is not a document',
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            if len(item.snippet.deps) == 0:
+                p('')  # prevent print nothing warning
+            for dep in item.snippet.deps:
+                p(dep)
         if args.url:
             # HACK: get doc id in better way
             doc_id, _ = args.cache.index_id_to_doc_id.get(index_id)
@@ -236,11 +309,15 @@ def _on_command_get(args: argparse.Namespace):
             url = posixpath.join(base_url, doc_id[1] + '.html')
             if item.snippet.refid:
                 url += '#' + item.snippet.refid
-            print(url)
+            p(url)
         if args.line_start:
-            print(item.snippet.lineno[0])
+            p(item.snippet.lineno[0])
         if args.line_end:
-            print(item.snippet.lineno[1])
+            p(item.snippet.lineno[1])
+
+        if not printed:
+            print('please specify at least one argument', file=sys.stderr)
+            sys.exit(1)
 
 
 def _on_command_integration(args: argparse.Namespace):
@@ -275,4 +352,13 @@ def _on_command_integration(args: argparse.Namespace):
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    # Prevent "[Errno 32] Broken pipe" error.
+    # https://docs.python.org/3/library/signal.html#note-on-sigpipe
+    try:
+        sys.exit(main())
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shutdown.
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        sys.exit(1)  # Python exits with error code 1 on EPIPE

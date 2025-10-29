@@ -9,7 +9,6 @@ Helper functions for keywords extraction.
 """
 
 from __future__ import annotations
-from typing import List, Optional
 import string
 from collections import Counter
 
@@ -47,8 +46,8 @@ class Extractor(object):
         )
 
     def extract(
-        self, text: str, top_n: Optional[int] = None, strip_stopwords: bool = True
-    ) -> List[str]:
+        self, text: str, top_n: int | None = None, strip_stopwords: bool = True
+    ) -> list[str]:
         """Return keywords of given text."""
         # TODO: zh -> en
         # Normalize
@@ -87,7 +86,7 @@ class Extractor(object):
         text = text.replace('\n', ' ')
         return text
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         # Get top most 5 langs
         langs = self._detect_langs(text)[:5]
         tokens = [text]
@@ -104,10 +103,10 @@ class Extractor(object):
             new_tokens = []
         return tokens
 
-    def trans_to_pinyin(self, word: str) -> Optional[str]:
+    def trans_to_pinyin(self, word: str) -> str | None:
         return ' '.join(self._pinyin(word, errors='ignore'))
 
-    def strip_stopwords(self, words: List[str]) -> List[str]:
+    def strip_stopwords(self, words: list[str]) -> list[str]:
         stw = self._stopwords(['en', 'zh'])
         new_words = []
         for word in words:
@@ -115,5 +114,5 @@ class Extractor(object):
                 new_words.append(word)
         return new_words
 
-    def strip_invalid_token(self, tokens: List[str]) -> List[str]:
+    def strip_invalid_token(self, tokens: list[str]) -> list[str]:
         return [token for token in tokens if token != '']

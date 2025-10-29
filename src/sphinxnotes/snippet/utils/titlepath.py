@@ -9,22 +9,21 @@ Utils for ellipsis string.
 """
 
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from docutils import nodes
 
 if TYPE_CHECKING:
-    from sphinx.enviornment import BuilderEnviornment
+    from sphinx.environment import BuildEnvironment
 
 
 def resolve(
-    env: BuilderEnviornment, docname: str, node: nodes.Node
-) -> List[nodes.title]:
+    env: BuildEnvironment, docname: str, node: nodes.Element
+) -> list[nodes.title]:
     return resolve_section(node) + resolve_document(env, docname)
 
 
-def resolve_section(node: nodes.section) -> List[nodes.title]:
-    # FIXME: doc is None
+def resolve_section(node: nodes.Element) -> list[nodes.title]:
     titlenodes = []
     while node:
         if len(node) > 0 and isinstance(node[0], nodes.title):
@@ -33,10 +32,8 @@ def resolve_section(node: nodes.section) -> List[nodes.title]:
     return titlenodes
 
 
-def resolve_document(env: BuilderEnviornment, docname: str) -> List[nodes.title]:
-    """
-    .. note:: Title of document itself does not included in the returned list
-    """
+def resolve_document(env: BuildEnvironment, docname: str) -> list[nodes.title]:
+    """NOTE: Title of document itself does not included in the returned list"""
     titles = []
     master_doc = env.config.master_doc
     v = docname.split('/')

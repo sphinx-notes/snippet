@@ -5,23 +5,23 @@
 sphinxnotes-snippet
 ===================
 
-.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages
+.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages?label=docs
    :target: https://sphinx.silverrainz.me/snippet
    :alt: Documentation Status
-
 .. |license| image:: https://img.shields.io/github/license/sphinx-notes/snippet
    :target: https://github.com/sphinx-notes/snippet/blob/master/LICENSE
    :alt: Open Source License
-
 .. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-snippet.svg
-   :target: https://pypi.python.org/pypi/sphinxnotes-snippet
+   :target: https://pypistats.org/packages/sphinxnotes-snippet
    :alt: PyPI Package
-
 .. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-snippet
    :target: https://pypi.python.org/pypi/sphinxnotes-snippet
    :alt: PyPI Package Downloads
+.. |github| image:: https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white/
+   :target: https://github.com/sphinx-notes/snippet
+   :alt: GitHub Repository
 
-|docs| |license| |pypi| |download|
+|docs| |license| |pypi| |download| |github|
 
 Introduction
 ============
@@ -44,11 +44,13 @@ Getting Started
    We assume you already have a Sphinx documentation,
    if not, see `Getting Started with Sphinx`_.
 
+
 First, downloading extension from PyPI:
 
 .. code-block:: console
 
    $ pip install sphinxnotes-snippet
+
 
 Then, add the extension name to ``extensions`` configuration item in your
 :parsed_literal:`conf.py_`:

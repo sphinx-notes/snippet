@@ -1,15 +1,15 @@
 """
-sphinxnotes.ext.snippet
+sphinxnotes.snippet.ext
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Sphinx extension for sphinxnotes.snippet.
+Sphinx extension implementation, but the entrypoint is located at __init__.py.
 
-:copyright: Copyright 2021 Shengyu Zhang
+:copyright: Copyright 2024 Shengyu Zhang
 :license: BSD, see LICENSE for details.
 """
 
 from __future__ import annotations
-from typing import List, Set, TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 import re
 from os import path
 import time
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 from .config import Config
-from . import Snippet, WithTitle, Document, Section
+from .snippets import Snippet, WithTitle, Document, Section, Code
 from .picker import pick
 from .cache import Cache, Item
 from .keyword import Extractor
@@ -45,53 +45,38 @@ def extract_tags(s: Snippet) -> str:
         tags += 'd'
     elif isinstance(s, Section):
         tags += 's'
+    elif isinstance(s, Code):
+        tags += 'c'
     return tags
 
 
 def extract_excerpt(s: Snippet) -> str:
     if isinstance(s, Document) and s.title is not None:
-        return '<' + s.title.text + '>'
+        return '<' + s.title + '>'
     elif isinstance(s, Section) and s.title is not None:
-        return '[' + s.title.text + ']'
+        return '[' + s.title + ']'
+    elif isinstance(s, Code):
+        return '`' + (s.lang + ':').ljust(8, ' ') + ' ' + s.desc + '`'
     return ''
 
 
-def extract_keywords(s: Snippet) -> List[str]:
-    keywords = []
-    # TODO: Deal with more snippet
+def extract_keywords(s: Snippet) -> list[str]:
+    keywords = [s.docname]
     if isinstance(s, WithTitle) and s.title is not None:
-        keywords.extend(extractor.extract(s.title.text, strip_stopwords=False))
+        keywords.extend(extractor.extract(s.title, strip_stopwords=False))
+    if isinstance(s, Code):
+        keywords.extend(extractor.extract(s.desc, strip_stopwords=False))
     return keywords
 
 
-def is_document_matched(
-    pats: Dict[str, List[str]], docname: str
-) -> Dict[str, List[str]]:
-    """Whether the docname matched by given patterns pats"""
-    new_pats = {}
-    for tag, ps in pats.items():
+def _get_document_allowed_tags(pats: dict[str, list[str]], docname: str) -> str:
+    """Return the tags of snippets that are allowed to be picked from the document."""
+    allowed_tags = ''
+    for tags, ps in pats.items():
         for pat in ps:
             if re.match(pat, docname):
-                new_pats.setdefault(tag, []).append(pat)
-    return new_pats
-
-
-def is_snippet_matched(pats: Dict[str, List[str]], s: [Snippet], docname: str) -> bool:
-    """Whether the snippet's tags and docname matched by given patterns pats"""
-    if '*' in pats:  # Wildcard
-        for pat in pats['*']:
-            if re.match(pat, docname):
-                return True
-
-    not_in_pats = True
-    for k in extract_tags(s):
-        if k not in pats:
-            continue
-        not_in_pats = False
-        for pat in pats[k]:
-            if re.match(pat, docname):
-                return True
-    return not_in_pats
+                allowed_tags += tags
+    return allowed_tags
 
 
 def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
@@ -108,11 +93,12 @@ def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
 def on_env_get_outdated(
     app: Sphinx,
     env: BuildEnvironment,
-    added: Set[str],
-    changed: Set[str],
-    removed: Set[str],
-) -> List[str]:
+    added: set[str],
+    changed: set[str],
+    removed: set[str],
+) -> list[str]:
     # Remove purged indexes and snippetes from db
+    assert cache is not None
     for docname in removed:
         del cache[(app.config.project, docname)]
     return []
@@ -126,15 +112,18 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
         )
         return
 
-    pats = is_document_matched(app.config.snippet_patterns, docname)
-    if len(pats) == 0:
-        logger.debug('[snippet] skip picking because %s is not matched', docname)
+    allowed_tags = _get_document_allowed_tags(app.config.snippet_patterns, docname)
+    if not allowed_tags:
+        logger.debug('[snippet] skip picking: no tag allowed for document %s', docname)
         return
 
     doc = []
     snippets = pick(app, doctree, docname)
+    tags = []
     for s, n in snippets:
-        if not is_snippet_matched(pats, s, docname):
+        # FIXME: Better filter logic.
+        tags.append(extract_tags(s))
+        if tags[-1] not in allowed_tags:
             continue
         tpath = [x.astext() for x in titlepath.resolve(app.env, docname, n)]
         if isinstance(s, Section):
@@ -150,17 +139,24 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
         )
 
     cache_key = (app.config.project, docname)
+    assert cache is not None
     if len(doc) != 0:
         cache[cache_key] = doc
     elif cache_key in cache:
         del cache[cache_key]
 
     logger.debug(
-        '[snippet] picked %s/%s snippetes in %s', len(doc), len(snippets), docname
+        '[snippet] picked %s/%s snippets in %s, tags: %s, allowed tags: %s',
+        len(doc),
+        len(snippets),
+        docname,
+        tags,
+        allowed_tags,
     )
 
 
 def on_builder_finished(app: Sphinx, exception) -> None:
+    assert cache is not None
     cache.dump()
 
 
@@ -206,15 +202,3 @@ def _format_modified_time(timestamp: float) -> str:
     """Return an RFC 3339 formatted string representing the given timestamp."""
     seconds, fraction = divmod(timestamp, 1)
     return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(seconds)) + f'.{fraction:.3f}'
-
-
-def setup(app: Sphinx):
-    app.add_builder(SnippetBuilder)
-
-    app.add_config_value('snippet_config', {}, '')
-    app.add_config_value('snippet_patterns', {'*': ['.*']}, '')
-
-    app.connect('config-inited', on_config_inited)
-    app.connect('env-get-outdated', on_env_get_outdated)
-    app.connect('doctree-resolved', on_doctree_resolved)
-    app.connect('build-finished', on_builder_finished)

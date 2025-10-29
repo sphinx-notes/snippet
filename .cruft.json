@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/sphinx-notes/template",
-  "commit": "80a61fa9abcd9474d8cfbc36d0bf5d41f99c916c",
+  "commit": "4736b672023e3bf4bc80d0d51850d7bc45ca1e12",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -14,7 +14,13 @@
       "github_repo": "snippet",
       "pypi_name": "sphinxnotes-snippet",
       "pypi_owner": "SilverRainZ",
-      "_template": "https://github.com/sphinx-notes/template"
+      "is_python_project": true,
+      "python_version": "3.12",
+      "is_sphinx_extension": true,
+      "sphinx_version": "7.0",
+      "development_status": "3 - Alpha",
+      "_template": "https://github.com/sphinx-notes/template",
+      "_commit": "4736b672023e3bf4bc80d0d51850d7bc45ca1e12"
     }
   },
   "directory": null
