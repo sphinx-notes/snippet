@@ -24,7 +24,7 @@ class Extractor(object):
         # Import NLP libs here to prevent import overhead
         import logging
         from langid import rank
-        from jieba import cut_for_search, setLogLevel
+        from jieba_next import cut_for_search, setLogLevel
         from pypinyin import lazy_pinyin
         from stopwordsiso import stopwords
         from wordsegment import load, segment
