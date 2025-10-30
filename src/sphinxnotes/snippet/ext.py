@@ -63,9 +63,9 @@ def extract_excerpt(s: Snippet) -> str:
 def extract_keywords(s: Snippet) -> list[str]:
     keywords = [s.docname]
     if isinstance(s, WithTitle) and s.title is not None:
-        keywords.extend(extractor.extract(s.title, strip_stopwords=False))
+        keywords.extend(extractor.extract(s.title))
     if isinstance(s, Code):
-        keywords.extend(extractor.extract(s.desc, strip_stopwords=False))
+        keywords.extend(extractor.extract(s.desc))
     return keywords
 
 
