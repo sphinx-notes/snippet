@@ -26,7 +26,6 @@ class Extractor(object):
         from langid import rank
         from jieba_next import cut_for_search, setLogLevel
         from pypinyin import lazy_pinyin
-        from stopwordsiso import stopwords
         from wordsegment import load, segment
 
         # Turn off jieba debug log.
@@ -38,16 +37,13 @@ class Extractor(object):
         self._tokenize_zh_cn = cut_for_search
         self._tokenize_en = segment
         self._pinyin = lazy_pinyin
-        self._stopwords = stopwords
 
         self._punctuation = (
             string.punctuation
             + '！？｡。＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏.·'
         )
 
-    def extract(
-        self, text: str, top_n: int | None = None, strip_stopwords: bool = True
-    ) -> list[str]:
+    def extract(self, text: str, top_n: int | None = None) -> list[str]:
         """Return keywords of given text."""
         # TODO: zh -> en
         # Normalize
@@ -57,8 +53,6 @@ class Extractor(object):
         # Invalid token removal
         words = self.strip_invalid_token(words)
         # Stopwords removal
-        if strip_stopwords:
-            words = self.strip_stopwords(words)
         if top_n:
             # Get top n words as keyword
             keywords = Counter(words).most_common(top_n)
@@ -105,14 +99,6 @@ class Extractor(object):
 
     def trans_to_pinyin(self, word: str) -> str | None:
         return ' '.join(self._pinyin(word, errors='ignore'))
-
-    def strip_stopwords(self, words: list[str]) -> list[str]:
-        stw = self._stopwords(['en', 'zh'])
-        new_words = []
-        for word in words:
-            if word not in stw:
-                new_words.append(word)
-        return new_words
 
     def strip_invalid_token(self, tokens: list[str]) -> list[str]:
         return [token for token in tokens if token != '']
