@@ -160,10 +160,10 @@ def on_builder_finished(app: Sphinx, exception) -> None:
     cache.dump()
 
 
-class PickerBuilder(DummyBuilder):  # DummyBuilder has dummy impls we need.
-    name = 'picker'
+class SnippetBuilder(DummyBuilder):  # DummyBuilder has dummy impls we need.
+    name = 'snippet'
     epilog = __(
-        'The picker builder produces pickers (not to OUTPUTDIR) for use by picker CLI tool'
+        'The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool'
     )
 
     def get_outdated_docs(self) -> Iterator[str]:
