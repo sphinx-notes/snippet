@@ -1,24 +1,24 @@
 .. This file is generated from sphinx-notes/cookiecutter.
    You need to consider modifying the TEMPLATE or modifying THIS FILE.
 
-===================
-sphinxnotes-snippet
-===================
+==================
+sphinxnotes-picker
+==================
 
-.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/snippet/github-pages?label=docs
-   :target: https://sphinx.silverrainz.me/snippet
+.. |docs| image:: https://img.shields.io/github/deployments/sphinx-notes/picker/github-pages?label=docs
+   :target: https://sphinx.silverrainz.me/picker
    :alt: Documentation Status
-.. |license| image:: https://img.shields.io/github/license/sphinx-notes/snippet
+.. |license| image:: https://img.shields.io/github/license/sphinx-notes/picker
    :target: https://github.com/sphinx-notes/snippet/blob/master/LICENSE
    :alt: Open Source License
-.. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-snippet.svg
-   :target: https://pypistats.org/packages/sphinxnotes-snippet
+.. |pypi| image:: https://img.shields.io/pypi/v/sphinxnotes-picker.svg
+   :target: https://pypistats.org/packages/sphinxnotes-picker
    :alt: PyPI Package
-.. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-snippet
-   :target: https://pypi.python.org/pypi/sphinxnotes-snippet
+.. |download| image:: https://img.shields.io/pypi/dm/sphinxnotes-picker
+   :target: https://pypi.python.org/pypi/sphinxnotes-picker
    :alt: PyPI Package Downloads
 .. |github| image:: https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white/
-   :target: https://github.com/sphinx-notes/snippet
+   :target: https://github.com/sphinx-notes/picker
    :alt: GitHub Repository
 
 |docs| |license| |pypi| |download| |github|
@@ -49,7 +49,7 @@ First, downloading extension from PyPI:
 
 .. code-block:: console
 
-   $ pip install sphinxnotes-snippet
+   $ pip install sphinxnotes-picker
 
 
 Then, add the extension name to ``extensions`` configuration item in your
@@ -59,7 +59,7 @@ Then, add the extension name to ``extensions`` configuration item in your
 
    extensions = [
              # …
-             'sphinxnotes.snippet',
+             'sphinxnotes.picker',
              # …
              ]
 
@@ -95,6 +95,7 @@ as part of **The Sphinx Notes Project**.
    :caption: The Sphinx Notes Project
 
    Home <https://sphinx.silverrainz.me/>
+   GitHub <https://github.com/sphinx-notes>
    Blog <https://silverrainz.me/blog/category/sphinx.html>
    PyPI <https://pypi.org/search/?q=sphinxnotes>
 
