@@ -1,18 +1,18 @@
 {
   "template": "https://github.com/sphinx-notes/template",
-  "commit": "251643b4d04376494409369c91f29ca047687a5d",
+  "commit": "a829f105e638f3cba98b799eabef94c0148cd9c0",
   "checkout": null,
   "context": {
     "cookiecutter": {
       "namespace": "sphinxnotes",
-      "name": "snippet",
-      "full_name": "sphinxnotes-snippet",
+      "name": "picker",
+      "full_name": "sphinxnotes-picker",
       "author": "Shengyu Zhang",
       "description": "Sphinx documentation snippets manager",
       "version": "1.2",
       "github_owner": "sphinx-notes",
       "github_repo": "snippet",
-      "pypi_name": "sphinxnotes-snippet",
+      "pypi_name": "sphinxnotes-picker",
       "pypi_owner": "SilverRainZ",
       "is_python_project": true,
       "python_version": "3.12",
@@ -20,7 +20,7 @@
       "sphinx_version": "7.0",
       "development_status": "3 - Alpha",
       "_template": "https://github.com/sphinx-notes/template",
-      "_commit": "251643b4d04376494409369c91f29ca047687a5d"
+      "_commit": "a829f105e638f3cba98b799eabef94c0148cd9c0"
     }
   },
   "directory": null

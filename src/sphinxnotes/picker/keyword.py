@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet.keyword
+sphinxnotes.picker.keyword
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Helper functions for keywords extraction.

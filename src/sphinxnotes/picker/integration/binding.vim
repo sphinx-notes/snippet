@@ -1,4 +1,4 @@
-" Vim key binding for sphinxnotes-snippet
+" Vim key binding for sphinxnotes-picker
 " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 "
 " :Author: Shengyu Zhang

@@ -1,0 +1,15 @@
+diff a/pyproject.toml b/pyproject.toml	(rejected hunks)
+@@ -77,10 +77,10 @@ docs = [
+ ]
+ 
+ [project.urls]
+-homepage = "https://sphinx.silverrainz.me/snippet"
+-documentation = "https://sphinx.silverrainz.me/snippet"
++homepage = "https://sphinx.silverrainz.me/picker"
++documentation = "https://sphinx.silverrainz.me/picker"
+ repository = "https://github.com/sphinx-notes/snippet"
+-changelog = "https://sphinx.silverrainz.me/snippet/changelog.html"
++changelog = "https://sphinx.silverrainz.me/picker/changelog.html"
+ tracker = "https://github.com/sphinx-notes/snippet/issues"
+ 
+ [build-system]

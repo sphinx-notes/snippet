@@ -12,12 +12,12 @@ from sphinx.application import Sphinx
 from sphinx.util.typing import ExtensionMetadata
 
 
-__project__ = 'sphinxnotes-snippet'
+__project__ = 'sphinxnotes-picker'
 __author__ = 'Shengyu Zhang'
 __desc__ = 'Sphinx documentation snippets manager'
 
 try:
-    __version__ = metadata.version('sphinxnotes-snippet')
+    __version__ = metadata.version('sphinxnotes-picker')
 except metadata.PackageNotFoundError:
     __version__ = 'unknown'
 
