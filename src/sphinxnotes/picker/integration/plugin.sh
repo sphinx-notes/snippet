@@ -5,13 +5,13 @@
 # :Date: 2021-03-20
 # :Version: 20240828
 
-# Make sure we have $SNIPPET
-[ -z "$SNIPPET"] && SNIPPET='snippet'
+# Make sure we have $PICKER
+[ -z "$PICKER"] && PICKER='picker'
 
-# Arguments: $*: Extra opts of ``snippet list``
-# Returns: snippet_id
-function snippet_list() {
-  $SNIPPET list --width $(($(tput cols) - 2)) "$@" | \
+# Arguments: $*: Extra opts of ``picker list``
+# Returns: picker_id
+function picker_list() {
+  $PICKER list --width $(($(tput cols) - 2)) "$@" | \
     fzf --with-nth 2..      \
         --no-hscroll        \
         --header-lines 1    \

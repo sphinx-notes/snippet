@@ -7,13 +7,13 @@
 "
 " NOTE: junegunn/fzf.vim is required
 
-let s:snippet = 'snippet'
+let s:picker = 'picker'
 let s:width = 0.9
 let s:height = 0.6
 
 " Use fzf to list all snippets, callback with argument id.
 function g:SphinxNotesSnippetList(tags, callback)
-  let cmd = [s:snippet, 'list',
+  let cmd = [s:picker, 'list',
         \ '--tags', a:tags,
         \ '--width', float2nr(&columns * s:width) - 2,
         \ ]
@@ -37,7 +37,7 @@ endfunction
 
 " Return the attribute value of specific snippet.
 function g:SphinxNotesSnippetGet(id, attr)
-    let cmd = [s:snippet, 'get', a:id, '--' . a:attr]
+    let cmd = [s:picker, 'get', a:id, '--' . a:attr]
     return systemlist(join(cmd, ' '))
 endfunction
 
@@ -65,7 +65,7 @@ function g:SphinxNotesSnippetListSnippetAttrs(id, callback)
         call a:callback(opt, val) " finally call user's cb
     endfunction
 
-    let preview_cmd = [s:snippet, 'get', a:id, '--$(echo {} | cut -d " " -f1)']
+    let preview_cmd = [s:picker, 'get', a:id, '--$(echo {} | cut -d " " -f1)']
     let info_cmd = ['echo', 'Index ID:', a:id]
     call fzf#run({
                 \ 'source': table,

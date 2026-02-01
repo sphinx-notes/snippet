@@ -27,8 +27,8 @@ def setup(app):
 
     app.add_builder(SnippetBuilder)
 
-    app.add_config_value('snippet_config', {}, '')
-    app.add_config_value('snippet_patterns', {'*': ['.*']}, '')
+    app.add_config_value('picker_config', {}, '')
+    app.add_config_value('picker_patterns', {'*': ['.*']}, '')
 
     app.connect('config-inited', on_config_inited)
     app.connect('env-get-outdated', on_env_get_outdated)

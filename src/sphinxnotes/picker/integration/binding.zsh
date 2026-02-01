@@ -5,31 +5,31 @@
 # :Date: 2021-04-12
 # :Version: 20211114
 
-# $1: One of snippet_* functions
-function snippet_z_bind_wrapper() {
-  snippet_sh_bind_wrapper $1
+# $1: One of picker_* functions
+function picker_z_bind_wrapper() {
+  picker_sh_bind_wrapper $1
   zle redisplay
 }
 
-function snippet_z_view() {
-  snippet_z_bind_wrapper snippet_view
+function picker_z_view() {
+  picker_z_bind_wrapper picker_view
 }
 
-function snippet_z_edit() {
-  snippet_z_bind_wrapper snippet_edit
+function picker_z_edit() {
+  picker_z_bind_wrapper picker_edit
 }
 
-function snippet_z_url() {
-  snippet_z_bind_wrapper snippet_url
+function picker_z_url() {
+  picker_z_bind_wrapper picker_url
 }
 
 # Define widgets
-zle -N snippet_z_view
-zle -N snippet_z_edit
-zle -N snippet_z_url
+zle -N picker_z_view
+zle -N picker_z_edit
+zle -N picker_z_url
 
-bindkey '^kv' snippet_z_view
-bindkey '^ke' snippet_z_edit
-bindkey '^ku' snippet_z_url
+bindkey '^kv' picker_z_view
+bindkey '^ke' picker_z_edit
+bindkey '^ku' picker_z_url
 
 # vim: set shiftwidth=2:

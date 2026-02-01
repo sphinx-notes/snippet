@@ -33,14 +33,14 @@ function! g:SphinxNotesSnippetView(id)
 
   let buf = nvim_create_buf(v:false, v:true)
   " Global for :call
-  let g:sphinx_notes_snippet_win = nvim_open_win(buf, v:true, opts)
+  let g:sphinx_notes_picker_win = nvim_open_win(buf, v:true, opts)
 
   " The content is always reStructuredText for now
   set filetype=rst
   " Press enter to return
-  nmap <buffer> <CR> :call nvim_win_close(g:sphinx_notes_snippet_win, v:true)<CR>
+  nmap <buffer> <CR> :call nvim_win_close(g:sphinx_notes_picker_win, v:true)<CR>
 
-  let cmd = [s:snippet, 'get', '--src', a:id]
+  let cmd = [s:picker, 'get', '--src', a:id]
   call append(line('$'), ['.. hint:: Press <ENTER> to return'])
   execute '$read !' . '..'
   execute '$read !' . join(cmd, ' ')

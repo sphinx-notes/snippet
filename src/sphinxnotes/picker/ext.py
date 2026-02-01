@@ -81,13 +81,13 @@ def _get_document_allowed_tags(pats: dict[str, list[str]], docname: str) -> str:
 
 def on_config_inited(app: Sphinx, appcfg: SphinxConfig) -> None:
     global cache
-    cfg = Config(appcfg.snippet_config)
+    cfg = Config(appcfg.picker_config)
     cache = Cache(cfg.cache_dir)
 
     try:
         cache.load()
     except Exception as e:
-        logger.warning('[snippet] failed to laod cache: %s' % e)
+        logger.warning('[picker] failed to laod cache: %s' % e)
 
 
 def on_env_get_outdated(
@@ -108,13 +108,13 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
     if not isinstance(doctree, nodes.document):
         # XXX: It may caused by ablog
         logger.debug(
-            '[snippet] node %s is not nodes.document', type(doctree), location=doctree
+            '[picker] node %s is not nodes.document', type(doctree), location=doctree
         )
         return
 
-    allowed_tags = _get_document_allowed_tags(app.config.snippet_patterns, docname)
+    allowed_tags = _get_document_allowed_tags(app.config.picker_patterns, docname)
     if not allowed_tags:
-        logger.debug('[snippet] skip picking: no tag allowed for document %s', docname)
+        logger.debug('[picker] skip picking: no tag allowed for document %s', docname)
         return
 
     doc = []
@@ -146,7 +146,7 @@ def on_doctree_resolved(app: Sphinx, doctree: nodes.document, docname: str) -> N
         del cache[cache_key]
 
     logger.debug(
-        '[snippet] picked %s/%s snippets in %s, tags: %s, allowed tags: %s',
+        '[picker] picked %s/%s pickers in %s, tags: %s, allowed tags: %s',
         len(doc),
         len(snippets),
         docname,
@@ -160,10 +160,10 @@ def on_builder_finished(app: Sphinx, exception) -> None:
     cache.dump()
 
 
-class SnippetBuilder(DummyBuilder):  # DummyBuilder has dummy impls we need.
-    name = 'snippet'
+class PickerBuilder(DummyBuilder):  # DummyBuilder has dummy impls we need.
+    name = 'picker'
     epilog = __(
-        'The snippet builder produces snippets (not to OUTPUTDIR) for use by snippet CLI tool'
+        'The picker builder produces pickers (not to OUTPUTDIR) for use by picker CLI tool'
     )
 
     def get_outdated_docs(self) -> Iterator[str]:

@@ -5,8 +5,8 @@
 # :Date: 2021-08-14
 # :Version: 20240828
 
-function snippet_view() {
-  selection=$(snippet_list)
+function picker_view() {
+  selection=$(picker_list)
   [ -z "$selection" ] && return
 
   # Make sure we have $PAGER
@@ -18,38 +18,38 @@ function snippet_view() {
     fi
   fi
 
-  echo "$SNIPPET get --src $selection | $PAGER"
+  echo "$PICKER get --src $selection | $PAGER"
 }
 
-function snippet_edit() {
-  selection=$(snippet_list --tags ds)
+function picker_edit() {
+  selection=$(picker_list --tags ds)
   [ -z "$selection" ] && return
 
-  echo "vim +\$($SNIPPET get --line-start $selection) \$($SNIPPET get --file $selection)"
+  echo "vim +\$($PICKER get --line-start $selection) \$($PICKER get --file $selection)"
 }
 
-function snippet_url() {
-  selection=$(snippet_list --tags ds)
+function picker_url() {
+  selection=$(picker_list --tags ds)
   [ -z "$selection" ] && return
 
-  echo "xdg-open \$($SNIPPET get --url $selection)"
+  echo "xdg-open \$($PICKER get --url $selection)"
 }
 
-function snippet_sh_bind_wrapper() {
+function picker_sh_bind_wrapper() {
   cmd=$($1)
   if [ ! -z "$cmd" ]; then
     eval "$cmd"
   fi
 }
 
-function snippet_sh_do_bind() {
-  bind -x '"\C-kv": snippet_sh_bind_wrapper snippet_view'
-  bind -x '"\C-ke": snippet_sh_bind_wrapper snippet_edit'
-  bind -x '"\C-ku": snippet_sh_bind_wrapper snippet_url'
+function picker_sh_do_bind() {
+  bind -x '"\C-kv": picker_sh_bind_wrapper picker_view'
+  bind -x '"\C-ke": picker_sh_bind_wrapper picker_edit'
+  bind -x '"\C-ku": picker_sh_bind_wrapper picker_url'
 }
 
 # Bind key if bind command exists
 # (the script may sourced by Zsh)
-command -v bind 2>&1 1>/dev/null && snippet_sh_do_bind
+command -v bind 2>&1 1>/dev/null && picker_sh_do_bind
 
 # vim: set shiftwidth=2:

@@ -28,7 +28,7 @@ from .config import Config
 from .cache import Cache, IndexID, Index
 from .table import tablify, COLUMNS
 
-DEFAULT_CONFIG_FILE = path.join(xdg_config_home, 'sphinxnotes', 'snippet', 'conf.py')
+DEFAULT_CONFIG_FILE = path.join(xdg_config_home, 'sphinxnotes', 'picker', 'conf.py')
 
 
 class HelpFormatter(
@@ -59,11 +59,11 @@ def main(argv: list[str] = sys.argv[1:]):
         description='Sphinx documentation snippets manager',
         formatter_class=HelpFormatter,
         epilog=dedent("""
-                                     snippet tags:
-                                       d (document)          a document
-                                       s (section)           a section
-                                       c (code)              a code block
-                                       * (any)               wildcard for any snippet"""),
+                                     picker tags:
+                                        d (document)          a document
+                                        s (section)           a section
+                                        c (code)              a code block
+                                        * (any)               wildcard for any picker"""),
     )
     parser.add_argument(
         '--version',
@@ -82,7 +82,7 @@ def main(argv: list[str] = sys.argv[1:]):
         'stat',
         aliases=['s'],
         formatter_class=HelpFormatter,
-        help='show snippets statistic information',
+        help='show picker statistic information',
     )
     statparser.set_defaults(func=_on_command_stat)
 
@@ -90,7 +90,7 @@ def main(argv: list[str] = sys.argv[1:]):
         'list',
         aliases=['l'],
         formatter_class=HelpFormatter,
-        help='list snippet indexes, columns of indexes: %s' % COLUMNS,
+        help='list picker indexes, columns of indexes: %s' % COLUMNS,
     )
     listparser.add_argument(
         '--tags', '-t', type=str, default='*', help='list snippets with specified tags'
@@ -100,7 +100,7 @@ def main(argv: list[str] = sys.argv[1:]):
         '-d',
         type=str,
         default='**',
-        help='list snippets whose docname matches shell-style glob pattern',
+        help='list pickers whose docname matches shell-style glob pattern',
     )
     listparser.add_argument(
         '--width',
@@ -115,13 +115,13 @@ def main(argv: list[str] = sys.argv[1:]):
         'get',
         aliases=['g'],
         formatter_class=HelpFormatter,
-        help='get information of snippet by index ID',
+        help='get information of picker by index ID',
     )
     getparser.add_argument(
-        '--docname', '-d', action='store_true', help='get docname of snippet'
+        '--docname', '-d', action='store_true', help='get docname of picker'
     )
     getparser.add_argument(
-        '--file', '-f', action='store_true', help='get source file path of snippet'
+        '--file', '-f', action='store_true', help='get source file path of picker'
     )
     getparser.add_argument(
         '--deps', action='store_true', help='get dependent files of document'
@@ -129,29 +129,29 @@ def main(argv: list[str] = sys.argv[1:]):
     getparser.add_argument(
         '--line-start',
         action='store_true',
-        help='get line number where snippet starts in source file',
+        help='get line number where picker starts in source file',
     )
     getparser.add_argument(
         '--line-end',
         action='store_true',
-        help='get line number where snippet ends in source file',
+        help='get line number where picker ends in source file',
     )
     getparser.add_argument(
         '--text',
         '-t',
         action='store_true',
-        help='get text representation of snippet',
+        help='get text representation of picker',
     )
     getparser.add_argument(
         '--src',
         action='store_true',
-        help='get source text of snippet',
+        help='get source text of picker',
     )
     getparser.add_argument(
         '--url',
         '-u',
         action='store_true',
-        help='get URL of HTML documentation of snippet',
+        help='get URL of HTML documentation of picker',
     )
     getparser.add_argument('index_id', type=str, nargs='+', help='index ID')
     getparser.set_defaults(func=_on_command_get)

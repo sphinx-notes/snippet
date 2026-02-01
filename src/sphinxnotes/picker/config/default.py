@@ -19,7 +19,7 @@ from xdg.BaseDirectory import xdg_cache_home as __xdg_cache_home
     (Default: ``"$XDG_CACHE_HOME/sphinxnotes/snippet"``)
     Path to snippet cache directory.
 """
-cache_dir = __path.join(__xdg_cache_home, 'sphinxnotes', 'snippet')
+cache_dir = __path.join(__xdg_cache_home, 'sphinxnotes', 'picker')
 
 """
 ``base_urls``
