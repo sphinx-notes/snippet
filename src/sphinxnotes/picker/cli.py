@@ -56,14 +56,14 @@ def main(argv: list[str] = sys.argv[1:]):
 
     parser = argparse.ArgumentParser(
         prog=__name__,
-        description='Sphinx documentation snippets manager',
+        description='Sphinx documentation pickers',
         formatter_class=HelpFormatter,
         epilog=dedent("""
-                                     picker tags:
+                                     filter tags:
                                         d (document)          a document
                                         s (section)           a section
                                         c (code)              a code block
-                                        * (any)               wildcard for any picker"""),
+                                        * (any)               wildcard for any target"""),
     )
     parser.add_argument(
         '--version',
@@ -228,7 +228,7 @@ def _on_command_stat(args: argparse.Namespace):
     num_projects = len(cache.num_snippets_by_project)
     num_docs = len(cache.num_snippets_by_docid)
     num_snippets = sum(cache.num_snippets_by_project.values())
-    print(f'snippets are loaded from {cache.dirname}')
+    print(f'indexes are loaded from {cache.dirname}')
     print(f'configuration are loaded from {args.config}')
     print(f'integration files are located at {get_integration_file("")}')
     print('')

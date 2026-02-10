@@ -6,7 +6,7 @@
 # :Version: 20240828
 
 # Make sure we have $PICKER
-[ -z "$PICKER"] && PICKER='picker'
+[ -z "$PICKER"] && PICKER='sphinxnotes-picker'
 
 # Arguments: $*: Extra opts of ``picker list``
 # Returns: picker_id

@@ -38,7 +38,6 @@ classifiers = [
     # CUSTOM CLASSIFIERS END
 ]
 
-# See ``make pyver`` for more details.
 requires-python = ">=3.12"
 dependencies = [
     "Sphinx >= 7.0",
@@ -85,14 +84,15 @@ docs = [
 ]
 
 [project.urls]
-homepage = "https://sphinx.silverrainz.me/snippet"
-documentation = "https://sphinx.silverrainz.me/snippet"
+homepage = "https://sphinx.silverrainz.me/picker"
+documentation = "https://sphinx.silverrainz.me/picker"
 repository = "https://github.com/sphinx-notes/snippet"
-changelog = "https://sphinx.silverrainz.me/snippet/changelog.html"
+changelog = "https://sphinx.silverrainz.me/picker/changelog.html"
 tracker = "https://github.com/sphinx-notes/snippet/issues"
 
 [project.scripts]
-picker = "sphinxnotes.picker.cli:main"
+sphinx-picker = "sphinxnotes.picker.cli:main"
+sphinxnotes-picker = "sphinxnotes.picker.cli:main"
 
 [build-system]
 requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel"]

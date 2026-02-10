@@ -9,7 +9,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'sphinxnotes-snippet'
+project = 'sphinxnotes-picker'
 author = 'Shengyu Zhang'
 copyright = "2023, " + author
 
