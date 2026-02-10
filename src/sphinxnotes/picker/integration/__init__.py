@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet.integration
+sphinxnotes.picker.integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Dummpy module for including package_data.

@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet
+sphinxnotes.picker
 ~~~~~~~~~~~~~~~~~~~
 
 Sphinx extension entrypoint.
@@ -11,10 +11,10 @@ Sphinx extension entrypoint.
 
 def setup(app):
     # **WARNING**: We don't import these packages globally, because the current
-    # package (sphinxnotes.snippet) is always resloved when importing
-    # sphinxnotes.snippet.*. If we import packages here, eventually we will
+    # package (sphinxnotes.picker) is always resloved when importing
+    # sphinxnotes.picker.*. If we import packages here, eventually we will
     # load a lot of packages from the Sphinx. It will seriously **SLOW DOWN**
-    # the startup time of our CLI tool (sphinxnotes.snippet.cli).
+    # the startup time of our CLI tool (sphinxnotes.picker.cli).
     #
     # .. seealso:: https://github.com/sphinx-notes/snippet/pull/31
     from .ext import (
@@ -27,8 +27,8 @@ def setup(app):
 
     app.add_builder(SnippetBuilder)
 
-    app.add_config_value('snippet_config', {}, '')
-    app.add_config_value('snippet_patterns', {'*': ['.*']}, '')
+    app.add_config_value('picker_config', {}, '')
+    app.add_config_value('picker_patterns', {'*': ['.*']}, '')
 
     app.connect('config-inited', on_config_inited)
     app.connect('env-get-outdated', on_env_get_outdated)

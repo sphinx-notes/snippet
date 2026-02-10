@@ -9,7 +9,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'sphinxnotes-snippet'
+project = 'sphinxnotes-picker'
 author = 'Shengyu Zhang'
 copyright = "2023, " + author
 
@@ -55,12 +55,6 @@ keep_warnings = True
 #
 html_theme = 'furo'
 
-html_theme_options = {}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
 html_theme_options = {
     "source_repository": "https://github.com/sphinx-notes/snippet/",
     "source_branch": "master",
@@ -69,9 +63,16 @@ html_theme_options = {
 
 # The URL which points to the root of the HTML documentation.
 # It is used to indicate the location of document like canonical_url
-html_baseurl = 'https://sphinx.silverrainz.me/snippet'
+html_baseurl = 'https://sphinx.silverrainz.me/picker'
 
 html_logo = html_favicon = '_static/sphinx-notes.png'
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ['_static']
+
+html_css_files = ['custom.css']
 
 # -- Extensions -------------------------------------------------------------
 
@@ -117,7 +118,7 @@ primary_domain = 'any'
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../src/sphinxnotes'))
-extensions.append('snippet')
+extensions.append('picker')
 
 # CUSTOM CONFIGURATION
 

@@ -1,4 +1,4 @@
-" Vim integration for sphinxnotes-snippet
+" Vim integration for sphinxnotes-picker
 " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 "
 " :Author: Shengyu Zhang
@@ -7,13 +7,13 @@
 "
 " NOTE: junegunn/fzf.vim is required
 
-let s:snippet = 'snippet'
+let s:picker = 'sphinxnotes-picker'
 let s:width = 0.9
 let s:height = 0.6
 
 " Use fzf to list all snippets, callback with argument id.
-function g:SphinxNotesSnippetList(tags, callback)
-  let cmd = [s:snippet, 'list',
+function g:SphinxNotesPickerList(tags, callback)
+  let cmd = [s:picker, 'list',
         \ '--tags', a:tags,
         \ '--width', float2nr(&columns * s:width) - 2,
         \ ]
@@ -36,14 +36,14 @@ function g:SphinxNotesSnippetList(tags, callback)
 endfunction
 
 " Return the attribute value of specific snippet.
-function g:SphinxNotesSnippetGet(id, attr)
-    let cmd = [s:snippet, 'get', a:id, '--' . a:attr]
+function g:SphinxNotesPickerGet(id, attr)
+    let cmd = [s:picker, 'get', a:id, '--' . a:attr]
     return systemlist(join(cmd, ' '))
 endfunction
 
 " Use fzf to list all attr of specific snippet,
 " callback with arguments (attr_name, attr_value).
-function g:SphinxNotesSnippetListSnippetAttrs(id, callback)
+function g:SphinxNotesPickerListPickerAttrs(id, callback)
     " Display attr -> Identify attr (also used as CLI option)
     let attrs = {
                 \ 'Source':             'src',
@@ -59,17 +59,17 @@ function g:SphinxNotesSnippetListSnippetAttrs(id, callback)
         call add(table, attrs[name] . delim . name)
     endfor
 
-    function! ListSnippetAttrs_CB(selection) closure
+    function! ListPickerAttrs_CB(selection) closure
         let opt = split(a:selection, ' ')[0]
-        let val = g:SphinxNotesSnippetGet(a:id, opt)
+        let val = g:SphinxNotesPickerGet(a:id, opt)
         call a:callback(opt, val) " finally call user's cb
     endfunction
 
-    let preview_cmd = [s:snippet, 'get', a:id, '--$(echo {} | cut -d " " -f1)']
+    let preview_cmd = [s:picker, 'get', a:id, '--$(echo {} | cut -d " " -f1)']
     let info_cmd = ['echo', 'Index ID:', a:id]
     call fzf#run({
                 \ 'source': table,
-                \ 'sink': function('ListSnippetAttrs_CB'),
+                \ 'sink': function('ListPickerAttrs_CB'),
                 \ 'options': [
                 \               '--header-lines', '1',
                 \               '--with-nth', '2..',
@@ -81,7 +81,7 @@ function g:SphinxNotesSnippetListSnippetAttrs(id, callback)
                 \ })
 endfunction
 
-function g:SphinxNotesSnippetInput(id)
+function g:SphinxNotesPickerInput(id)
   function! Input_CB(attr, val) " TODO: became g:func.
     if a:attr == 'docname' 
       " Create doc reference.
@@ -95,15 +95,15 @@ function g:SphinxNotesSnippetInput(id)
     execute 'normal! i' . content
   endfunction
 
-  call g:SphinxNotesSnippetListSnippetAttrs(a:id, function('Input_CB'))
+  call g:SphinxNotesPickerListPickerAttrs(a:id, function('Input_CB'))
 endfunction
 
-function g:SphinxNotesSnippetListAndInput()
+function g:SphinxNotesPickerListAndInput()
   function! ListAndInput_CB(id)
-    call g:SphinxNotesSnippetInput(a:id)
+    call g:SphinxNotesPickerInput(a:id)
   endfunction
 
-  call g:SphinxNotesSnippetList('"*"', function('ListAndInput_CB'))
+  call g:SphinxNotesPickerList('"*"', function('ListAndInput_CB'))
 endfunction
 
   " vim: set shiftwidth=2:

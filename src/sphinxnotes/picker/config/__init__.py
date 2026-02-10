@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet.config
+sphinxnotes.picker.config
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: Copyright 2021 Shengyu Zhang

@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet.snippets
+sphinxnotes.picker.snippets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Definitions of various snippets.

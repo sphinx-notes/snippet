@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet.table
+sphinxnotes.picker.table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :copyright: Copyright 2021 Shengyu Zhang

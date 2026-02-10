@@ -1,5 +1,5 @@
 """
-sphinxnotes.snippet.picker
+sphinxnotes.picker.picker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Snippet picker implementations.
